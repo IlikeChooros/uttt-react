@@ -1,6 +1,6 @@
 'use client'
 
-const ENGINE_API_ADDRESS = "http://127.0.0.1:8080/analysis"
+const ENGINE_API_ADDRESS = "/api/analysis"
 
 export interface AnalysisRequest {
     position: string;
@@ -42,7 +42,12 @@ export class EngineAPI {
     ])
 
     static async analyze(request: AnalysisRequest = {position: ""}): Promise<EngineMove[]> {
-        let response = fetch(ENGINE_API_ADDRESS, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(request)})
+        let response = fetch(
+            ENGINE_API_ADDRESS, {
+                method: "POST", 
+                headers: {"Content-Type": "application/json"}, 
+                body: JSON.stringify(request)
+        })
 
         return response.then((resp) => {
             return resp.json()  

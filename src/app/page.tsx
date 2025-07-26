@@ -1,13 +1,13 @@
 import * as React from 'react';
 import Container from '@mui/material/Container';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import Link from '@mui/material/Link';
-import NextLink from 'next/link';
+import Box from '@mui/material/Box';;
 import Copyright from '@/components/Copyright';
-import UltimateTicTacToeBoard from '@/components/UltimateTicTacToeBoard';
+import UltimateTicTacToeBoard from '@/components/game/UltimateTicTacToeGame';
+import { getEngineLimits } from '@/api';
+import Loading from '@/app/loading';
 
 export default function Home() {
+
   return (
     <Container maxWidth="lg">
       <Box
@@ -20,12 +20,8 @@ export default function Home() {
         }}
       >        
         <Box sx={{ mb: 4 }}>
-          <UltimateTicTacToeBoard />
+            <UltimateTicTacToeBoard />
         </Box>
-        
-        <Link href="/login" color="secondary" component={NextLink}>
-          Go to login
-        </Link>
         <Copyright />
       </Box>
     </Container>

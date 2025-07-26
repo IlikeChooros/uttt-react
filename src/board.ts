@@ -1,4 +1,4 @@
-
+import { EngineMove } from "@/api";
 
 export type Player = 'X' | 'O' | null;
 export type SmallBoard = Player[];
@@ -16,6 +16,42 @@ export interface GameState {
   isDraw: boolean;
   activeBoard: number | null; // Which small board the next player must play in
   lastMove: { boardIndex: number; cellIndex: number } | null;
+}
+
+export interface AnalysisState {
+  enabled: boolean;
+  currentEvaluation: string;
+  bestMove: EngineMove | null;
+  topMoves: EngineMove[];
+  thinking: boolean;
+}
+
+export interface BoardSettings {
+  size: number;
+  showAnalysis: boolean;
+  engineDepth: number;
+  nThreads: number;
+  memorySizeMb: number;
+}
+
+export const getInitialBoardState = (): GameState => {
+  const boards: SmallBoardState[] = [];
+  for (let i = 0; i < 9; i++) {
+    boards.push({
+      board: Array(9).fill(null),
+      winner: null,
+      isDraw: false,
+    });
+  }
+  
+  return {
+    boards,
+    currentPlayer: 'X',
+    winner: null,
+    isDraw: false,
+    activeBoard: null, // First move can be anywhere
+    lastMove: null,
+  };
 }
 
 /**

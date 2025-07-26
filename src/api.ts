@@ -1,11 +1,14 @@
 'use client'
 
-const ENGINE_API_ADDRESS = "/api/analysis"
+const ENGINE_API_ANALYSIS = "/api/analysis"
+const ENGINE_API_LIMITS = "/api/limits"
 
 export interface AnalysisRequest {
     position: string;
     movetime?: number;
     depth?: number;
+    threads?: number;
+    sizemb?: number;
 }
 
 export interface AnalysisResponse {
@@ -24,6 +27,12 @@ export interface EngineMove {
   principalVariation: string[];
 }
 
+export interface EngineLimits {
+    depth: number;
+    mbsize: number;
+    threads: number;
+}
+
 function IsInstance<T>(obj: any, requiredKeys: (keyof T)[], keys: (keyof T)[]) : boolean {
     if (typeof obj != 'object' || obj == null) {
         return false;
@@ -31,6 +40,22 @@ function IsInstance<T>(obj: any, requiredKeys: (keyof T)[], keys: (keyof T)[]) :
 
     return requiredKeys.every((key) => key in obj) &&
         (Object.keys(obj) as (keyof T)[]).every(key => keys.includes(key)) ;
+}
+
+export async function  getEngineLimits(): Promise<EngineLimits> {
+    let response = fetch(ENGINE_API_LIMITS, {method: "GET"})
+
+    return response.then((resp) => {
+        return resp.json()
+    }).then((json) => {
+        if (!IsInstance<EngineLimits>(json, ['depth', 'mbsize', 'threads'], ['depth', 'mbsize', 'threads'])) {
+            throw new Error("Limits: invalid json structure, got:" + json.toString());
+        }
+
+        return json;
+    }).catch((error) => {
+        console.log(error);
+    })
 }
 
 export class EngineAPI {
@@ -41,9 +66,11 @@ export class EngineAPI {
         ['a1', 6], ['b1', 7], ['c1', 8], 
     ])
 
+    
+
     static async analyze(request: AnalysisRequest = {position: ""}): Promise<EngineMove[]> {
         let response = fetch(
-            ENGINE_API_ADDRESS, {
+            ENGINE_API_ANALYSIS, {
                 method: "POST", 
                 headers: {"Content-Type": "application/json"}, 
                 body: JSON.stringify(request)

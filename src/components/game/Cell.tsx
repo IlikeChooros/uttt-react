@@ -45,6 +45,8 @@ export default function Cell({
           : isTopMove
             ? alpha(theme.palette.warning.main, 0.05)
             : 'transparent',
+        cursor: canClick ? 'pointer' : 'not-allowed',
+        transition: 'all 0.2s ease-in-out',
         '&:hover': canClick ? {
           backgroundColor: isBestMove
             ? alpha(theme.palette.success.main, 0.2)
@@ -52,6 +54,7 @@ export default function Cell({
           borderColor: isBestMove 
             ? theme.palette.success.main
             : theme.palette.primary.main,
+          transform: 'scale(1.02)',
         } : {},
         '&.Mui-disabled': {
           color: value === 'X' 
@@ -69,6 +72,7 @@ export default function Cell({
             : isTopMove
               ? alpha(theme.palette.warning.main, 0.05)
               : 'transparent',
+          opacity: value ? 1 : 0.5,
         },
       }}
     >

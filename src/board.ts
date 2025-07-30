@@ -1,4 +1,4 @@
-import { EngineMove } from "@/api";
+import { EngineMove, AnalysisRequest } from "@/api";
 
 export type Player = 'X' | 'O' | null;
 export type SmallBoard = Player[];
@@ -32,6 +32,15 @@ export interface BoardSettings {
   engineDepth: number;
   nThreads: number;
   memorySizeMb: number;
+}
+
+export function toAnalysisRequest(settings: BoardSettings, gameState: GameState): AnalysisRequest {
+  return {
+    position: ToNotation(gameState),
+    depth: settings.engineDepth,
+    threads: settings.nThreads,
+    sizemb: settings.memorySizeMb,
+  }
 }
 
 export const getInitialBoardState = (): GameState => {

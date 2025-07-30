@@ -1,17 +1,25 @@
-'use client'
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Paper, Box, CircularProgress } from '@mui/material';
+import { Paper, Box, CircularProgress, Alert, Chip } from '@mui/material';
 import { EngineAPI, EngineLimits, EngineMove, getEngineLimits } from '@/api';
-import { GameState, ToNotation, getInitialBoardState, AnalysisState, BoardSettings, SmallBoard, Player, toAnalysisRequest } from '@/board';
+import { GameState, BoardSettings, AnalysisState, SmallBoard, Player, ToNotation, getInitialBoardState, toAnalysisRequest } from '@/board';
 import GameBoard from '@/components/game/GameBoard';
 import GameStatus from '@/components/game/GameStatus';
 import GameControls from '@/components/game/GameControls';
 import SettingsPanel from '@/components/settings/SettingsPanel';
-import AnalysisPanel from '@/components/analysis/AnalysisPanel';
-import GameRules from '@/components/ui/GameRules';
+import VersusAiControls from '@/components/vs-ai/VersusAiControls';
+import VersusAiStatus from '@/components/vs-ai/VersusAiStatus';
 
-export default function UltimateTicTacToeGame() {
+interface VersusState {
+  ready: boolean;
+  on: boolean;
+  thinking: boolean;
+  engineTurn: Player;
+  gameMode: 'setup' | 'playing' | 'finished';
+}
+
+export default function VersusAiGame() {
   const [engineLimits, setEngineLimits] = useState<EngineLimits>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [gameState, setGameState] = useState<GameState>(getInitialBoardState());
@@ -25,9 +33,16 @@ export default function UltimateTicTacToeGame() {
   const [boardSettings, setBoardSettings] = useState<BoardSettings>({
     size: 64,
     showAnalysis: false,
-    engineDepth: 3,
-    nThreads: 2,
-    memorySizeMb: 4,
+    engineDepth: 16,
+    nThreads: 4,
+    memorySizeMb: 16,
+  });
+  const [versusState, setVersusState] = useState<VersusState>({
+    ready: false,
+    on: false,
+    thinking: false,
+    engineTurn: 'O', // Default: human is X, AI is O
+    gameMode: 'setup'
   });
 
   // Load engine limits on mount
@@ -54,43 +69,46 @@ export default function UltimateTicTacToeGame() {
     fetchLimits();
   }, []);
 
-  // Analyze current position when settings or game state changes
+  // AI move logic
   useEffect(() => {
-    async function analyzePosition() {
-      if (!boardSettings.showAnalysis || gameState.winner || gameState.isDraw) return;
-      
-      setAnalysisState(prev => ({ ...prev, thinking: true }));    
-      const topMoves: EngineMove[] = await EngineAPI.analyze(toAnalysisRequest(boardSettings, gameState));
-      
-      const bestMove = topMoves[0] || null;
-      const currentEval = bestMove ? bestMove.evaluation : "0";
-      
-      setAnalysisState({
-        enabled: true,
-        currentEvaluation: currentEval,
-        bestMove,
-        topMoves: topMoves.slice(0, 5),
-        thinking: false,
-      });
-    }
-    
-    if (boardSettings.showAnalysis) {
-      analyzePosition();
-    }
-  }, [gameState.boards, gameState.currentPlayer, gameState.activeBoard, 
-      boardSettings.showAnalysis, boardSettings.engineDepth, boardSettings.nThreads, boardSettings.memorySizeMb]);
+    async function makeAiMove() {
+      if (!versusState.on || !versusState.ready || versusState.thinking) return;
+      if (versusState.engineTurn !== gameState.currentPlayer) return;
+      if (gameState.winner || gameState.isDraw) return;
 
-  // Reset the game
-  const resetGame = () => {
-    setGameState(getInitialBoardState());
-    setAnalysisState({
-      enabled: false,
-      currentEvaluation: "0",
-      bestMove: null,
-      topMoves: [],
-      thinking: false,
-    });
-  };
+      setVersusState(prev => ({ ...prev, thinking: true }));
+      
+      try {
+        const moves = await EngineAPI.analyze(toAnalysisRequest(boardSettings, gameState));
+
+        const bestMove = moves[0] || null;
+        
+        if (bestMove != null) {
+            // Add a small delay to make AI thinking visible
+            console.log('made move', bestMove);
+            handleMakeMove(bestMove.boardIndex, bestMove.cellIndex);
+        }
+
+        setVersusState(prev => ({ ...prev, thinking: false }));
+      } catch (error) {
+        console.error("AI move failed:", error);
+        setVersusState(prev => ({ ...prev, thinking: false }));
+      }
+    }
+
+    if (versusState.gameMode === 'playing') {
+      makeAiMove();
+    }
+  }, [gameState.currentPlayer, versusState.on, versusState.ready, versusState.thinking, versusState.engineTurn, versusState.gameMode]);
+
+  // Update game mode based on game state
+  useEffect(() => {
+    if (gameState.winner || gameState.isDraw) {
+      setVersusState(prev => ({ ...prev, gameMode: 'finished', thinking: false }));
+    } else if (versusState.on && versusState.ready) {
+      setVersusState(prev => ({ ...prev, gameMode: 'playing' }));
+    }
+  }, [gameState.winner, gameState.isDraw, versusState.on, versusState.ready]);
 
   const checkSmallBoardWinner = useCallback((board: SmallBoard): Player => {
     const lines = [
@@ -131,8 +149,8 @@ export default function UltimateTicTacToeGame() {
   }, [checkSmallBoardWinner]);
 
   const handleMakeMove = useCallback((boardIndex: number, cellIndex: number) => {
+
     // Check if move is valid
-    if (gameState.winner || gameState.isDraw) return;
     if (gameState.boards[boardIndex].board[cellIndex] !== null) return;
     if (gameState.boards[boardIndex].winner || gameState.boards[boardIndex].isDraw) return;
     if (gameState.activeBoard !== null && gameState.activeBoard !== boardIndex) return;
@@ -162,7 +180,53 @@ export default function UltimateTicTacToeGame() {
       activeBoard: nextActiveBoard,
       lastMove: { boardIndex, cellIndex },
     });
-  }, [gameState, checkOverallWinner, updateSmallBoardState]);
+  }, [gameState, versusState.thinking, versusState.on, versusState.engineTurn, checkOverallWinner, updateSmallBoardState]);
+
+  const handlePlayerMove = useCallback((boardIndex: number, cellIndex: number) => {
+    // Prevent moves during AI thinking or if game is over
+    if (versusState.thinking || gameState.winner || gameState.isDraw) return;
+    
+    // In VS AI mode, prevent moves when it's the AI's turn
+    if (versusState.on && versusState.engineTurn === gameState.currentPlayer) return;
+
+    handleMakeMove(boardIndex, cellIndex);
+  }, [gameState, versusState.thinking, versusState.on, versusState.engineTurn, checkOverallWinner, updateSmallBoardState])
+
+  
+  const startVersusAi = (humanPlaysFirst: boolean) => {
+    setGameState(getInitialBoardState());
+    setVersusState({
+      ready: true,
+      on: true,
+      thinking: false,
+      engineTurn: humanPlaysFirst ? 'O' : 'X',
+      gameMode: 'playing'
+    });
+  };
+
+  const stopVersusAi = () => {
+    setVersusState({
+      ready: false,
+      on: false,
+      thinking: false,
+      engineTurn: 'O',
+      gameMode: 'setup'
+    });
+  };
+
+  const resetGame = () => {
+    setGameState(getInitialBoardState());
+    setAnalysisState({
+      enabled: false,
+      currentEvaluation: "0",
+      bestMove: null,
+      topMoves: [],
+      thinking: false,
+    });
+    if (versusState.on) {
+      setVersusState(prev => ({ ...prev, thinking: false, gameMode: 'playing' }));
+    }
+  };
 
   if (isLoading) {
     return (
@@ -177,6 +241,9 @@ export default function UltimateTicTacToeGame() {
     );
   }
 
+  const isHumanTurn = !versusState.on || versusState.engineTurn !== gameState.currentPlayer;
+  const canMakeMove = isHumanTurn && !versusState.thinking && !gameState.winner && !gameState.isDraw;
+
   return (
     <Paper 
       elevation={2} 
@@ -187,41 +254,45 @@ export default function UltimateTicTacToeGame() {
         mx: 'auto',
       }}
     >
-      <GameStatus 
-        gameState={gameState} 
+      <GameStatus gameState={gameState} />
+      
+      <VersusAiStatus 
+        versusState={versusState}
+        gameState={gameState}
+        engineLimits={engineLimits}
+      />
+
+      <VersusAiControls
+        versusState={versusState}
+        onStartGame={startVersusAi}
+        onStopGame={stopVersusAi}
+        onReset={resetGame}
       />
       
-      <GameControls 
-        onReset={resetGame} 
-      />
-      
-      <SettingsPanel 
+      {/* <SettingsPanel 
         limits={engineLimits}
         settings={boardSettings} 
         onSettingsChange={setBoardSettings} 
-      />
-      
-      {boardSettings.showAnalysis && (
-        <AnalysisPanel 
-          analysisState={analysisState} 
-          thinking={analysisState.thinking} 
-        />
-      )}
+      /> */}
       
       <GameBoard 
         gameState={gameState} 
-        handleCellClick={handleMakeMove}
+        handleCellClick={canMakeMove ? handlePlayerMove : () => {}}
         boardSettings={boardSettings}
         analysisState={analysisState}
       />
       
       {(gameState.winner || gameState.isDraw) && (
         <Box sx={{ textAlign: 'center', mt: 3 }}>
+          <Alert severity={gameState.winner ? 'success' : 'info'} sx={{ mb: 2 }}>
+            {gameState.winner 
+              ? `${gameState.winner === versusState.engineTurn ? 'AI' : 'You'} won!`
+              : 'Game ended in a draw!'
+            }
+          </Alert>
           <GameControls onReset={resetGame} showNewGameButton />
         </Box>
       )}
-      
-      <GameRules showAnalysis={boardSettings.showAnalysis} />
     </Paper>
   );
 }

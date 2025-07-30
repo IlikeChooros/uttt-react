@@ -100,6 +100,8 @@ export default function SettingsPanel({
               >
                 {settings.showAnalysis ? 'Hide Analysis' : 'Show Analysis'}
               </Button>
+
+              
               
               {settings.showAnalysis && (
                 <BoardSizeSlider

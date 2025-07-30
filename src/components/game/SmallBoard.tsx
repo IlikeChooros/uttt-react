@@ -42,7 +42,11 @@ export default function SmallBoard({
           ? `2px solid ${theme.palette.primary.main}`
           : `1px solid ${theme.palette.divider}`,
         position: 'relative',
-        transition: 'all 0.2s ease-in-out',
+        transition: 'all 0.3s ease-in-out',
+        '&:hover': isActive ? {
+          transform: 'translateY(-2px)',
+          boxShadow: theme.shadows[6],
+        } : {},
       }}
     >
       {/* Winner overlay */}

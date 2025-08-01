@@ -16,6 +16,18 @@ export interface GameState {
   isDraw: boolean;
   activeBoard: number | null; // Which small board the next player must play in
   lastMove: { boardIndex: number; cellIndex: number } | null;
+  enabled: boolean;
+}
+
+export function getInitialAnalysisState(): AnalysisState {
+  return {
+    enabled: false,
+    currentEvaluation: "",
+    bestMove: null,
+    topMoves: [],
+    thinking: false,
+    ws: null,
+  }
 }
 
 export interface AnalysisState {
@@ -24,6 +36,17 @@ export interface AnalysisState {
   bestMove: EngineMove | null;
   topMoves: EngineMove[];
   thinking: boolean;
+  ws: WebSocket | null;
+}
+
+export function getIntialBoardSettings(): BoardSettings {
+  return {
+    size: 64,
+    showAnalysis: false,
+    engineDepth: 16,
+    nThreads: 4,
+    memorySizeMb: 16,
+  }
 }
 
 export interface BoardSettings {
@@ -60,6 +83,7 @@ export const getInitialBoardState = (): GameState => {
     isDraw: false,
     activeBoard: null, // First move can be anywhere
     lastMove: null,
+    enabled: true,
   };
 }
 

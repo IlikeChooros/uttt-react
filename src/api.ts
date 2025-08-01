@@ -1,7 +1,6 @@
-'use client'
-
 const ENGINE_API_ANALYSIS = "/api/analysis"
 const ENGINE_API_LIMITS = "/api/limits"
+const ENGINE_API_WS_ANALYSIS = "/api/rt-analysis"
 
 export interface AnalysisRequest {
     position: string;
@@ -16,6 +15,7 @@ export interface AnalysisResponse {
     pv: string[];
     eval: string;
     nps: number;
+    final: boolean;
     error?: string;
 }
 
@@ -66,6 +66,38 @@ export class EngineAPI {
         ['a1', 6], ['b1', 7], ['c1', 8], 
     ])
 
+    static parseAnalysisResponse(json: any): EngineMove {
+        if (!IsInstance<AnalysisResponse>(json, 
+            ['eval', 'nps', 'pv', 'depth', 'final'], 
+            ['error', 'nps', 'pv', 'eval', 'depth','final'])
+        ) {
+            throw new Error("Invalid json structure, got:" + json.toString());
+        }
+        
+        let boardIndex: number | undefined = 0,
+            cellIndex: number | undefined = 0;
+        if (json.pv?.length != 0) {
+            // Convert all moves 
+            boardIndex = this.IndexMapper.get(json.pv[0].substring(0, 2).toLowerCase());
+            if (boardIndex == undefined) {
+                boardIndex = 0
+            }
+
+            cellIndex = this.IndexMapper.get(json.pv[0].substring(2, 4))
+            if (cellIndex == undefined) {
+                cellIndex = 0;
+            }
+        }
+        
+
+        return {
+            depth: json.depth,
+            evaluation: json.eval,
+            boardIndex,
+            cellIndex,
+            principalVariation: json.pv
+        }
+    }
     
 
     static async analyze(request: AnalysisRequest = {position: ""}): Promise<EngineMove[]> {
@@ -79,32 +111,7 @@ export class EngineAPI {
         return response.then((resp) => {
             return resp.json()  
         }).then((json) => {
-            if (!IsInstance<AnalysisResponse>(json, ['eval', 'nps', 'pv', 'depth'], ['error', 'nps', 'pv', 'eval', 'depth'])) {
-                throw new Error("Invalid json structure, got:" + json.toString());
-            }
-
-            let engineResp: EngineMove;
-
-            // Convert all moves 
-            let boardIndex: number | undefined = this.IndexMapper.get(json.pv[0].substring(0, 2).toLowerCase());
-            if (boardIndex == undefined) {
-                boardIndex = 0
-            }
-
-            let cellIndex: number | undefined = this.IndexMapper.get(json.pv[0].substring(2, 4))
-            if (cellIndex == undefined) {
-                cellIndex = 0;
-            }
-
-            engineResp = {
-                depth: json.depth,
-                evaluation: json.eval,
-                boardIndex,
-                cellIndex,
-                principalVariation: json.pv
-            }
-
-            return new Array<EngineMove>(1).fill(engineResp);
+            return new Array<EngineMove>(1).fill(this.parseAnalysisResponse(json));
         }).catch((err) => {
             console.log(err)
             return new Array<EngineMove>(0);

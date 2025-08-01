@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Paper, Box, Typography, Chip, alpha, useTheme } from '@mui/material';
-import { Psychology as AnalysisIcon } from '@mui/icons-material';
+import { Paper, Box, Typography, Chip, alpha, useTheme, Alert, LinearProgress } from '@mui/material';
+import { Psychology as AnalysisIcon, Timer as TimerIcon } from '@mui/icons-material';
 import { AnalysisState } from '@/board';
 
 interface AnalysisPanelProps {
@@ -18,12 +18,49 @@ export default function AnalysisPanel({
   
   return (
     <Paper sx={{ p: 2, mb: 3, backgroundColor: alpha(theme.palette.info.main, 0.05) }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+      {/* <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
         <AnalysisIcon color="primary" />
         <Typography variant="h6">Engine Analysis</Typography>
         {thinking && (
-          <Chip label="Thinking..." size="small" color="primary" />
+          // <Alert 
+          //     severity="info" 
+          //     sx={{ 
+          //       justifyContent: 'center',
+          //       '& .MuiAlert-message': { 
+          //         display: 'flex', 
+          //         alignItems: 'center', 
+          //         gap: 1 
+          //       }
+          //     }}
+          //   >
+              <LinearProgress 
+                sx={{ 
+                  width: '65%',
+                  ml: 1,
+                  height: 4,
+                  borderRadius: 2
+                }} 
+              />
+         
         )}
+      </Box> */}
+
+      <Box sx={{display: 'flex', flexDirection: {xs: 'column', md: 'row'}, gap: 2, mb: 2}}>
+          <Box sx={{display: 'flex'}}>
+            <AnalysisIcon color="primary" />
+            <Typography variant="h6">Engine Analysis</Typography>
+          </Box>
+          <Box sx={{display: 'flex', flexGrow: 1, alignItems: 'center', justifyContent: 'center'}}>
+            {thinking && (
+              <LinearProgress 
+                  sx={{ 
+                    width: '90%',
+                    height: 6,
+                    borderRadius: 4
+                  }} 
+                />
+            )}
+          </Box>
       </Box>
       
       <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>

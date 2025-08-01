@@ -29,13 +29,15 @@ export default function GameControls({
           New Game
         </Button>
       ) : (
-        <IconButton 
-          onClick={onReset}
-          color="primary"
-          size="small"
-        >
-          <RestartIcon />
-        </IconButton>
+        <Box>
+          <IconButton 
+            onClick={onReset}
+            color="primary"
+            size="small"
+          >
+            <RestartIcon />
+          </IconButton>
+        </Box>
       )}
     </Box>
   );

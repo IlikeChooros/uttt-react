@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Paper, Box, CircularProgress, Alert, Chip } from '@mui/material';
 import { EngineAPI, EngineLimits, EngineMove, getEngineLimits } from '@/api';
-import { GameState, BoardSettings, AnalysisState, SmallBoard, Player, ToNotation, getInitialBoardState, toAnalysisRequest } from '@/board';
+import { GameState, BoardSettings, AnalysisState, SmallBoard, Player, ToNotation, getInitialBoardState, toAnalysisRequest, getInitialAnalysisState, getIntialBoardSettings } from '@/board';
 import GameBoard from '@/components/game/GameBoard';
 import GameStatus from '@/components/game/GameStatus';
 import GameControls from '@/components/game/GameControls';
@@ -19,24 +19,16 @@ interface VersusState {
   gameMode: 'setup' | 'playing' | 'finished';
 }
 
+function initialVsAiBoardState(): GameState {
+  return {...getInitialBoardState(), enabled: false}
+}
+
 export default function VersusAiGame() {
   const [engineLimits, setEngineLimits] = useState<EngineLimits>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [gameState, setGameState] = useState<GameState>(getInitialBoardState());
-  const [analysisState, setAnalysisState] = useState<AnalysisState>({
-    enabled: false,
-    currentEvaluation: "0",
-    bestMove: null,
-    topMoves: [],
-    thinking: false,
-  });
-  const [boardSettings, setBoardSettings] = useState<BoardSettings>({
-    size: 64,
-    showAnalysis: false,
-    engineDepth: 16,
-    nThreads: 4,
-    memorySizeMb: 16,
-  });
+  const [gameState, setGameState] = useState<GameState>(initialVsAiBoardState());
+  const [analysisState, setAnalysisState] = useState<AnalysisState>(getInitialAnalysisState());
+  const [boardSettings, setBoardSettings] = useState<BoardSettings>(getIntialBoardSettings());
   const [versusState, setVersusState] = useState<VersusState>({
     ready: false,
     on: false,
@@ -179,6 +171,7 @@ export default function VersusAiGame() {
       isDraw: overallDraw,
       activeBoard: nextActiveBoard,
       lastMove: { boardIndex, cellIndex },
+      enabled: overallWinner == null && !overallDraw,
     });
   }, [gameState, versusState.thinking, versusState.on, versusState.engineTurn, checkOverallWinner, updateSmallBoardState]);
 
@@ -194,17 +187,18 @@ export default function VersusAiGame() {
 
   
   const startVersusAi = (humanPlaysFirst: boolean) => {
-    setGameState(getInitialBoardState());
+    setGameState(getInitialBoardState()); // imporant! Board MUST be enabled
     setVersusState({
       ready: true,
       on: true,
       thinking: false,
       engineTurn: humanPlaysFirst ? 'O' : 'X',
-      gameMode: 'playing'
+      gameMode: 'playing',
     });
   };
 
   const stopVersusAi = () => {
+    setGameState(initialVsAiBoardState());
     setVersusState({
       ready: false,
       on: false,
@@ -215,14 +209,8 @@ export default function VersusAiGame() {
   };
 
   const resetGame = () => {
-    setGameState(getInitialBoardState());
-    setAnalysisState({
-      enabled: false,
-      currentEvaluation: "0",
-      bestMove: null,
-      topMoves: [],
-      thinking: false,
-    });
+    setGameState(initialVsAiBoardState());
+    setAnalysisState(getInitialAnalysisState());
     if (versusState.on) {
       setVersusState(prev => ({ ...prev, thinking: false, gameMode: 'playing' }));
     }

@@ -3,7 +3,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Paper, Box, CircularProgress } from '@mui/material';
 import { EngineAPI, EngineLimits, EngineMove, getEngineLimits } from '@/api';
-import { GameState, ToNotation, getInitialBoardState, AnalysisState, BoardSettings, SmallBoard, Player, toAnalysisRequest } from '@/board';
+import { 
+  GameState, ToNotation, 
+  getInitialBoardState, 
+  getInitialAnalysisState, 
+  getIntialBoardSettings, 
+  AnalysisState, BoardSettings, 
+  SmallBoard, Player, 
+  toAnalysisRequest 
+} from '@/board';
 import GameBoard from '@/components/game/GameBoard';
 import GameStatus from '@/components/game/GameStatus';
 import GameControls from '@/components/game/GameControls';
@@ -15,20 +23,8 @@ export default function UltimateTicTacToeGame() {
   const [engineLimits, setEngineLimits] = useState<EngineLimits>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [gameState, setGameState] = useState<GameState>(getInitialBoardState());
-  const [analysisState, setAnalysisState] = useState<AnalysisState>({
-    enabled: false,
-    currentEvaluation: "0",
-    bestMove: null,
-    topMoves: [],
-    thinking: false,
-  });
-  const [boardSettings, setBoardSettings] = useState<BoardSettings>({
-    size: 64,
-    showAnalysis: false,
-    engineDepth: 3,
-    nThreads: 2,
-    memorySizeMb: 4,
-  });
+  const [analysisState, setAnalysisState] = useState<AnalysisState>(getInitialAnalysisState());
+  const [boardSettings, setBoardSettings] = useState<BoardSettings>(getIntialBoardSettings());
 
   // Load engine limits on mount
   useEffect(() => {
@@ -54,42 +50,106 @@ export default function UltimateTicTacToeGame() {
     fetchLimits();
   }, []);
 
-  // Analyze current position when settings or game state changes
-  useEffect(() => {
-    async function analyzePosition() {
-      if (!boardSettings.showAnalysis || gameState.winner || gameState.isDraw) return;
-      
-      setAnalysisState(prev => ({ ...prev, thinking: true }));    
-      const topMoves: EngineMove[] = await EngineAPI.analyze(toAnalysisRequest(boardSettings, gameState));
-      
-      const bestMove = topMoves[0] || null;
-      const currentEval = bestMove ? bestMove.evaluation : "0";
-      
-      setAnalysisState({
-        enabled: true,
-        currentEvaluation: currentEval,
-        bestMove,
-        topMoves: topMoves.slice(0, 5),
-        thinking: false,
-      });
-    }
+
+  const openWebSocket = async function() {
+    console.log("Establishing WebSocket connection...");
     
-    if (boardSettings.showAnalysis) {
-      analyzePosition();
+    try {
+      // Make sure we're using the correct protocol (ws:// for http, wss:// for https)
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//localhost:8080/rt-analysis`;
+      console.log(`Connecting to WebSocket at ${wsUrl}`);
+      
+      const ws = new WebSocket(wsUrl);
+      
+      ws.onopen = (event) => {
+        console.log("Connected to websocket", event);
+        setAnalysisState((prev) => ({...prev, ws}));
+      };
+      
+      ws.onmessage = (event) => {
+        try {
+          const response = JSON.parse(event.data);
+          console.log("Analysis response:", response);
+          
+          if (response.error) {
+            console.error("Analysis error:", response.error);
+            setAnalysisState(prev => ({ ...prev, thinking: false }));
+            return;
+          }
+
+          
+          let bestMove = EngineAPI.parseAnalysisResponse(response);
+
+          // Update analysis state with response
+          setAnalysisState(prev => ({
+            ...prev,
+            enabled: true,
+            currentEvaluation: response.eval || "0",
+            thinking: !response.final,
+            bestMove,
+            topMoves: [bestMove],
+          }));
+        } catch (error) {
+          console.error("Failed to parse WebSocket message:", error);
+        }
+      };
+      
+      ws.onclose = (ev) => {
+        console.log("WebSocket closed:", ev);
+        setAnalysisState(prev => ({ ...prev, ws: null, thinking: false }));
+      };
+      
+      ws.onerror = (error) => {
+        console.error("WebSocket error:", error);
+        setAnalysisState(prev => ({ ...prev, ws: null, thinking: false }));
+      };
+    } catch (error) {
+      console.error("Failed to create WebSocket:", error);
     }
-  }, [gameState.boards, gameState.currentPlayer, gameState.activeBoard, 
-      boardSettings.showAnalysis, boardSettings.engineDepth, boardSettings.nThreads, boardSettings.memorySizeMb]);
+  }
+
+  // Handle WebSocket connection for analysis
+  useEffect(() => {
+    if (boardSettings.showAnalysis && !analysisState.ws) {
+      openWebSocket();
+    } else if (!boardSettings.showAnalysis && analysisState.ws) {
+      // Close WebSocket when analysis is disabled
+      console.log("Closing WebSocket connection...");
+      analysisState.ws.close();
+    }
+  }, [boardSettings.showAnalysis]);
+  
+  // Send analysis requests when game state changes
+  useEffect(() => {
+    if (boardSettings.showAnalysis && 
+        !gameState.winner && 
+        !gameState.isDraw) {
+
+      if (analysisState.ws && 
+        analysisState.ws.readyState === WebSocket.OPEN) {
+        
+        console.log("Sending analysis request...");
+        setAnalysisState(prev => ({ ...prev, thinking: true }));
+        analysisState.ws.send(JSON.stringify(toAnalysisRequest(boardSettings, gameState)));
+      }
+    }
+  }, [analysisState.ws, gameState.boards, gameState.currentPlayer, gameState.activeBoard, 
+      boardSettings.engineDepth, boardSettings.nThreads, boardSettings.memorySizeMb]);
+
+  // Close on unmount
+  useEffect(() => {
+    return () => {
+      if (analysisState.ws) {
+        analysisState.ws.close();
+      }
+    }
+  }, [analysisState.ws]);
 
   // Reset the game
   const resetGame = () => {
     setGameState(getInitialBoardState());
-    setAnalysisState({
-      enabled: false,
-      currentEvaluation: "0",
-      bestMove: null,
-      topMoves: [],
-      thinking: false,
-    });
+    setAnalysisState(getInitialAnalysisState());
   };
 
   const checkSmallBoardWinner = useCallback((board: SmallBoard): Player => {
@@ -161,6 +221,7 @@ export default function UltimateTicTacToeGame() {
       isDraw: overallDraw,
       activeBoard: nextActiveBoard,
       lastMove: { boardIndex, cellIndex },
+      enabled: true,
     });
   }, [gameState, checkOverallWinner, updateSmallBoardState]);
 

@@ -107,7 +107,7 @@ export default function SmallBoard({
               value={value}
               size={cellSize}
               canClick={canClick}
-              isBestMove={isBestMove}
+              isBestMove={isBestMove && showAnalysis}
               isTopMove={isTopMove && showAnalysis}
               onClick={() => onCellClick(boardIndex, cellIndex)}
             />

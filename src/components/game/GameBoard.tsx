@@ -20,7 +20,7 @@ export default function GameBoard({
 }: GameBoardProps) {
 
   const isBoardActive = useCallback((boardIndex: number): boolean => {
-    if (gameState.winner || gameState.isDraw) return false;
+    if (gameState.winner || gameState.isDraw || !gameState.enabled) return false;
     if (gameState.boards[boardIndex].winner || gameState.boards[boardIndex].isDraw) return false;
     return gameState.activeBoard === null || gameState.activeBoard === boardIndex;
   }, [gameState]);

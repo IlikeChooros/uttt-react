@@ -30,7 +30,12 @@ export default function GameBoard({
       sx={{ 
         display: 'grid',
         gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: 2,
+        gap: {
+          xs: 1,
+          sm: 1.5,
+          md: 2,
+          lg: 2.5,
+        },
         width: 'fit-content',
         mx: 'auto',
         opacity: typeof handleCellClick === 'function' ? 1 : 0.6,
@@ -44,7 +49,6 @@ export default function GameBoard({
           boardIndex={boardIndex}
           smallBoard={gameState.boards[boardIndex]}
           isActive={isBoardActive(boardIndex)}
-          cellSize={boardSettings.size}
           showAnalysis={boardSettings.showAnalysis}
           bestMove={analysisState.bestMove}
           topMoves={analysisState.topMoves}

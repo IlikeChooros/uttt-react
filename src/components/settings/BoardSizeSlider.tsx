@@ -1,48 +1,71 @@
 'use client';
 
 import React from 'react';
-import { Box, Slider, Typography } from '@mui/material';
+import { Box, Typography, ToggleButtonGroup, ToggleButton, Slider } from '@mui/material';
+import { BoardSizeOption } from '@/board';
 
 interface BoardSizeSliderProps {
-  value: number;
-  onChange: (value: number) => void;
+  value: number | BoardSizeOption;
+  onChange: (value: number | BoardSizeOption) => void;
   min?: number;
   max?: number;
   step?: number;
   label?: string;
   showMarks?: boolean;
+  isNumeric?: boolean;
 }
 
 export default function BoardSizeSlider({
   value,
   onChange,
-  min = 24,
-  max = 96,
-  step = 8,
+  min = 1,
+  max = 16,
+  step = 1,
   label = 'Size',
-  showMarks = true
+  showMarks = true,
+  isNumeric = false
 }: BoardSizeSliderProps) {
-  return (
-    <Box>
-      {label && (
+  // For numeric sliders (depth, threads, memory)
+  if (isNumeric && typeof value === 'number') {
+    return (
+      <Box>
         <Typography gutterBottom sx={{ fontSize: '0.8rem' }}>
           {label}: {value}
         </Typography>
-      )}
-      <Slider
+        <Slider
+          value={value}
+          onChange={(_, value) => onChange(value as number)}
+          min={min}
+          max={max}
+          step={step}
+          valueLabelDisplay="auto"
+          size="small"
+        />
+      </Box>
+    );
+  }
+  
+  // For board size selection
+  return (
+    <Box>
+      <Typography gutterBottom sx={{ fontSize: '0.8rem', mb: 1 }}>
+        {label}
+      </Typography>
+      <ToggleButtonGroup
         value={value}
-        onChange={(_, value) => onChange(value as number)}
-        min={min}
-        max={max}
-        step={step}
-        marks={showMarks ? [
-          { value: min, label: 'Small' },
-          { value: (min + max) / 2, label: 'Medium' },
-          { value: max, label: 'Large' },
-        ] : undefined}
-        valueLabelDisplay="auto"
+        exclusive
+        onChange={(_, newValue) => {
+          if (newValue !== null) {
+            onChange(newValue);
+          }
+        }}
+        fullWidth
         size="small"
-      />
+      >
+        <ToggleButton value="small">Small</ToggleButton>
+        <ToggleButton value="normal">Normal</ToggleButton>
+        <ToggleButton value="large">Large</ToggleButton>
+      </ToggleButtonGroup>
     </Box>
   );
 }

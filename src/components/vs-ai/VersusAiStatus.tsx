@@ -85,8 +85,8 @@ export default function VersusAiStatus({
               gap: 1 
             }
           }}
+          icon={<TimerIcon fontSize="small" />}
         >
-          <TimerIcon fontSize="small" />
           AI is thinking...
           <LinearProgress 
             sx={{ 
@@ -102,16 +102,14 @@ export default function VersusAiStatus({
 
     if (isAiTurn) {
       return (
-        <Alert severity="warning" sx={{ justifyContent: 'center' }}>
-          <AiIcon sx={{ mr: 1 }} />
+        <Alert severity="warning" icon={<AiIcon sx={{ mr: 1 }} />} sx={{ justifyContent: 'center' }}>
           AI's turn - Please wait
         </Alert>
       );
     }
 
     return (
-      <Alert severity="success" sx={{ justifyContent: 'center' }}>
-        <PersonIcon sx={{ mr: 1 }} />
+      <Alert severity="success" icon={<PersonIcon sx={{ mr: 1 }} />} sx={{ justifyContent: 'center' }}>
         Your turn - Make a move!
       </Alert>
     );

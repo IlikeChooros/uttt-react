@@ -1,11 +1,15 @@
 # UTTT React
 
+## Chores
+- [ ] Refactor UTTT game component so that as much code as possible is shared with the 'versus ai' component
+  - Use provider to share the game state, functions to alter it, and capture there the game logic.
 
 ## Features
 - [x] Add websocket support for real-time analysis
+- [ ] Add support for lack of websocket connection - fallback to simple HTTP requests for analysis
 
 ## Bug fixes
-- [ ] Make no engine recommendation when analysis is turned off (after turning it on)
-- [ ] Don't allow player to play in AI versus mode until the user selects a turn
+- [x] Make no engine recommendation when analysis is turned off (after turning it on)
+- [x] Don't allow player to play in AI versus mode until the user selects a turn
 - [ ] Add rate limiting to analysis, when changing the engine settings
 - [ ] Fix ddos attack when backend is down (on vs AI mode)

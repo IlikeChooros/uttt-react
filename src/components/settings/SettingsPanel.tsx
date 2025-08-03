@@ -19,7 +19,7 @@ import {
   Tune as TuneIcon,
   Psychology as AnalysisIcon
 } from '@mui/icons-material';
-import { BoardSettings } from '@/board';
+import { BoardSettings, BoardSizeOption } from '@/board';
 import BoardSizeSlider from '@/components/settings/BoardSizeSlider';
 import { EngineLimits } from '@/api';
 
@@ -36,10 +36,10 @@ export default function SettingsPanel({
 }: SettingsPanelProps) {
   const { mode, setMode } = useColorScheme();
   
-  const handleSizeChange = (size: number) => {
+  const handleSizeChange = (size: BoardSizeOption) => {
     onSettingsChange({
       ...settings,
-      size
+      boardSize: size
     });
   };
   
@@ -70,8 +70,8 @@ export default function SettingsPanel({
           <Box sx={{ flex: 1 }}>
             <Typography gutterBottom>Board Size</Typography>
             <BoardSizeSlider
-              value={settings.size}
-              onChange={handleSizeChange}
+              value={settings.boardSize}
+              onChange={(size) => handleSizeChange(size as BoardSizeOption)}
             />
           </Box>
           
@@ -106,34 +106,37 @@ export default function SettingsPanel({
               {settings.showAnalysis && (
                 <BoardSizeSlider
                   value={settings.engineDepth}
-                  onChange={handleDepthChange}
+                  onChange={(v) => handleDepthChange(v as number)}
                   min={1}
                   max={limits?.depth || 10}
                   step={1}
                   label="Engine Depth"
                   showMarks={false}
+                  isNumeric={true}
                 />
               )}
               {settings.showAnalysis && (
                 <BoardSizeSlider
                   value={settings.nThreads}
-                  onChange={(v) => onSettingsChange({...settings, nThreads: v})}
+                  onChange={(v) => onSettingsChange({...settings, nThreads: v as number})}
                   min={1}
                   max={limits?.threads || 4}
                   step={1}
                   label='Threads'
                   showMarks={false}
+                  isNumeric={true}
                 />
               )}
               {settings.showAnalysis && (
                 <BoardSizeSlider
                   value={settings.memorySizeMb}
-                  onChange={(v) => onSettingsChange({...settings, memorySizeMb: v})}
+                  onChange={(v) => onSettingsChange({...settings, memorySizeMb: v as number})}
                   min={1}
                   max={limits?.mbsize || 16}
                   step={1}
                   label='Memory'
                   showMarks={false}
+                  isNumeric={true}
                 />
               )}
             </Box>

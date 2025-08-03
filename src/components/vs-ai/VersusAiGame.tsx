@@ -236,10 +236,14 @@ export default function VersusAiGame() {
     <Paper 
       elevation={2} 
       sx={{ 
-        p: 4, 
+        p: {
+          xs: 2,
+          sm: 4,
+        },
         borderRadius: 3,
-        maxWidth: Math.max(800, boardSettings.size * 9 + 200),
-        mx: 'auto',
+        // maxWidth: 1200,
+        width: '100%',
+        // mx: 0,
       }}
     >
       <GameStatus gameState={gameState} />

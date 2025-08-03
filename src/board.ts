@@ -39,9 +39,11 @@ export interface AnalysisState {
   ws: WebSocket | null;
 }
 
+export type BoardSizeOption = 'small' | 'normal' | 'large';
+
 export function getIntialBoardSettings(): BoardSettings {
   return {
-    size: 64,
+    boardSize: 'normal',
     showAnalysis: false,
     engineDepth: 16,
     nThreads: 4,
@@ -50,7 +52,7 @@ export function getIntialBoardSettings(): BoardSettings {
 }
 
 export interface BoardSettings {
-  size: number;
+  boardSize: BoardSizeOption;
   showAnalysis: boolean;
   engineDepth: number;
   nThreads: number;

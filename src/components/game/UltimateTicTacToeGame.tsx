@@ -10,7 +10,8 @@ import {
   getIntialBoardSettings, 
   AnalysisState, BoardSettings, 
   SmallBoard, Player, 
-  toAnalysisRequest 
+  toAnalysisRequest,
+  BoardSizeOption 
 } from '@/board';
 import GameBoard from '@/components/game/GameBoard';
 import GameStatus from '@/components/game/GameStatus';
@@ -242,10 +243,12 @@ export default function UltimateTicTacToeGame() {
     <Paper 
       elevation={2} 
       sx={{ 
-        p: 4, 
+        p: {
+          xs: 1,
+          sm: 4,
+        },
         borderRadius: 3,
-        maxWidth: Math.max(800, boardSettings.size * 9 + 200),
-        mx: 'auto',
+        width: '100%',
       }}
     >
       <GameStatus 

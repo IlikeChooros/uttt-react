@@ -6,7 +6,6 @@ import { Player } from '@/board';
 
 interface CellProps {
   value: Player;
-  size: number;
   canClick: boolean;
   isBestMove: boolean;
   isTopMove: boolean;
@@ -15,7 +14,6 @@ interface CellProps {
 
 export default function Cell({
   value,
-  size,
   canClick,
   isBestMove,
   isTopMove,
@@ -29,10 +27,28 @@ export default function Cell({
       onClick={onClick}
       disabled={!canClick}
       sx={{
-        width: size,
-        height: size,
+        width: {
+          xs: '32px',
+          sm: '42px',
+          md: '70px',
+          lg: '76px',
+          xl: '82px',
+        },
+        height: {
+          xs: '32px',
+          sm: '42px',
+          md: '70px',
+          lg: '76px',
+          xl: '82px',
+        },
         minWidth: 'unset',
-        fontSize: size > 48 ? '2rem' : size > 32 ? '1.5rem' : '1rem',
+        fontSize: {
+          xs: '1rem',
+          sm: '1.25rem',
+          md: '1.5rem',
+          lg: '2rem',
+          xl: '2.5rem',
+        },
         fontWeight: 'bold',
         borderRadius: 1,
         border: isBestMove 

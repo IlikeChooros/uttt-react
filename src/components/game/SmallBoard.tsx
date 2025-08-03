@@ -10,7 +10,6 @@ interface SmallBoardProps {
   boardIndex: number;
   smallBoard: SmallBoardState;
   isActive: boolean;
-  cellSize: number;
   showAnalysis: boolean;
   bestMove: EngineMove | null;
   topMoves: EngineMove[];
@@ -21,7 +20,6 @@ export default function SmallBoard({
   boardIndex,
   smallBoard,
   isActive,
-  cellSize,
   showAnalysis,
   bestMove,
   topMoves,
@@ -33,7 +31,7 @@ export default function SmallBoard({
     <Paper
       elevation={isActive ? 4 : 1}
       sx={{
-        p: 1,
+        p: 0.5,
         borderRadius: 2,
         backgroundColor: isActive 
           ? alpha(theme.palette.primary.main, 0.1)
@@ -78,7 +76,12 @@ export default function SmallBoard({
               color: 'white',
               fontWeight: 'bold',
               textShadow: '0 2px 4px rgba(0,0,0,0.3)',
-              fontSize: cellSize > 48 ? '2rem' : '1.5rem',
+              fontSize: {
+                xs: '1.2rem',
+                sm: '1.5rem',
+                md: '2rem',
+                lg: '2.5rem',
+              },
             }}
           >
             {smallBoard.isDraw ? '—' : smallBoard.winner}
@@ -90,7 +93,12 @@ export default function SmallBoard({
         sx={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: 0.5,
+          gap: {
+            xs: 0.25,
+            sm: 0.5,
+            md: 0.75,
+            lg: 1,
+          },
         }}
       >
         {Array.from({ length: 9 }, (_, cellIndex) => {
@@ -105,7 +113,6 @@ export default function SmallBoard({
             <Cell
               key={cellIndex}
               value={value}
-              size={cellSize}
               canClick={canClick}
               isBestMove={isBestMove && showAnalysis}
               isTopMove={isTopMove && showAnalysis}

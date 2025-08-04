@@ -7,6 +7,10 @@
 ## Features
 - [x] Add websocket support for real-time analysis
 - [ ] Add support for lack of websocket connection - fallback to simple HTTP requests for analysis
+- [ ] Add 'notation' string to load the game state
+- [ ] Add more top moves (multipv) to the analysis
+- [ ] Make the navbar responsive, especially on mobile:
+  - Add a drawer for the menu
 
 ## Bug fixes
 - [x] Make no engine recommendation when analysis is turned off (after turning it on)

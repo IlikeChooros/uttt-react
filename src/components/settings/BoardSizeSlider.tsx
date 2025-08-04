@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Box, Typography, ToggleButtonGroup, ToggleButton, Slider } from '@mui/material';
+import { Box, Typography, ToggleButtonGroup, ToggleButton, Slider, BoxProps } from '@mui/material';
 import { BoardSizeOption } from '@/board';
 
 interface BoardSizeSliderProps {
@@ -13,6 +13,7 @@ interface BoardSizeSliderProps {
   label?: string;
   showMarks?: boolean;
   isNumeric?: boolean;
+  boxProps?: BoxProps;
 }
 
 export default function BoardSizeSlider({
@@ -23,12 +24,13 @@ export default function BoardSizeSlider({
   step = 1,
   label = 'Size',
   // showMarks = true,
+  boxProps,
   isNumeric = false
 }: BoardSizeSliderProps) {
   // For numeric sliders (depth, threads, memory)
   if (isNumeric && typeof value === 'number') {
     return (
-      <Box>
+      <Box {...boxProps} width={'100%'} >
         <Typography gutterBottom sx={{ fontSize: '0.8rem' }}>
           {label}: {value}
         </Typography>

@@ -14,8 +14,7 @@ import {
   Person as PersonIcon,
   Timer as TimerIcon
 } from '@mui/icons-material';
-import { GameState } from '@/board';
-import { EngineLimits } from '@/api';
+import { BoardSettings, GameState } from '@/board';
 
 interface VersusState {
   ready: boolean;
@@ -28,13 +27,13 @@ interface VersusState {
 interface VersusAiStatusProps {
   versusState: VersusState;
   gameState: GameState;
-  engineLimits?: EngineLimits;
+  settings: BoardSettings;
 }
 
 export default function VersusAiStatus({
   versusState,
   gameState,
-  engineLimits
+  settings
 }: VersusAiStatusProps) {
   
   if (versusState.gameMode === 'setup') {
@@ -135,10 +134,10 @@ export default function VersusAiStatus({
       {getCurrentTurnMessage()}
 
       {/* Engine settings display */}
-      {versusState.gameMode === 'playing' && engineLimits && (
+      {versusState.gameMode === 'playing' && (
         <Box sx={{ textAlign: 'center', mt: 2 }}>
           <Typography variant="caption" color="text.secondary">
-            AI Settings: Depth {engineLimits.depth} • Threads {engineLimits.threads} • Memory {engineLimits.mbsize}MB
+            AI Settings: Depth {settings.engineDepth} • Threads {settings.nThreads} • Memory {settings.memorySizeMb}MB
           </Typography>
         </Box>
       )}

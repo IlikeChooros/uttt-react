@@ -10,6 +10,7 @@ import GameControls from '@/components/game/GameControls';
 import VersusAiControls from '@/components/vs-ai/VersusAiControls';
 import VersusAiStatus from '@/components/vs-ai/VersusAiStatus';
 import { useGameLogic } from '../game/GameLogic';
+import AiSettings from './AiSettings';
 
 interface VersusState {
   ready: boolean;
@@ -143,7 +144,7 @@ export default function VersusAiGame() {
       <VersusAiStatus 
         versusState={versusState}
         gameState={gameLogic.game}
-        engineLimits={gameLogic.limits}
+        settings={gameLogic.settings}
       />
 
       <VersusAiControls
@@ -154,11 +155,11 @@ export default function VersusAiGame() {
         onReset={resetGame}
       />
       
-      {/* <SettingsPanel 
-        limits={engineLimits}
-        settings={gameLogic.settings} 
-        onSettingsChange={setBoardSettings} 
-      /> */}
+     <AiSettings 
+        limits={gameLogic.limits}
+        settings={gameLogic.settings}
+        onSettingsChange={(s) => dispatchGameLogic({type: 'change-settings', newSettings: s})}
+     />
       
       <GameBoard 
         gameState={gameLogic.game} 

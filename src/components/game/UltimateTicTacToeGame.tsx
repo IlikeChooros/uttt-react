@@ -142,6 +142,7 @@ export default function UltimateTicTacToeGame() {
       
       {gameLogic.settings.showAnalysis && (
         <AnalysisPanel 
+          settings={gameLogic.settings}
           analysisState={analysisState} 
           thinking={analysisState.thinking} 
         />

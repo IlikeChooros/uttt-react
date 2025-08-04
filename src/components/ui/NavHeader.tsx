@@ -1,24 +1,28 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { 
   AppBar, 
   Toolbar, 
   Typography, 
   Button, 
   Box,
-  useTheme
 } from '@mui/material';
 import { 
   Home as HomeIcon,
-  Psychology as AiIcon 
+  Psychology as AiIcon,
+  Group
 } from '@mui/icons-material';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 export default function NavHeader() {
-  const theme = useTheme();
   const pathname = usePathname();
+  const navData = useMemo<Array<{href: string, name: string, icon: React.ReactElement}>>(() => [
+    {href: '/', name: 'Home', icon: <HomeIcon />},
+    {href: '/vs-ai', name: 'VS AI', icon: <AiIcon />},
+    {href: '/local', name: 'Local', icon: <Group />},
+  ], []);
 
   return (
     <AppBar position="static" color="default" elevation={1}>
@@ -32,31 +36,23 @@ export default function NavHeader() {
         </Typography>
         
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
-            component={Link}
-            href="/"
-            startIcon={<HomeIcon />}
-            variant={pathname === '/' ? 'contained' : 'text'}
-            sx={{ 
-              textTransform: 'none',
-              borderRadius: 2
-            }}
-          >
-            Home
-          </Button>
-          
-          <Button
-            component={Link}
-            href="/vs-ai"
-            startIcon={<AiIcon />}
-            variant={pathname === '/vs-ai' ? 'contained' : 'text'}
-            sx={{ 
-              textTransform: 'none',
-              borderRadius: 2
-            }}
-          >
-            VS AI
-          </Button>
+          {navData.map(({href, name, icon}, index) => {
+            return (
+              <Button
+                key={`${href}-${index}`}
+                component={Link}
+                href={href}
+                startIcon={icon}
+                variant={pathname === href ? 'contained' : 'text'}
+                sx={{ 
+                  textTransform: 'none',
+                  borderRadius: 2
+                }}
+              >
+                {name}
+              </Button>
+            )
+          })}
         </Box>
       </Toolbar>
     </AppBar>

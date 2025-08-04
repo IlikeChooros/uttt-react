@@ -4,15 +4,18 @@ import React from 'react';
 import { Paper, Box, Typography, Chip, alpha, useTheme, LinearProgress } from '@mui/material';
 import { Psychology as AnalysisIcon,} from '@mui/icons-material';
 import { AnalysisState } from '@/api';
+import { BoardSettings } from '@/board';
 
 interface AnalysisPanelProps {
+  settings: BoardSettings;
   analysisState: AnalysisState;
   thinking: boolean;
 }
 
 export default function AnalysisPanel({
+  settings,
   analysisState,
-  thinking
+  thinking,
 }: AnalysisPanelProps) {
   const theme = useTheme();
   
@@ -46,13 +49,21 @@ export default function AnalysisPanel({
       </Box> */}
 
       <Box sx={{display: 'flex', flexDirection: {xs: 'column', md: 'row'}, gap: 2, mb: 2}}>
-          <Box sx={{display: 'flex'}}>
-            <AnalysisIcon color="primary" />
-            <Typography variant="h6">Engine Analysis</Typography>
+          <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+            <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
+              <AnalysisIcon color="primary" />
+              <Typography variant="h6">Engine Analysis</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', textAlign: 'center'}}>
+              <Typography variant="caption" color="text.secondary">
+                Depth {settings.engineDepth} • Threads {settings.nThreads} • Memory {settings.memorySizeMb}MB
+              </Typography>
+            </Box>
           </Box>
-          <Box sx={{display: 'flex', flexGrow: 1, alignItems: 'center', justifyContent: 'center'}}>
+          
+          <Box sx={{display: 'flex', flexGrow: 1, alignItems: 'center', justifyContent: 'center', mt: {xs: 1, sm: 0}}}>
             {thinking && (
-              <LinearProgress 
+              <LinearProgress
                   sx={{ 
                     width: '90%',
                     height: 6,

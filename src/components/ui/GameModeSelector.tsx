@@ -79,15 +79,17 @@ export default function GameModeSelector() {
         </CardContent>
         <CardActions>
           <Button 
+            component={Link}
+            href='/local'
             variant="outlined" 
             fullWidth
             size="large"
             startIcon={<GroupIcon />}
-            onClick={() => {
-              // Scroll to the game board below
-              const gameBoard = document.getElementById('game-board');
-              gameBoard?.scrollIntoView({ behavior: 'smooth' });
-            }}
+            // onClick={() => {
+            //   // Scroll to the game board below
+            //   const gameBoard = document.getElementById('game-board');
+            //   gameBoard?.scrollIntoView({ behavior: 'smooth' });
+            // }}
           >
             Play Local Game
           </Button>

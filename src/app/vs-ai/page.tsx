@@ -14,7 +14,7 @@ export default function VsAiPage() {
         alignItems: 'center',
       }}
     >        
-      <Box sx={{ mb: 4 }}>
+      <Box sx={{ mb: 4, width: '100%' }}>
         <VersusAiGame />
       </Box>
       <Copyright />

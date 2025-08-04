@@ -2,7 +2,6 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Copyright from '@/components/Copyright';
-import UltimateTicTacToeBoard from '@/components/game/UltimateTicTacToeGame';
 import GameModeSelector from '@/components/ui/GameModeSelector';
 
 export default function Home() {
@@ -27,13 +26,8 @@ export default function Home() {
         </Box>
 
         {/* Game Mode Selection */}
-        <GameModeSelector />
+        <GameModeSelector />   
 
-        {/* Local Game Board */}        
-        <Box id="game-board" sx={{ mb: 4, width: '100%' }}>
-          <UltimateTicTacToeBoard />
-        </Box>
-        
         <Copyright />
       </Box>
   );

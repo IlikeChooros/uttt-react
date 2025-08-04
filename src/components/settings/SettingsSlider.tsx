@@ -1,0 +1,62 @@
+'use client';
+
+import React, { useMemo } from 'react';
+import { Box, Typography, Slider, BoxProps } from '@mui/material';
+
+interface SettingsSliderProps {
+  value: number;
+  onChange: (value: number) => void;
+  formatter?: (value: number) => string;
+  min: number;
+  max: number;
+  step: number;
+  label?: string;
+  description?: string;
+  showMarks?: boolean;
+  boxProps?: BoxProps;
+}
+
+
+export default function SettingsSlider({
+    value,
+    onChange,
+    formatter,
+    boxProps,
+    label,
+    description,
+    min,
+    max,
+    step,
+} : SettingsSliderProps) {
+
+    const valueFormatted = useMemo(() => {
+        if (formatter === undefined) {
+            return `${value}`
+        }
+        return formatter(value);
+    }, [formatter, value])
+
+    return (
+        <Box width={'100%'} {...boxProps} >
+            <Typography sx={{fontSize: {xs: '14px', sm: '16px'}}}>
+            {label}: {valueFormatted}
+            </Typography>
+
+            {description !== undefined && (
+                <Typography sx={{fontSize: {xs: '12px', sm: '14px'}}} color='text.secondary'>
+                    {description}
+                </Typography>
+            )}
+
+            <Slider
+                value={value}
+                onChange={(_, value) => onChange(value as number)}
+                min={min}
+                max={max}
+                step={step}
+                valueLabelDisplay="auto"
+                size="small"
+            />
+      </Box>
+    )
+}

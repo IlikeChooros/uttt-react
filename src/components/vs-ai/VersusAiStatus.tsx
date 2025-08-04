@@ -103,7 +103,7 @@ export default function VersusAiStatus({
     if (isAiTurn) {
       return (
         <Alert severity="warning" icon={<AiIcon sx={{ mr: 1 }} />} sx={{ justifyContent: 'center' }}>
-          AI's turn - Please wait
+          AI&apos;s turn - Please wait
         </Alert>
       );
     }

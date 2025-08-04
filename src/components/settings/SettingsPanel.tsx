@@ -12,7 +12,8 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  useColorScheme
+  useColorScheme,
+  CircularProgress
 } from '@mui/material';
 import { 
   ExpandMore as ExpandMoreIcon,
@@ -27,12 +28,14 @@ interface SettingsPanelProps {
   limits?: EngineLimits
   settings: BoardSettings;
   onSettingsChange: (settings: BoardSettings) => void;
+  loading: boolean;
 }
 
 export default function SettingsPanel({
   settings,
   limits,
-  onSettingsChange
+  onSettingsChange,
+  loading
 }: SettingsPanelProps) {
   const { mode, setMode } = useColorScheme();
   
@@ -44,10 +47,12 @@ export default function SettingsPanel({
   };
   
   const toggleAnalysis = () => {
-    onSettingsChange({
-      ...settings,
-      showAnalysis: !settings.showAnalysis
-    });
+    if (!loading) {
+      onSettingsChange({
+        ...settings,
+        showAnalysis: !settings.showAnalysis
+      });
+    }
   };
   
   const handleDepthChange = (depth: number) => {
@@ -63,6 +68,9 @@ export default function SettingsPanel({
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <TuneIcon />
           <Typography variant="h6">Settings & Analysis</Typography>
+          {loading && (
+            <CircularProgress size={16} />
+          )}
         </Box>
       </AccordionSummary>
       <AccordionDetails>
@@ -93,6 +101,7 @@ export default function SettingsPanel({
           <Box sx={{ flex: 1 }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Button
+                loading={loading}
                 variant={settings.showAnalysis ? "contained" : "outlined"}
                 onClick={toggleAnalysis}
                 startIcon={<AnalysisIcon />}

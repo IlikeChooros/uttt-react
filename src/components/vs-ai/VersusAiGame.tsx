@@ -1,15 +1,15 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Paper, Box, CircularProgress, Alert, Chip } from '@mui/material';
-import { EngineAPI, EngineLimits, EngineMove, getEngineLimits } from '@/api';
-import { GameState, BoardSettings, AnalysisState, SmallBoard, Player, ToNotation, getInitialBoardState, toAnalysisRequest, getInitialAnalysisState, getIntialBoardSettings } from '@/board';
+import { Paper, Box, Alert, } from '@mui/material';
+import { EngineAPI, AnalysisState, toAnalysisRequest, getInitialAnalysisState } from '@/api';
+import { GameState, Player, getInitialBoardState} from '@/board';
 import GameBoard from '@/components/game/GameBoard';
 import GameStatus from '@/components/game/GameStatus';
 import GameControls from '@/components/game/GameControls';
-import SettingsPanel from '@/components/settings/SettingsPanel';
 import VersusAiControls from '@/components/vs-ai/VersusAiControls';
 import VersusAiStatus from '@/components/vs-ai/VersusAiStatus';
+import { useGameLogic } from '../game/GameLogic';
 
 interface VersusState {
   ready: boolean;
@@ -24,11 +24,8 @@ function initialVsAiBoardState(): GameState {
 }
 
 export default function VersusAiGame() {
-  const [engineLimits, setEngineLimits] = useState<EngineLimits>();
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [gameState, setGameState] = useState<GameState>(initialVsAiBoardState());
   const [analysisState, setAnalysisState] = useState<AnalysisState>(getInitialAnalysisState());
-  const [boardSettings, setBoardSettings] = useState<BoardSettings>(getIntialBoardSettings());
+  const [gameLogic, dispatchGameLogic] = useGameLogic(null, initialVsAiBoardState); 
   const [versusState, setVersusState] = useState<VersusState>({
     ready: false,
     on: false,
@@ -37,48 +34,24 @@ export default function VersusAiGame() {
     gameMode: 'setup'
   });
 
-  // Load engine limits on mount
-  useEffect(() => {
-    async function fetchLimits() {
-      try {
-        setIsLoading(true);
-        const limits = await getEngineLimits();
-        setEngineLimits(limits);
-        
-        setBoardSettings(prev => ({
-          ...prev,
-          engineDepth: Math.min(prev.engineDepth, limits?.depth || 10),
-          nThreads: Math.min(prev.nThreads, limits?.threads || 4),
-          memorySizeMb: Math.min(prev.memorySizeMb, limits?.mbsize || 16)
-        }));
-      } catch (error) {
-        console.error("Failed to fetch engine limits:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    
-    fetchLimits();
-  }, []);
-
   // AI move logic
   useEffect(() => {
     async function makeAiMove() {
       if (!versusState.on || !versusState.ready || versusState.thinking) return;
-      if (versusState.engineTurn !== gameState.currentPlayer) return;
-      if (gameState.winner || gameState.isDraw) return;
+      if (versusState.engineTurn !== gameLogic.game.currentPlayer) return;
+      if (gameLogic.game.winner || gameLogic.game.isDraw) return;
 
       setVersusState(prev => ({ ...prev, thinking: true }));
       
       try {
-        const moves = await EngineAPI.analyze(toAnalysisRequest(boardSettings, gameState));
+        const moves = await EngineAPI.analyze(toAnalysisRequest(gameLogic.settings, gameLogic.game));
 
         const bestMove = moves[0] || null;
         
         if (bestMove != null) {
             // Add a small delay to make AI thinking visible
             console.log('made move', bestMove);
-            handleMakeMove(bestMove.boardIndex, bestMove.cellIndex);
+            dispatchGameLogic({type: 'makemove', move: bestMove})
         }
 
         setVersusState(prev => ({ ...prev, thinking: false }));
@@ -91,103 +64,35 @@ export default function VersusAiGame() {
     if (versusState.gameMode === 'playing') {
       makeAiMove();
     }
-  }, [gameState.currentPlayer, versusState.on, versusState.ready, versusState.thinking, versusState.engineTurn, versusState.gameMode]);
+  }, [gameLogic.game.currentPlayer, gameLogic.game,
+    gameLogic.settings, dispatchGameLogic,
+    versusState.on, versusState.ready, 
+    versusState.thinking, versusState.engineTurn, 
+    versusState.gameMode]);
 
   // Update game mode based on game state
   useEffect(() => {
-    if (gameState.winner || gameState.isDraw) {
+    if (gameLogic.game.winner || gameLogic.game.isDraw) {
       setVersusState(prev => ({ ...prev, gameMode: 'finished', thinking: false }));
     } else if (versusState.on && versusState.ready) {
       setVersusState(prev => ({ ...prev, gameMode: 'playing' }));
     }
-  }, [gameState.winner, gameState.isDraw, versusState.on, versusState.ready]);
+  }, [gameLogic.game.winner, gameLogic.game.isDraw, versusState.on, versusState.ready]);
 
-  const checkSmallBoardWinner = useCallback((board: SmallBoard): Player => {
-    const lines = [
-      [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
-      [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
-      [0, 4, 8], [2, 4, 6], // diagonals
-    ];
-
-    for (const [a, b, c] of lines) {
-      if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-        return board[a];
-      }
-    }
-    return null;
-  }, []);
-
-  const checkOverallWinner = useCallback((boards: GameState['boards']): Player => {
-    const lines = [
-      [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
-      [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
-      [0, 4, 8], [2, 4, 6], // diagonals
-    ];
-
-    const winners = boards.map(b => b.winner);
-    
-    for (const [a, b, c] of lines) {
-      if (winners[a] && winners[a] === winners[b] && winners[a] === winners[c]) {
-        return winners[a];
-      }
-    }
-    return null;
-  }, []);
-
-  const updateSmallBoardState = useCallback((board: SmallBoard) => {
-    const winner = checkSmallBoardWinner(board);
-    const isDraw = !winner && board.every(cell => cell !== null);
-    return { board, winner, isDraw };
-  }, [checkSmallBoardWinner]);
-
-  const handleMakeMove = useCallback((boardIndex: number, cellIndex: number) => {
-
-    // Check if move is valid
-    if (gameState.boards[boardIndex].board[cellIndex] !== null) return;
-    if (gameState.boards[boardIndex].winner || gameState.boards[boardIndex].isDraw) return;
-    if (gameState.activeBoard !== null && gameState.activeBoard !== boardIndex) return;
-
-    // Make the move
-    const newBoards = [...gameState.boards];
-    const newBoard = [...newBoards[boardIndex].board];
-    newBoard[cellIndex] = gameState.currentPlayer;
-    
-    // Update the small board state
-    newBoards[boardIndex] = updateSmallBoardState(newBoard);
-    
-    // Determine next active board
-    const nextActiveBoard = newBoards[cellIndex].winner || newBoards[cellIndex].isDraw 
-      ? null // Can play anywhere if target board is complete
-      : cellIndex;
-    
-    // Check for overall winner
-    const overallWinner = checkOverallWinner(newBoards);
-    const overallDraw = !overallWinner && newBoards.every(b => b.winner || b.isDraw);
-
-    setGameState({
-      boards: newBoards,
-      currentPlayer: gameState.currentPlayer === 'X' ? 'O' : 'X',
-      winner: overallWinner,
-      isDraw: overallDraw,
-      activeBoard: nextActiveBoard,
-      lastMove: { boardIndex, cellIndex },
-      enabled: overallWinner == null && !overallDraw,
-    });
-  }, [gameState, versusState.thinking, versusState.on, versusState.engineTurn, checkOverallWinner, updateSmallBoardState]);
 
   const handlePlayerMove = useCallback((boardIndex: number, cellIndex: number) => {
     // Prevent moves during AI thinking or if game is over
-    if (versusState.thinking || gameState.winner || gameState.isDraw) return;
+    if (versusState.thinking || gameLogic.game.winner || gameLogic.game.isDraw) return;
     
-    // In VS AI mode, prevent moves when it's the AI's turn
-    if (versusState.on && versusState.engineTurn === gameState.currentPlayer) return;
+    // Prevent moves when it's the AI's turn
+    if (versusState.on && versusState.engineTurn === gameLogic.game.currentPlayer) return;
 
-    handleMakeMove(boardIndex, cellIndex);
-  }, [gameState, versusState.thinking, versusState.on, versusState.engineTurn, checkOverallWinner, updateSmallBoardState])
+    dispatchGameLogic({type: 'makemove', move: {boardIndex, cellIndex}});
+  }, [gameLogic.game, versusState.thinking, versusState.on, versusState.engineTurn, dispatchGameLogic])
 
   
   const startVersusAi = (humanPlaysFirst: boolean) => {
-    setGameState(getInitialBoardState()); // imporant! Board MUST be enabled
+    dispatchGameLogic({type: 'change-gamestate', newGameState: getInitialBoardState()}); // imporant! Board MUST be enabled
     setVersusState({
       ready: true,
       on: true,
@@ -198,7 +103,7 @@ export default function VersusAiGame() {
   };
 
   const stopVersusAi = () => {
-    setGameState(initialVsAiBoardState());
+    dispatchGameLogic({type: 'change-gamestate', newGameState: initialVsAiBoardState()});
     setVersusState({
       ready: false,
       on: false,
@@ -209,28 +114,15 @@ export default function VersusAiGame() {
   };
 
   const resetGame = () => {
-    setGameState(initialVsAiBoardState());
+    dispatchGameLogic({type: 'change-gamestate', newGameState: initialVsAiBoardState()});
     setAnalysisState(getInitialAnalysisState());
     if (versusState.on) {
       setVersusState(prev => ({ ...prev, thinking: false, gameMode: 'playing' }));
     }
   };
 
-  if (isLoading) {
-    return (
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '50vh' 
-      }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  const isHumanTurn = !versusState.on || versusState.engineTurn !== gameState.currentPlayer;
-  const canMakeMove = isHumanTurn && !versusState.thinking && !gameState.winner && !gameState.isDraw;
+  const isHumanTurn = !versusState.on || versusState.engineTurn !== gameLogic.game.currentPlayer;
+  const canMakeMove = isHumanTurn && !versusState.thinking && !gameLogic.game.winner && !gameLogic.game.isDraw;
 
   return (
     <Paper 
@@ -246,15 +138,16 @@ export default function VersusAiGame() {
         // mx: 0,
       }}
     >
-      <GameStatus gameState={gameState} />
+      <GameStatus gameState={gameLogic.game} />
       
       <VersusAiStatus 
         versusState={versusState}
-        gameState={gameState}
-        engineLimits={engineLimits}
+        gameState={gameLogic.game}
+        engineLimits={gameLogic.limits}
       />
 
       <VersusAiControls
+        loading={gameLogic.loadingLimits}
         versusState={versusState}
         onStartGame={startVersusAi}
         onStopGame={stopVersusAi}
@@ -263,22 +156,22 @@ export default function VersusAiGame() {
       
       {/* <SettingsPanel 
         limits={engineLimits}
-        settings={boardSettings} 
+        settings={gameLogic.settings} 
         onSettingsChange={setBoardSettings} 
       /> */}
       
       <GameBoard 
-        gameState={gameState} 
+        gameState={gameLogic.game} 
         handleCellClick={canMakeMove ? handlePlayerMove : () => {}}
-        boardSettings={boardSettings}
+        boardSettings={gameLogic.settings}
         analysisState={analysisState}
       />
       
-      {(gameState.winner || gameState.isDraw) && (
+      {(gameLogic.game.winner || gameLogic.game.isDraw) && (
         <Box sx={{ textAlign: 'center', mt: 3 }}>
-          <Alert severity={gameState.winner ? 'success' : 'info'} sx={{ mb: 2 }}>
-            {gameState.winner 
-              ? `${gameState.winner === versusState.engineTurn ? 'AI' : 'You'} won!`
+          <Alert severity={gameLogic.game.winner ? 'success' : 'info'} sx={{ mb: 2 }}>
+            {gameLogic.game.winner 
+              ? `${gameLogic.game.winner === versusState.engineTurn ? 'AI' : 'You'} won!`
               : 'Game ended in a draw!'
             }
           </Alert>

@@ -5,12 +5,10 @@ import {
   Box, 
   Button, 
   ButtonGroup, 
-  Chip,
   Typography,
   Alert
 } from '@mui/material';
 import { 
-  PlayArrow as PlayIcon,
   Stop as StopIcon,
   RestartAlt as RestartIcon,
   Psychology as AiIcon,
@@ -30,13 +28,15 @@ interface VersusAiControlsProps {
   onStartGame: (humanPlaysFirst: boolean) => void;
   onStopGame: () => void;
   onReset: () => void;
+  loading: boolean;
 }
 
 export default function VersusAiControls({
   versusState,
   onStartGame,
   onStopGame,
-  onReset
+  onReset,
+  loading
 }: VersusAiControlsProps) {
   
   if (versusState.gameMode === 'setup') {
@@ -51,6 +51,7 @@ export default function VersusAiControls({
           sx={{ mb: 2 }}
         >
           <Button
+            loading={loading}
             onClick={() => onStartGame(true)}
             startIcon={<PersonIcon />}
             sx={{ 
@@ -63,6 +64,7 @@ export default function VersusAiControls({
             You Play First (X)
           </Button>
           <Button
+            loading={loading}
             onClick={() => onStartGame(false)}
             startIcon={<AiIcon />}
             sx={{ 

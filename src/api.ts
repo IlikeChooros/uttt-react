@@ -1,6 +1,8 @@
+import { ToNotation, Move, BoardSettings, GameState } from '@/board';
+
 const ENGINE_API_ANALYSIS = "/api/analysis"
 const ENGINE_API_LIMITS = "/api/limits"
-const ENGINE_API_WS_ANALYSIS = "/api/rt-analysis"
+// const ENGINE_API_WS_ANALYSIS = "/api/rt-analysis"
 
 export interface AnalysisRequest {
     position: string;
@@ -9,6 +11,36 @@ export interface AnalysisRequest {
     threads?: number;
     sizemb?: number;
 }
+
+export function toAnalysisRequest(settings: BoardSettings, gameState: GameState): AnalysisRequest {
+  return {
+    position: ToNotation(gameState),
+    depth: settings.engineDepth,
+    threads: settings.nThreads,
+    sizemb: settings.memorySizeMb,
+  }
+}
+
+export function getInitialAnalysisState(): AnalysisState {
+  return {
+    enabled: false,
+    currentEvaluation: "",
+    bestMove: null,
+    topMoves: [],
+    thinking: false,
+    ws: null,
+  }
+}
+
+export interface AnalysisState {
+  enabled: boolean;
+  currentEvaluation: string;
+  bestMove: EngineMove | null;
+  topMoves: EngineMove[];
+  thinking: boolean;
+  ws: WebSocket | null;
+}
+
 
 export interface AnalysisResponse {
     depth: number;
@@ -19,9 +51,7 @@ export interface AnalysisResponse {
     error?: string;
 }
 
-export interface EngineMove {
-  boardIndex: number;
-  cellIndex: number;
+export interface EngineMove extends Move {
   evaluation: string;
   depth: number;
   principalVariation: string[];
@@ -33,7 +63,13 @@ export interface EngineLimits {
     threads: number;
 }
 
-function IsInstance<T>(obj: any, requiredKeys: (keyof T)[], keys: (keyof T)[]) : boolean {
+export function getInitialEngineLimits(): EngineLimits {
+    return {
+        depth: 10, mbsize: 14, threads: 2,
+    }
+}
+
+function IsInstance<T>(obj: object, requiredKeys: (keyof T)[], keys: (keyof T)[]) : boolean {
     if (typeof obj != 'object' || obj == null) {
         return false;
     }
@@ -43,7 +79,7 @@ function IsInstance<T>(obj: any, requiredKeys: (keyof T)[], keys: (keyof T)[]) :
 }
 
 export async function  getEngineLimits(): Promise<EngineLimits> {
-    let response = fetch(ENGINE_API_LIMITS, {method: "GET"})
+    const response = fetch(ENGINE_API_LIMITS, {method: "GET"})
 
     return response.then((resp) => {
         return resp.json()
@@ -66,7 +102,7 @@ export class EngineAPI {
         ['a1', 6], ['b1', 7], ['c1', 8], 
     ])
 
-    static parseAnalysisResponse(json: any): EngineMove {
+    static parseAnalysisResponse(json: AnalysisResponse): EngineMove {
         if (!IsInstance<AnalysisResponse>(json, 
             ['eval', 'nps', 'pv', 'depth', 'final'], 
             ['error', 'nps', 'pv', 'eval', 'depth','final'])
@@ -101,7 +137,7 @@ export class EngineAPI {
     
 
     static async analyze(request: AnalysisRequest = {position: ""}): Promise<EngineMove[]> {
-        let response = fetch(
+        const response = fetch(
             ENGINE_API_ANALYSIS, {
                 method: "POST", 
                 headers: {"Content-Type": "application/json"}, 

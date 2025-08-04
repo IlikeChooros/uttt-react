@@ -5,6 +5,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import InitColorSchemeScript from '@mui/material/InitColorSchemeScript';
 import theme from '@/theme';
 import NavHeader from '@/components/ui/NavHeader';
+import Container from '@mui/material/Container';
 
 export default function RootLayout(props: { children: React.ReactNode }) {
   return (
@@ -16,7 +17,9 @@ export default function RootLayout(props: { children: React.ReactNode }) {
             {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
             <CssBaseline />
             <NavHeader />
-            {props.children}
+            <Container maxWidth='lg'>
+              {props.children}
+            </Container>
           </ThemeProvider>
         </AppRouterCacheProvider>
       </body>

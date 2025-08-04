@@ -22,7 +22,7 @@ export default function BoardSizeSlider({
   max = 16,
   step = 1,
   label = 'Size',
-  showMarks = true,
+  // showMarks = true,
   isNumeric = false
 }: BoardSizeSliderProps) {
   // For numeric sliders (depth, threads, memory)

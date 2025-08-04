@@ -1,9 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Paper, Box, Typography, Chip, alpha, useTheme, Alert, LinearProgress } from '@mui/material';
-import { Psychology as AnalysisIcon, Timer as TimerIcon } from '@mui/icons-material';
-import { AnalysisState } from '@/board';
+import { Paper, Box, Typography, Chip, alpha, useTheme, LinearProgress } from '@mui/material';
+import { Psychology as AnalysisIcon,} from '@mui/icons-material';
+import { AnalysisState } from '@/api';
 
 interface AnalysisPanelProps {
   analysisState: AnalysisState;

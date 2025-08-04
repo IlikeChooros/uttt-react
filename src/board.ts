@@ -1,7 +1,10 @@
-import { EngineMove, AnalysisRequest } from "@/api";
-
 export type Player = 'X' | 'O' | null;
 export type SmallBoard = Player[];
+
+export interface Move {
+  boardIndex: number;
+  cellIndex: number;
+}
 
 export interface SmallBoardState {
   board: SmallBoard;
@@ -17,26 +20,6 @@ export interface GameState {
   activeBoard: number | null; // Which small board the next player must play in
   lastMove: { boardIndex: number; cellIndex: number } | null;
   enabled: boolean;
-}
-
-export function getInitialAnalysisState(): AnalysisState {
-  return {
-    enabled: false,
-    currentEvaluation: "",
-    bestMove: null,
-    topMoves: [],
-    thinking: false,
-    ws: null,
-  }
-}
-
-export interface AnalysisState {
-  enabled: boolean;
-  currentEvaluation: string;
-  bestMove: EngineMove | null;
-  topMoves: EngineMove[];
-  thinking: boolean;
-  ws: WebSocket | null;
 }
 
 export type BoardSizeOption = 'small' | 'normal' | 'large';
@@ -59,14 +42,6 @@ export interface BoardSettings {
   memorySizeMb: number;
 }
 
-export function toAnalysisRequest(settings: BoardSettings, gameState: GameState): AnalysisRequest {
-  return {
-    position: ToNotation(gameState),
-    depth: settings.engineDepth,
-    threads: settings.nThreads,
-    sizemb: settings.memorySizeMb,
-  }
-}
 
 export const getInitialBoardState = (): GameState => {
   const boards: SmallBoardState[] = [];

@@ -1,5 +1,4 @@
 import * as React from 'react';
-import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Copyright from '@/components/Copyright';
@@ -8,7 +7,6 @@ import GameModeSelector from '@/components/ui/GameModeSelector';
 
 export default function Home() {
   return (
-    <Container maxWidth="lg">
       <Box
         sx={{
           my: 4,
@@ -38,6 +36,5 @@ export default function Home() {
         
         <Copyright />
       </Box>
-    </Container>
   );
 }

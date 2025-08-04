@@ -2,7 +2,8 @@
 
 import React, { useCallback } from 'react';
 import { Box } from '@mui/material';
-import { GameState, BoardSettings, AnalysisState } from '@/board';
+import { GameState, BoardSettings } from '@/board';
+import { AnalysisState } from '@/api'
 import SmallBoardComponent from '@/components/game/SmallBoard';
 
 interface GameBoardProps {

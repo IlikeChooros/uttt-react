@@ -1,8 +1,8 @@
 # UTTT React
 
 ## Chores
-- [ ] Refactor UTTT game component so that as much code as possible is shared with the 'versus ai' component
-  - Use provider to share the game state, functions to alter it, and capture there the game logic.
+- [x] Refactor UTTT game component so that as much code as possible is shared with the 'versus ai' component
+  - Used the `useGameLogic` hook as a reducer for the game state.
 
 ## Features
 - [x] Add websocket support for real-time analysis

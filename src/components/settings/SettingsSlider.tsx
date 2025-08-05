@@ -1,7 +1,9 @@
 'use client';
 
+import Box, { BoxProps } from '@mui/material/Box';
+import Slider from '@mui/material/Slider';
+import Typography from '@mui/material/Typography';
 import React, { useMemo } from 'react';
-import { Box, Typography, Slider, BoxProps } from '@mui/material';
 
 interface SettingsSliderProps {
   value: number;

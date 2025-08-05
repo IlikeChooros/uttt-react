@@ -9,7 +9,7 @@
 - [ ] Add support for lack of websocket connection - fallback to simple HTTP requests for analysis
 - [ ] Add 'notation' string to load the game state
 - [ ] Add more top moves (multipv) to the analysis
-- [ ] Make the navbar responsive, especially on mobile:
+- [x] Make the navbar responsive, especially on mobile:
   - Add a drawer for the menu
 
 ## Bug fixes

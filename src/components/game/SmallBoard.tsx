@@ -1,10 +1,17 @@
 'use client';
 
 import React from 'react';
-import { Paper, Box, useTheme, alpha } from '@mui/material';
+
+// mui
+import Paper from '@mui/material/Paper';
+import Box from '@mui/material/Box';
+import { alpha, useTheme } from '@mui/material/styles';
+
+// my components
+import Cell from '@/components/game/Cell'
 import { SmallBoardState } from '@/board';
 import { EngineMove } from '@/api';
-import Cell from '@/components/game/Cell'
+
 
 interface SmallBoardProps {
   boardIndex: number;

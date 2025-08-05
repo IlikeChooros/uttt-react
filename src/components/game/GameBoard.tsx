@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback } from 'react';
-import { Box } from '@mui/material';
+import Box from '@mui/material/Box';
 import { GameState, BoardSettings } from '@/board';
 import { AnalysisState } from '@/api'
 import SmallBoardComponent from '@/components/game/SmallBoard';

@@ -1,19 +1,20 @@
 'use client';
 
 import React from 'react';
-import { 
-  Box, 
-  Button, 
-  ButtonGroup, 
-  Typography,
-  Alert
-} from '@mui/material';
-import { 
-  Stop as StopIcon,
-  RestartAlt as RestartIcon,
-  Psychology as AiIcon,
-  Person as PersonIcon
-} from '@mui/icons-material';
+
+// mui components
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import ButtonGroup from '@mui/material/ButtonGroup';
+import Button from '@mui/material/Button';
+import Alert from '@mui/material/Alert';
+
+// icons
+import StopIcon from '@mui/icons-material/Stop';
+import RestartIcon from '@mui/icons-material/RestartAlt';
+import AiIcon from '@mui/icons-material/Psychology';
+import PersonIcon from '@mui/icons-material/Person';
+
 
 interface VersusState {
   ready: boolean;

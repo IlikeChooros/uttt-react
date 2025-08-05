@@ -1,8 +1,10 @@
 'use client';
 
 import React from 'react';
-import { Alert, Typography, Box } from '@mui/material';
 import { GameState } from '@/board';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Alert from '@mui/material/Alert';
 
 interface GameStatusProps {
   gameState: GameState;

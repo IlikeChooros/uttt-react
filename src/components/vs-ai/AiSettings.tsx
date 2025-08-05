@@ -1,10 +1,18 @@
 import Box from "@mui/material/Box";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import Accordion from "@mui/material/Accordion";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import Typography from "@mui/material/Typography";
+
+// icons
 import SettingsIcon from '@mui/icons-material/Settings';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+
+// my components
 import { BoardSettings } from "@/board";
 import { EngineLimits } from "@/api";
-import { Accordion, AccordionDetails, AccordionSummary, Typography } from "@mui/material";
 import EngineSettings from "../settings/EngineSettings";
+
 
 
 interface AiSettingsProps {

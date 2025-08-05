@@ -1,3 +1,5 @@
+'use client'
+
 import { EngineLimits, getEngineLimits, getInitialEngineLimits } from "@/api";
 import { 
     BoardSettings, GameState, getInitialBoardState, 

@@ -1,5 +1,7 @@
+import Box from '@mui/material/Box';
+import { alpha, useTheme } from '@mui/material/styles';
+import Typography from '@mui/material/Typography';
 import React from 'react';
-import { Box, Typography, alpha, useTheme } from '@mui/material';
 
 interface GameRulesProps {
   showAnalysis: boolean;

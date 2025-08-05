@@ -1,10 +1,15 @@
 'use client';
 
 import React from 'react';
-import { Paper, Box, Typography, Chip, alpha, useTheme, LinearProgress } from '@mui/material';
 import { Psychology as AnalysisIcon,} from '@mui/icons-material';
 import { AnalysisState } from '@/api';
 import { BoardSettings } from '@/board';
+import Paper from '@mui/material/Paper';
+import { alpha, useTheme } from '@mui/material/styles';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import LinearProgress from '@mui/material/LinearProgress';
+import Chip from '@mui/material/Chip';
 
 interface AnalysisPanelProps {
   settings: BoardSettings;

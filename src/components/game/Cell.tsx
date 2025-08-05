@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Button, useTheme, alpha } from '@mui/material';
 import { Player } from '@/board';
+import { alpha, useTheme } from '@mui/material/styles';
+import Button from '@mui/material/Button';
 
 interface CellProps {
   value: Player;

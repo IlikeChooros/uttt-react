@@ -1,15 +1,22 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { Paper, Box } from '@mui/material';
+
+// mui
+import Paper from '@mui/material/Paper';
+import Box from '@mui/material/Box';
+
 import { EngineAPI, toAnalysisRequest, getInitialAnalysisState, AnalysisState } from '@/api';
+import { useGameLogic } from './GameLogic';
+
+// my components
 import GameBoard from '@/components/game/GameBoard';
 import GameStatus from '@/components/game/GameStatus';
 import GameControls from '@/components/game/GameControls';
 import SettingsPanel from '@/components/settings/SettingsPanel';
 import AnalysisPanel from '@/components/analysis/AnalysisPanel';
 import GameRules from '@/components/ui/GameRules';
-import { useGameLogic } from './GameLogic';
+
 
 export default function UltimateTicTacToeGame() {
   const [analysisState, setAnalysisState] = useState<AnalysisState>(getInitialAnalysisState);

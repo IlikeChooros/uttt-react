@@ -1,8 +1,12 @@
 'use client';
 
 import React from 'react';
-import { Box, Typography, ToggleButtonGroup, ToggleButton, Slider, BoxProps } from '@mui/material';
 import { BoardSizeOption } from '@/board';
+import Box, { BoxProps } from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Slider from '@mui/material/Slider';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import ToggleButton from '@mui/material/ToggleButton';
 
 interface BoardSizeSliderProps {
   value: number | BoardSizeOption;

@@ -1,8 +1,10 @@
 'use client';
 
 import React from 'react';
-import { Button, IconButton, Box } from '@mui/material';
-import { RestartAlt as RestartIcon } from '@mui/icons-material';
+import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import Box from '@mui/material/Box';
+import RestartIcon from '@mui/icons-material/RestartAlt';
 
 interface GameControlsProps {
   onReset: () => void;

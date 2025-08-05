@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Paper, Box, Alert, } from '@mui/material';
 import { EngineAPI, AnalysisState, toAnalysisRequest, getInitialAnalysisState } from '@/api';
 import { GameState, Player, getInitialBoardState} from '@/board';
 import GameBoard from '@/components/game/GameBoard';
@@ -11,6 +10,9 @@ import VersusAiControls from '@/components/vs-ai/VersusAiControls';
 import VersusAiStatus from '@/components/vs-ai/VersusAiStatus';
 import { useGameLogic } from '../game/GameLogic';
 import AiSettings from './AiSettings';
+import Paper from '@mui/material/Paper';
+import Box from '@mui/material/Box';
+import Alert from '@mui/material/Alert';
 
 interface VersusState {
   ready: boolean;

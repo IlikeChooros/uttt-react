@@ -2,19 +2,17 @@
 
 import React from 'react';
 import { 
-  Box, 
-  Alert, 
-  Chip, 
-  Typography,
-  LinearProgress,
-  Stack
-} from '@mui/material';
-import { 
   Psychology as AiIcon,
   Person as PersonIcon,
   Timer as TimerIcon
 } from '@mui/icons-material';
 import { BoardSettings, GameState } from '@/board';
+import Chip from '@mui/material/Chip';
+import Alert from '@mui/material/Alert';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+import LinearProgress from '@mui/material/LinearProgress';
 
 interface VersusState {
   ready: boolean;

@@ -1,21 +1,24 @@
 'use client';
 
 import React from 'react';
-import { 
-  Card, 
-  CardContent, 
-  CardActions, 
-  Typography, 
-  Button, 
-  Box, 
-  Chip 
-} from '@mui/material';
-import { 
-  Psychology as AiIcon,
-  Group as GroupIcon,
-  Star as StarIcon
-} from '@mui/icons-material';
+
+// nextjs
 import Link from 'next/link';
+
+// mui
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import Chip from '@mui/material/Chip';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import CardActions from '@mui/material/CardActions';
+import Button from '@mui/material/Button';
+
+// icons
+import StarIcon from '@mui/icons-material/Star';
+import GroupIcon from '@mui/icons-material/Group';
+import AiIcon from '@mui/icons-material/Psychology';
+
 
 export default function GameModeSelector() {
   return (

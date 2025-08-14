@@ -31,6 +31,7 @@ import Home from '@mui/icons-material/Home';
 import Psychology from '@mui/icons-material/Psychology';
 import LightModeIcon from '@mui/icons-material/WbSunny';
 import DarkModeIcon from '@mui/icons-material/Brightness3';
+import AutoGraphIcon from '@mui/icons-material/AutoGraph';
 
 type NavData = Array<{ href: string; name: string; icon: React.ReactElement }>;
 
@@ -39,9 +40,26 @@ interface DrawerListProps {
 }
 
 const navData: NavData = [
-	{ href: '/', name: 'Home', icon: <Home /> },
-	{ href: '/vs-ai', name: 'VS AI', icon: <Psychology /> },
-	{ href: '/local', name: 'Local', icon: <Group /> },
+	{
+		href: '/',
+		name: 'Home',
+		icon: <Home />,
+	},
+	{
+		href: '/vs-ai',
+		name: 'VS AI',
+		icon: <Psychology />,
+	},
+	{
+		href: '/local',
+		name: 'Local',
+		icon: <Group />,
+	},
+	{
+		href: '/analysis',
+		name: 'Analysis',
+		icon: <AutoGraphIcon />,
+	},
 ];
 
 const DrawerList = function ({ onClick }: DrawerListProps): React.JSX.Element {
@@ -55,7 +73,9 @@ const DrawerList = function ({ onClick }: DrawerListProps): React.JSX.Element {
 						onClick={onClick}
 						key={v.href}
 					>
-						<ListItemIcon>{v.icon}</ListItemIcon>
+						<ListItemIcon sx={{ color: 'text.secondary' }}>
+							{v.icon}
+						</ListItemIcon>
 						<ListItemText>{v.name}</ListItemText>
 					</ListItemButton>
 				))}
@@ -88,27 +108,37 @@ export default function NavHeader() {
 						<IconButton
 							onClick={() => setOpenDrawer((prev) => !prev)}
 						>
-							<Menu />
+							<Menu sx={{ color: 'text.secondary' }} />
 						</IconButton>
 					</Box>
 
 					{/* Always on */}
-					<BlurOn sx={{ fontSize: '2rem', display: 'flex' }} />
-					<Typography
-						variant="h6"
-						component="a"
+					<Box
+						component={Link}
+						href="/"
+						display={'flex'}
+						alignItems={'center'}
 						sx={{
-							display: 'flex',
-							fontWeight: 600,
-							fontFamily: 'monospace',
-							letterSpacing: '0.2rem',
+							textDecoration: 'none',
 							flexGrow: { xs: 1, sm: 0 },
+							color: 'InfoText',
+							gap: 1,
 							py: 2,
-							px: { xs: 1, sm: 2 },
 						}}
 					>
-						UTTT
-					</Typography>
+						<BlurOn sx={{ fontSize: '2rem', display: 'flex' }} />
+						<Typography
+							variant="h6"
+							sx={{
+								display: 'flex',
+								fontWeight: 600,
+								fontFamily: 'monospace',
+								letterSpacing: '0.2rem',
+							}}
+						>
+							UTTT
+						</Typography>
+					</Box>
 
 					{/* If the window is too small, these components disappear */}
 					<Box
@@ -121,20 +151,32 @@ export default function NavHeader() {
 					>
 						{navData.map(({ href, name, icon }, index) => {
 							return (
-								<Button
-									key={`${href}-${index}`}
-									component={Link}
-									href={href}
-									startIcon={icon}
-									variant={'text'}
-									sx={{
-										textTransform: 'none',
-										borderRadius: 2,
-										color: 'text.secondary',
-									}}
-								>
-									{name}
-								</Button>
+								<React.Fragment key={`${href}-${index}`}>
+									<Button
+										component={Link}
+										href={href}
+										startIcon={icon}
+										variant={'text'}
+										sx={{
+											textTransform: 'none',
+											borderRadius: 2,
+											color: 'text.secondary',
+											display: { sm: 'none', md: 'flex' },
+										}}
+									>
+										{name}
+									</Button>
+
+									<IconButton
+										size="small"
+										sx={{
+											display: { sm: 'flex', md: 'none' },
+											color: 'text.secondary',
+										}}
+									>
+										{icon}
+									</IconButton>
+								</React.Fragment>
 							);
 						})}
 					</Box>

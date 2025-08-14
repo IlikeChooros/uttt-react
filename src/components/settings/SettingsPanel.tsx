@@ -3,30 +3,31 @@
 import React, { useMemo } from 'react';
 
 // mui
-import Accordion from '@mui/material/Accordion';
-import AccordionSummary from '@mui/material/AccordionSummary';
+import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import CircularProgress from '@mui/material/CircularProgress';
-import AccordionDetails from '@mui/material/AccordionDetails';
 import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
+import IconButton from '@mui/material/IconButton';
 
 // icons
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import TuneIcon from '@mui/icons-material/Tune';
+import EditIcon from '@mui/icons-material/Edit';
 import AnalysisIcon from '@mui/icons-material/Psychology';
+import UndoIcon from '@mui/icons-material/Undo';
+import Restore from '@mui/icons-material/RestartAlt';
 
 // my comps
-import { BoardSettings, GameState, ToNotation } from '@/board';
+import { BoardSettings, GameState } from '@/board';
 import { EngineLimits } from '@/api';
 import EngineSettings from './EngineSettings';
+
+import { alpha, useTheme } from '@mui/material/styles';
 
 interface SettingsPanelProps {
 	gameState: GameState;
 	limits: EngineLimits;
 	settings: BoardSettings;
 	onSettingsChange: (settings: BoardSettings) => void;
+	onReset: () => void;
+	onUndo: () => void;
 	loading: boolean;
 }
 
@@ -35,86 +36,120 @@ export default function SettingsPanel({
 	settings,
 	limits,
 	onSettingsChange,
+	onReset,
+	onUndo,
 	loading,
 }: SettingsPanelProps) {
-	const toggleAnalysis = () => {
-		if (!loading) {
-			onSettingsChange({
-				...settings,
-				showAnalysis: !settings.showAnalysis,
-			});
-		}
-	};
+	const theme = useTheme();
 
-	const positionNotation = useMemo(() => {
-		return ToNotation(gameState);
-	}, [gameState]);
+	const buttonData = useMemo(
+		() => [
+			{
+				label: 'Set position',
+				icon: <EditIcon />,
+				onClick: () => {},
+			},
+			{
+				label: 'Reset',
+				icon: <Restore />,
+				onClick: onReset,
+			},
+			{
+				label: 'Undo',
+				icon: <UndoIcon />,
+				onClick: onUndo,
+			},
+			{
+				label: settings.showAnalysis
+					? 'Hide Settings'
+					: 'Show Settings',
+				icon: <AnalysisIcon />,
+				onClick: () => {
+					if (!loading) {
+						onSettingsChange({
+							...settings,
+							showAnalysis: !settings.showAnalysis,
+						});
+					}
+				},
+			},
+		],
+		[settings, onSettingsChange, loading, onReset, onUndo],
+	);
 
 	return (
-		<Accordion sx={{ mb: 3, borderRadius: '0px 0px 8px 8px' }}>
-			<AccordionSummary expandIcon={<ExpandMoreIcon />}>
-				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-					<TuneIcon />
-					<Typography variant="h6">Settings & Analysis</Typography>
-					{loading && <CircularProgress size={16} />}
-				</Box>
-			</AccordionSummary>
-			<AccordionDetails>
-				<Box
-					sx={{
-						display: 'flex',
-						flexDirection: { xs: 'column', md: 'row' },
-						gap: 3,
-					}}
-				>
-					<Box sx={{ flex: 1 }}>
-						{/* TODO: make notation load from this input here */}
-						<TextField
-							variant="standard"
-							fullWidth
-							helperText="Position notation"
-							value={positionNotation}
-							onChange={() => {}}
+		<Paper
+			sx={{
+				p: 2,
+				mb: 3,
+				backgroundColor: alpha(theme.palette.primary.main, 0.05),
+				borderRadius: 2,
+			}}
+			elevation={0}
+		>
+			<Box
+				sx={{
+					display: 'flex',
+					flexDirection: 'row',
+					justifyContent: { xs: 'space-evenly', sm: 'flex-start' },
+					gap: 3,
+				}}
+			>
+				{/* Use icon buttons if the screen is small */}
+				{buttonData.map((button) => (
+					<React.Fragment key={button.label}>
+						<Button
+							sx={{
+								display: {
+									xs: 'none',
+									sm: 'flex',
+								},
+							}}
+							color="primary"
+							variant="outlined"
+							startIcon={button.icon}
+							onClick={button.onClick}
+						>
+							{button.label}
+						</Button>
+						<IconButton
+							sx={{
+								display: {
+									xs: 'flex',
+									sm: 'none',
+								},
+							}}
+							onClick={button.onClick}
+						>
+							{button.icon}
+						</IconButton>
+					</React.Fragment>
+				))}
+			</Box>
+
+			{settings.showAnalysis && (
+				<Box sx={{ flex: 1, py: 2 }}>
+					<Box
+						sx={{
+							display: 'flex',
+							flexDirection: {
+								xs: 'column',
+								sm: 'column',
+								md: 'row',
+							},
+							gap: 2,
+						}}
+					>
+						<EngineSettings
+							show
+							settings={settings}
+							limits={limits}
+							onSettingsChange={onSettingsChange}
+							multipv
 						/>
 					</Box>
-					<Box sx={{ flex: 1 }}>
-						<Box
-							sx={{
-								display: 'flex',
-								flexDirection: 'column',
-								gap: 2,
-							}}
-						>
-							<Button
-								loading={loading}
-								variant={
-									settings.showAnalysis
-										? 'contained'
-										: 'outlined'
-								}
-								onClick={toggleAnalysis}
-								startIcon={<AnalysisIcon />}
-								size={'small'}
-								sx={{
-									mt: { sm: 0, md: 2 },
-								}}
-							>
-								{settings.showAnalysis
-									? 'Hide Analysis'
-									: 'Show Analysis'}
-							</Button>
-
-							<EngineSettings
-								show={settings.showAnalysis}
-								settings={settings}
-								limits={limits}
-								onSettingsChange={onSettingsChange}
-								multipv
-							/>
-						</Box>
-					</Box>
 				</Box>
-			</AccordionDetails>
-		</Accordion>
+			)}
+		</Paper>
 	);
 }

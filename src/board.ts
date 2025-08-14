@@ -1,5 +1,6 @@
 export type Player = 'X' | 'O' | null;
 export type SmallBoard = Player[];
+export type BoardIndicator = number | null;
 
 export interface Move {
 	boardIndex: number;
@@ -12,19 +13,25 @@ export interface SmallBoardState {
 	isDraw: boolean;
 }
 
+export interface HistoryState {
+	move: Move;
+	playerToMove: Player;
+	activeBoard: BoardIndicator;
+}
+
 export interface GameState {
 	boards: SmallBoardState[];
 	currentPlayer: Player;
 	winner: Player;
 	isDraw: boolean;
-	activeBoard: number | null; // Which small board the next player must play in
-	lastMove: { boardIndex: number; cellIndex: number } | null;
+	activeBoard: BoardIndicator; // Which small board the next player must play in
+	history: HistoryState[];
 	enabled: boolean;
 }
 
 export type BoardSizeOption = 'small' | 'normal' | 'large';
 
-export function getIntialBoardSettings(): BoardSettings {
+export function getInitalBoardSettings(): BoardSettings {
 	return {
 		boardSize: 'normal',
 		showAnalysis: false,
@@ -60,7 +67,7 @@ export const getInitialBoardState = (): GameState => {
 		winner: null,
 		isDraw: false,
 		activeBoard: null, // First move can be anywhere
-		lastMove: null,
+		history: [],
 		enabled: true,
 	};
 };

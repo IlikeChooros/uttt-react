@@ -1,6 +1,7 @@
 import { EngineLimits } from '@/api';
 import { BoardSettings } from '@/board';
 import SettingsSlider from './SettingsSlider';
+import Box from '@mui/material/Box';
 
 interface EngineSettingsProps {
 	show: boolean;

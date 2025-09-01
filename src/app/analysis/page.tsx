@@ -13,6 +13,7 @@ import { useAnalysis } from '@/components/analysis/analysis';
 import Copyright from '@/components/Copyright';
 import SettingsPanel from '@/components/settings/SettingsPanel';
 import AnalysisPanel from '@/components/analysis/AnalysisPanel';
+import EvalBar from '@/components/analysis/EvalBar';
 
 export default function Analysis() {
 	const [analysisState, dispatchAnalysis] = useAnalysis({
@@ -118,17 +119,26 @@ export default function Analysis() {
 						thinking={analysisState.thinking}
 					/>
 
-					<GameBoard
-						gameState={gameLogic.game}
-						handleCellClick={(boardIndex, cellIndex) =>
-							gameLogicDispatch({
-								type: 'makemove',
-								move: { boardIndex, cellIndex },
-							})
-						}
-						showBestMoves
-						analysisState={analysisState}
-					/>
+					<Box display={'flex'} flexDirection={'row'}>
+						<EvalBar
+							width={'48px'}
+							height={'auto'}
+							currentPlayer={gameLogic.game.currentPlayer}
+							evaluation={analysisState.currentEvaluation}
+							direction="vertical"
+						/>
+						<GameBoard
+							gameState={gameLogic.game}
+							handleCellClick={(boardIndex, cellIndex) =>
+								gameLogicDispatch({
+									type: 'makemove',
+									move: { boardIndex, cellIndex },
+								})
+							}
+							showBestMoves
+							analysisState={analysisState}
+						/>
+					</Box>
 				</Box>
 			</Box>
 			<Copyright />

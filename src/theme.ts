@@ -6,11 +6,25 @@ import { extendTheme, Theme } from '@mui/material/styles';
 declare module '@mui/material/styles' {
 	interface Palette {
 		tertiary: Palette['primary'];
+		evalbar: {
+			x: string;
+			o: string;
+			Otext: string;
+			Xtext: string;
+			evalText: string;
+		};
 		surface: { main: string };
 		outline: { main: string };
 	}
 	interface PaletteOptions {
 		tertiary?: PaletteOptions['primary'];
+		evalbar?: {
+			x: string;
+			o: string;
+			Otext: string;
+			Xtext: string;
+			evalText: string;
+		};
 		surface?: { main: string };
 		outline?: { main: string };
 	}
@@ -94,6 +108,13 @@ const theme = extendTheme({
 					light: '#F9DEDC',
 					dark: '#8C1D18',
 					contrastText: '#FFFFFF',
+				},
+				evalbar: {
+					x: '#EADDFF', // Primary 90 (container)
+					o: '#dbd3e7ff',
+					Otext: '#625B71',
+					Xtext: '#6750A4', // Primary 40
+					evalText: '#49454F',
 				},
 				info: { main: '#8fb4d8ff' },
 				success: { main: '#5ed381ff', light: '#cafad9ff' },
@@ -187,6 +208,13 @@ const theme = extendTheme({
 					light: '#601410',
 					dark: '#8C1D18',
 					contrastText: '#601410',
+				},
+				evalbar: {
+					x: '#381E72', // Primary 90 (container)
+					o: '#332D41',
+					Otext: '#CCC2DC',
+					Xtext: '#D0BCFF', // Primary 40
+					evalText: '#CAC4D0',
 				},
 				info: { main: '#66B2FF' },
 				success: { main: '#55D190', light: '#1d5137ff' },

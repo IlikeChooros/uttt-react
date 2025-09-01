@@ -36,7 +36,7 @@ export default function EvalBar({
 
 		let newEval = 0.5;
 		if (evaluation.match('M') !== null) {
-			if (evaluation.startsWith('oM')) {
+			if (evaluation.endsWith('oM')) {
 				// O is winning
 				newEval = 0;
 			} else {
@@ -140,16 +140,6 @@ export default function EvalBar({
 					ease: 'easeInOut',
 				}}
 			/>
-
-			{/* <Box
-				sx={{
-					backgroundColor: 'evalbar.x',
-					transition: 'width 0.2s ease-in-out',
-					...(direction === 'horizontal'
-						? { width: `${evalNum * 100}%`, height: '100%' }
-						: { height: `${evalNum * 100}%`, width: '100%' }),
-				}}
-			/> */}
 		</Box>
 	);
 }

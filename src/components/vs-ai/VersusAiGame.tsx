@@ -193,17 +193,13 @@ export default function VersusAiGame() {
 		!gameLogic.game.isDraw;
 
 	return (
-		<Paper
-			elevation={2}
+		<Box
 			sx={{
-				p: {
-					xs: 2,
-					sm: 4,
-				},
-				borderRadius: 3,
-				// maxWidth: 1200,
-				width: '100%',
-				// mx: 0,
+				my: 4,
+				display: 'flex',
+				flexDirection: 'column',
+				justifyContent: 'center',
+				alignItems: 'center',
 			}}
 		>
 			<GameStatus gameState={gameLogic.game} />
@@ -236,7 +232,6 @@ export default function VersusAiGame() {
 			<GameBoard
 				gameState={gameLogic.game}
 				handleCellClick={canMakeMove ? handlePlayerMove : () => {}}
-				boardSettings={gameLogic.settings}
 				analysisState={analysisState}
 			/>
 
@@ -253,6 +248,6 @@ export default function VersusAiGame() {
 					<GameControls onReset={resetGame} showNewGameButton />
 				</Box>
 			)}
-		</Paper>
+		</Box>
 	);
 }

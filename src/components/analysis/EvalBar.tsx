@@ -11,7 +11,7 @@ import { useTheme } from '@mui/material/styles';
 import { GameState } from '@/board';
 import { AnalysisState } from '@/api';
 
-const MotionBox = motion(Box);
+const MotionBox = motion.create(Box);
 
 interface EvalBarProps {
 	evaluation?: AnalysisState['currentEvaluation']; // [0, 1] or +-M<number>

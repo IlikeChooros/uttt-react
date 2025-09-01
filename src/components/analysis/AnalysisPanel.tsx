@@ -83,8 +83,8 @@ export default function AnalysisPanel({
 					}}
 				>
 					<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-						<AnalysisIcon color="primary" />
-						<Typography variant="h6">Engine Analysis</Typography>
+						<AnalysisIcon color="primary" fontSize="large" />
+						<Typography variant="h4">Engine Analysis</Typography>
 					</Box>
 					<Box sx={{ display: 'flex', textAlign: 'center' }}>
 						<Typography variant="caption" color="text.secondary">

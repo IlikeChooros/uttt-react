@@ -95,6 +95,12 @@ export default function Analysis() {
 						width: '100%',
 					}}
 				>
+					<AnalysisPanel
+						settings={gameLogic.settings}
+						analysisState={analysisState}
+						thinking={analysisState.thinking}
+					/>
+
 					<SettingsPanel
 						onUndo={() => gameLogicDispatch({ type: 'undomove' })}
 						onReset={() => gameLogicDispatch({ type: 'reset' })}
@@ -111,12 +117,6 @@ export default function Analysis() {
 						onOpenSettings={() =>
 							gameLogicDispatch({ type: 'toggle-settings' })
 						}
-					/>
-
-					<AnalysisPanel
-						settings={gameLogic.settings}
-						analysisState={analysisState}
-						thinking={analysisState.thinking}
 					/>
 
 					<Box display={'flex'} flexDirection={'row'}>

@@ -2,6 +2,9 @@
 
 import React, { useMemo } from 'react';
 
+// motion
+import { AnimatePresence, motion } from 'motion/react';
+
 // mui
 import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
@@ -20,6 +23,8 @@ import { EngineLimits } from '@/api';
 import EngineSettings from './EngineSettings';
 
 import { alpha, useTheme } from '@mui/material/styles';
+
+const AnimatedBox = motion.create(Box);
 
 interface SettingsPanelProps {
 	gameState: GameState;
@@ -125,29 +130,41 @@ export default function SettingsPanel({
 				))}
 			</Box>
 
-			{settings.showAnalysis && (
-				<Box sx={{ flex: 1, py: 2 }}>
-					<Box
-						sx={{
-							display: 'flex',
-							flexDirection: {
-								xs: 'column',
-								sm: 'column',
-								md: 'row',
-							},
-							gap: 2,
+			<AnimatePresence>
+				{settings.showAnalysis && (
+					<AnimatedBox
+						sx={{ flex: 1 }}
+						initial={{ marginTop: 0, height: 0, opacity: 0 }}
+						animate={{
+							marginTop: '8px',
+							height: 'auto',
+							opacity: 1,
 						}}
+						exit={{ marginTop: 0, height: 0, opacity: 0 }}
+						transition={{ duration: 0.1 }}
 					>
-						<EngineSettings
-							show
-							settings={settings}
-							limits={limits}
-							onSettingsChange={onSettingsChange}
-							multipv
-						/>
-					</Box>
-				</Box>
-			)}
+						<Box
+							sx={{
+								display: 'flex',
+								flexDirection: {
+									xs: 'column',
+									sm: 'column',
+									md: 'row',
+								},
+								gap: 2,
+							}}
+						>
+							<EngineSettings
+								show
+								settings={settings}
+								limits={limits}
+								onSettingsChange={onSettingsChange}
+								multipv
+							/>
+						</Box>
+					</AnimatedBox>
+				)}
+			</AnimatePresence>
 		</Paper>
 	);
 }

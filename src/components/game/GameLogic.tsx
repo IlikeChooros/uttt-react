@@ -19,6 +19,7 @@ export type GameActionType =
 	| 'reset'
 	| 'set-limits'
 	| 'change-settings'
+	| 'toggle-settings'
 	| 'change-gamestate';
 export type SettingsInitializer = () => BoardSettings;
 export type GameStateInitializer = () => GameState;
@@ -38,6 +39,8 @@ export interface GameLogicState {
 	settings: BoardSettings;
 	limits: EngineLimits;
 	loadingLimits: boolean;
+	action: GameActionType | null;
+	prevAction: GameActionType | null;
 }
 
 // Checks if there is a winner in tic tac toe sense on provided board
@@ -159,12 +162,20 @@ function gameLogicReducer(
 	switch (action.type) {
 		case 'makemove':
 			if (action.move !== undefined) {
-				return handleMakeMove(prevstate, action.move);
+				return {
+					...handleMakeMove(prevstate, action.move),
+					action: 'makemove',
+					prevAction: prevstate.action,
+				};
 			}
 			break;
 
 		case 'undomove':
-			return handleUndoMove(prevstate);
+			return {
+				...handleUndoMove(prevstate),
+				action: 'undomove',
+				prevAction: prevstate.action,
+			};
 
 		case 'reset':
 			return gameLogicInit(
@@ -199,20 +210,36 @@ function gameLogicReducer(
 				},
 				limits,
 				loadingLimits,
+				action: 'set-limits',
+				prevAction: prevstate.action,
 			};
 
 		case 'change-settings':
 			return {
 				...prevstate,
+				action: 'change-settings',
+				prevAction: prevstate.action,
 				settings:
 					action.newSettings !== undefined
 						? action.newSettings
 						: prevstate.settings,
 			};
+		case 'toggle-settings':
+			return {
+				...prevstate,
+				action: 'toggle-settings',
+				prevAction: prevstate.action,
+				settings: {
+					...prevstate.settings,
+					showAnalysis: !prevstate.settings.showAnalysis,
+				},
+			};
 
 		case 'change-gamestate':
 			return {
 				...prevstate,
+				action: 'change-gamestate',
+				prevAction: prevstate.action,
 				game:
 					action.newGameState !== undefined
 						? action.newGameState
@@ -233,6 +260,8 @@ function gameLogicInit(
 		settings: settingsInit(),
 		limits: getInitialEngineLimits(),
 		loadingLimits: false,
+		action: null,
+		prevAction: null,
 	});
 }
 

@@ -26,7 +26,8 @@ export interface AnalysisAction {
 		| 'set-ws'
 		| 'start-thinking'
 		| 'stop-thinking'
-		| 'set-response';
+		| 'set-response'
+		| 'set-ws-state';
 
 	ws?: WebSocket | null;
 	state?: {
@@ -37,6 +38,7 @@ export interface AnalysisAction {
 		request?: AnalysisState['request'];
 	};
 
+	wsState?: AnalysisState['wsState'];
 	options?: AnalysisOptions;
 }
 
@@ -50,9 +52,17 @@ function analysisReducer(
 			if (action.ws === undefined) {
 				return prev;
 			}
-			return { ...prev, ws: action.ws };
+			return {
+				...prev,
+				ws: action.ws,
+				wsState: action.ws ? 'connected' : 'disconnected',
+			};
+		case 'set-ws-state':
+			if (action.wsState === undefined) {
+				return prev;
+			}
+			return { ...prev, wsState: action.wsState };
 		case 'start-thinking':
-			console.log('start thinking', prev);
 			return {
 				...prev,
 				thinking: true,
@@ -88,6 +98,7 @@ function analysisReducer(
 				wsFailed: true,
 				thinking: false,
 				ws: null,
+				wsState: 'failed',
 			};
 
 		// simply close the the connection
@@ -100,6 +111,7 @@ function analysisReducer(
 				shouldConnect: false,
 				thinking: false,
 				ws: null,
+				wsState: 'closed',
 			};
 
 		// make a new request to analyze the position only if we aren't currenlty
@@ -119,6 +131,7 @@ function analysisReducer(
 				useWebSocket: true,
 				shouldConnect: true,
 				request: null,
+				wsState: 'request-connection',
 			};
 		// requests websocket disconnection
 		case 'request-disconnection':
@@ -127,6 +140,7 @@ function analysisReducer(
 				useWebSocket: false,
 				shouldConnect: false,
 				request: null,
+				wsState: 'request-disconnection',
 			};
 		default:
 			break;
@@ -197,11 +211,15 @@ export function useAnalysis(
 
 	// Requests for connection/disconnection
 	useEffect(() => {
-		if (!state.useWebSocket) {
+		if (!state.useWebSocket || state.wsState === 'null') {
 			return;
 		}
 
-		if (state.shouldConnect && !state.ws) {
+		if (
+			state.shouldConnect &&
+			!state.ws &&
+			state.wsState === 'request-connection'
+		) {
 			try {
 				// Make sure we're using the correct protocol (ws:// for http, wss:// for https)
 				const protocol =
@@ -264,12 +282,14 @@ export function useAnalysis(
 			} catch (error) {
 				console.error('Failed to create WebSocket:', error);
 			}
+			dispatch({ type: 'set-ws-state', wsState: 'connecting' });
 		} else if (!state.shouldConnect && state.ws) {
 			state.ws.close();
 			dispatch({ type: 'set-ws', ws: null });
 		}
 	}, [
 		state.ws,
+		state.wsState,
 		state.shouldConnect,
 		state.useWebSocket,
 		state.fallbackOnWebSocketError,

@@ -26,13 +26,14 @@ interface SettingsPanelProps {
 	limits: EngineLimits;
 	settings: BoardSettings;
 	onSettingsChange: (settings: BoardSettings) => void;
+	onOpenSettings: () => void;
 	onReset: () => void;
 	onUndo: () => void;
 	loading: boolean;
 }
 
 export default function SettingsPanel({
-	gameState,
+	onOpenSettings,
 	settings,
 	limits,
 	onSettingsChange,
@@ -66,15 +67,12 @@ export default function SettingsPanel({
 				icon: <AnalysisIcon />,
 				onClick: () => {
 					if (!loading) {
-						onSettingsChange({
-							...settings,
-							showAnalysis: !settings.showAnalysis,
-						});
+						onOpenSettings();
 					}
 				},
 			},
 		],
-		[settings, onSettingsChange, loading, onReset, onUndo],
+		[settings, onOpenSettings, loading, onReset, onUndo],
 	);
 
 	return (

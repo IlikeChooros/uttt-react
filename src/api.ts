@@ -60,9 +60,21 @@ export function getInitialAnalysisState(
 		fallbackOnWebSocketError: false,
 		wsFailed: false,
 		ws: null,
+		wsState: 'null',
 		...options,
 	};
 }
+
+export type AnaysisWsState =
+	| 'null'
+	| 'request-connection'
+	| 'connecting'
+	| 'connected'
+	| 'failed'
+	| 'request-disconnection'
+	| 'disconnecting'
+	| 'disconnected'
+	| 'closed';
 
 export interface AnalysisState {
 	currentEvaluation: string;
@@ -76,6 +88,7 @@ export interface AnalysisState {
 	fallbackOnWebSocketError: boolean;
 	wsFailed: boolean;
 	ws: WebSocket | null;
+	wsState: AnaysisWsState;
 }
 
 export interface EngineMove extends Move {

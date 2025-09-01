@@ -22,29 +22,38 @@ export default function Analysis() {
 
 	// Handle WebSocket connection for analysis
 	useEffect(() => {
-		if (analysisState.wsFailed) {
+		if (analysisState.wsFailed || analysisState.wsState === 'closed') {
 			return;
 		}
 
-		if (!analysisState.ws) {
+		// Open web socket on mount
+		if (!analysisState.ws && analysisState.wsState === 'null') {
 			console.log('Request connection');
 			dispatchAnalysis({ type: 'request-connection' });
-		} else {
-			// Close WebSocket when analysis is disabled
-			console.log('Closing WebSocket connection...');
-			dispatchAnalysis({ type: 'request-disconnection' });
 		}
 	}, [
 		gameLogic.settings,
 		analysisState.wsFailed,
 		analysisState.ws,
 		dispatchAnalysis,
+		analysisState.wsState,
 	]);
 
 	// Send analysis requests when game state changes
 	useEffect(() => {
-		if (!gameLogic.game.winner && !gameLogic.game.isDraw) {
-			console.log('Sending analysis request...');
+		if (gameLogic.game.winner || gameLogic.game.isDraw) {
+			return;
+		}
+
+		// See if there is a good cause for a request
+		if (
+			gameLogic.action === null ||
+			gameLogic.action === 'change-settings' ||
+			gameLogic.action === 'makemove' ||
+			gameLogic.action === 'undomove' ||
+			(gameLogic.action === 'reset' && gameLogic.prevAction !== 'reset')
+		) {
+			console.log('Sending analysis request, cause: ', gameLogic.action);
 			dispatchAnalysis({
 				type: 'analyze',
 				state: {
@@ -57,6 +66,8 @@ export default function Analysis() {
 		}
 	}, [
 		analysisState.wsFailed,
+		gameLogic.action,
+		gameLogic.prevAction,
 		gameLogic.game,
 		gameLogic.settings,
 		dispatchAnalysis,
@@ -95,6 +106,9 @@ export default function Analysis() {
 								type: 'change-settings',
 								newSettings,
 							})
+						}
+						onOpenSettings={() =>
+							gameLogicDispatch({ type: 'toggle-settings' })
 						}
 					/>
 

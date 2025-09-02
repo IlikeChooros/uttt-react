@@ -81,7 +81,10 @@ export default function SmallBoard({
 						display: 'flex',
 						alignItems: 'center',
 						justifyContent: 'center',
-						borderRadius: 1.75,
+						borderRadius: {
+							xs: 1,
+							sm: 2,
+						},
 						zIndex: 1,
 					}}
 				>

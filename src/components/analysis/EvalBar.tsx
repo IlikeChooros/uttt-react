@@ -64,28 +64,38 @@ export default function EvalBar({
 	direction = 'horizontal',
 }: EvalBarProps) {
 	type EvalType = {
+		absevalNum: number;
 		evalNum: number;
 		mate: Player;
 	};
 
-	const { evalNum, mate } = useMemo<EvalType>(() => {
-		if (abseval === undefined || abseval === '') {
-			return { evalNum: 0.5, mate: null };
+	const { absevalNum, evalNum, mate } = useMemo<EvalType>(() => {
+		if (
+			abseval === undefined ||
+			evaluation === undefined ||
+			evaluation === '' ||
+			abseval === ''
+		) {
+			return { absevalNum: 0.5, evalNum: 0.5, mate: null };
 		}
 
-		let newEval = { evalNum: 0, mate: null } as EvalType;
+		let newEval = { absevalNum: 0, evalNum: 0, mate: null } as EvalType;
 		if (abseval.match('M') !== null) {
 			if (abseval.endsWith('oM')) {
 				// O is winning
-				newEval = { evalNum: 0, mate: 'O' };
+				newEval = { absevalNum: 0, evalNum: 0, mate: 'O' };
 			} else {
-				newEval = { evalNum: 1, mate: 'X' };
+				newEval = { absevalNum: 1, evalNum: 1, mate: 'X' };
 			}
 		} else {
-			newEval = { evalNum: parseFloat(abseval), mate: null };
+			newEval = {
+				absevalNum: parseFloat(abseval),
+				evalNum: parseFloat(evaluation),
+				mate: null,
+			};
 		}
 		return newEval;
-	}, [abseval]);
+	}, [abseval, evaluation]);
 
 	return (
 		<Box
@@ -164,7 +174,7 @@ export default function EvalBar({
 				/>
 			</Box>
 
-			<EvalPercentage evalNum={evalNum} direction={direction} />
+			<EvalPercentage evalNum={absevalNum} direction={direction} />
 		</Box>
 	);
 }

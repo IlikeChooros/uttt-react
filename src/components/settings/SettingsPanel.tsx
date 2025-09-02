@@ -83,7 +83,7 @@ export default function SettingsPanel({
 	return (
 		<Paper
 			sx={{
-				p: 2,
+				p: { xs: 1, sm: 2 },
 				mb: 3,
 				backgroundColor: alpha(theme.palette.primary.main, 0.05),
 				borderRadius: 2,

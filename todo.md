@@ -22,6 +22,6 @@
 ## Bug fixes
 - [x] Make no engine recommendation when analysis is turned off (after turning it on)
 - [x] Don't allow player to play in AI versus mode until the user selects a turn
-- [ ] Add rate limiting to analysis, when changing the engine settings
+- [x] Add rate limiting to analysis, when changing the engine settings
 - [ ] Fix ddos attack when backend is down (on vs AI mode)
-- [ ] Fix analysis bug, when hiding the available websocket closes, and falls back to http requests
+- [x] Fix analysis bug, when hiding the available websocket closes, and falls back to http requests

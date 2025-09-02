@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback } from 'react';
-import Box from '@mui/material/Box';
+import Box, { BoxProps } from '@mui/material/Box';
 import { GameState, BoardSettings } from '@/board';
 import { AnalysisState } from '@/api';
 import SmallBoardComponent from '@/components/game/SmallBoard';
@@ -11,6 +11,7 @@ interface GameBoardProps {
 	handleCellClick: (boardIndex: number, cellIndex: number) => void;
 	showBestMoves?: boolean;
 	analysisState?: AnalysisState;
+	maxSize: BoxProps['maxWidth'] | number;
 }
 
 export default function GameBoard({
@@ -18,6 +19,7 @@ export default function GameBoard({
 	handleCellClick,
 	showBestMoves,
 	analysisState,
+	maxSize,
 }: GameBoardProps) {
 	const isBoardActive = useCallback(
 		(boardIndex: number): boolean => {
@@ -39,34 +41,42 @@ export default function GameBoard({
 	return (
 		<Box
 			sx={{
-				display: 'grid',
-				gridTemplateColumns: 'repeat(3, 1fr)',
-				gap: {
-					xs: 1,
-					sm: 1.5,
-					md: 2,
-					lg: 2.5,
-				},
-				width: 'fit-content',
-				mx: 'auto',
-				opacity: typeof handleCellClick === 'function' ? 1 : 0.6,
-				pointerEvents:
-					typeof handleCellClick === 'function' ? 'auto' : 'none',
-				transition: 'opacity 0.3s ease-in-out',
+				width: '100%',
+				maxWidth: maxSize,
 			}}
 		>
-			{Array.from({ length: 9 }, (_, boardIndex) => (
-				<SmallBoardComponent
-					key={boardIndex}
-					boardIndex={boardIndex}
-					smallBoard={gameState.boards[boardIndex]}
-					isActive={isBoardActive(boardIndex)}
-					showAnalysis={showBestMoves}
-					bestMove={analysisState?.bestMove}
-					topMoves={analysisState?.topMoves}
-					onCellClick={handleCellClick}
-				/>
-			))}
+			<Box
+				sx={{
+					display: 'grid',
+					gridTemplateColumns: '1fr 1fr 1fr',
+					gap: {
+						xs: 1,
+						sm: 1.5,
+						md: 2,
+						lg: 2.5,
+					},
+					width: '100%',
+					height: 'fit-content',
+					mx: 'auto',
+					opacity: typeof handleCellClick === 'function' ? 1 : 0.6,
+					pointerEvents:
+						typeof handleCellClick === 'function' ? 'auto' : 'none',
+					transition: 'opacity 0.3s ease-in-out',
+				}}
+			>
+				{Array.from({ length: 9 }, (_, boardIndex) => (
+					<SmallBoardComponent
+						key={boardIndex}
+						boardIndex={boardIndex}
+						smallBoard={gameState.boards[boardIndex]}
+						isActive={isBoardActive(boardIndex)}
+						showAnalysis={showBestMoves}
+						bestMove={analysisState?.bestMove}
+						topMoves={analysisState?.topMoves}
+						onCellClick={handleCellClick}
+					/>
+				))}
+			</Box>
 		</Box>
 	);
 }

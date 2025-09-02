@@ -218,22 +218,33 @@ export default function VersusAiGame() {
 				onReset={resetGame}
 			/>
 
-			<AiSettings
-				limits={gameLogic.limits}
-				settings={gameLogic.settings}
-				onSettingsChange={(s) =>
-					dispatchGameLogic({
-						type: 'change-settings',
-						newSettings: s,
-					})
-				}
-			/>
+			<Box sx={{ maxWidth: '900px', width: '100%' }}>
+				<AiSettings
+					limits={gameLogic.limits}
+					settings={gameLogic.settings}
+					onSettingsChange={(s) =>
+						dispatchGameLogic({
+							type: 'change-settings',
+							newSettings: s,
+						})
+					}
+				/>
+			</Box>
 
-			<GameBoard
-				gameState={gameLogic.game}
-				handleCellClick={canMakeMove ? handlePlayerMove : () => {}}
-				analysisState={analysisState}
-			/>
+			<Box
+				sx={{
+					display: 'flex',
+					justifyContent: 'center',
+					width: '100%',
+				}}
+			>
+				<GameBoard
+					maxSize={'800px'}
+					gameState={gameLogic.game}
+					handleCellClick={canMakeMove ? handlePlayerMove : () => {}}
+					analysisState={analysisState}
+				/>
+			</Box>
 
 			{(gameLogic.game.winner || gameLogic.game.isDraw) && (
 				<Box sx={{ textAlign: 'center', mt: 3 }}>

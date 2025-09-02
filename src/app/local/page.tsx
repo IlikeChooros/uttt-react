@@ -81,15 +81,24 @@ export default function Local() {
 						</Button>
 					</Box>
 
-					<GameBoard
-						gameState={gameLogic.game}
-						handleCellClick={(boardIndex, cellIndex) =>
-							gameLogicDispatch({
-								type: 'makemove',
-								move: { boardIndex, cellIndex },
-							})
-						}
-					/>
+					<Box
+						sx={{
+							display: 'flex',
+							justifyContent: 'center',
+							mb: 2,
+						}}
+					>
+						<GameBoard
+							maxSize={'720px'}
+							gameState={gameLogic.game}
+							handleCellClick={(boardIndex, cellIndex) =>
+								gameLogicDispatch({
+									type: 'makemove',
+									move: { boardIndex, cellIndex },
+								})
+							}
+						/>
+					</Box>
 
 					<GameRules showAnalysis={gameLogic.settings.showAnalysis} />
 				</Box>

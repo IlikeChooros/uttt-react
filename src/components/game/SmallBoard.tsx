@@ -38,7 +38,10 @@ export default function SmallBoard({
 			elevation={isActive ? 4 : 1}
 			sx={{
 				p: { xs: 0.75, md: 1.25 },
-				borderRadius: 2,
+				borderRadius: {
+					xs: 1.25,
+					sm: 2,
+				},
 				backgroundColor: isActive
 					? alpha(theme.palette.primary.main, 0.1)
 					: 'transparent',
@@ -53,6 +56,9 @@ export default function SmallBoard({
 							boxShadow: theme.shadows[6],
 						}
 					: {},
+				aspectRatio: '1 / 1',
+				maxHeight: '250px',
+				// maxWidth: '250px',
 			}}
 		>
 			{/* Winner overlay */}

@@ -36,6 +36,7 @@ export interface AnalysisAction {
 		bestMove?: AnalysisState['bestMove'];
 		topMoves?: AnalysisState['topMoves'];
 		request?: AnalysisState['request'];
+		absEvaluation?: AnalysisState['absEvaluation'];
 	};
 
 	wsState?: AnalysisState['wsState'];
@@ -191,6 +192,7 @@ export function useAnalysis(
 							type: 'set-response',
 							state: {
 								currentEvaluation: bestMoves[0].evaluation,
+								absEvaluation: bestMoves[0].abseval,
 								bestMove: bestMoves[0],
 								topMoves: bestMoves,
 							},
@@ -252,6 +254,7 @@ export function useAnalysis(
 							type: 'set-response',
 							state: {
 								currentEvaluation: bestMoves[0].evaluation,
+								absEvaluation: bestMoves[0].abseval,
 								thinking: !response.final,
 								bestMove: bestMoves[0],
 								topMoves: bestMoves,

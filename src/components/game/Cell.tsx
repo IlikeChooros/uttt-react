@@ -3,7 +3,7 @@
 import React from 'react';
 import { Player } from '@/board';
 import { alpha, useTheme } from '@mui/material/styles';
-import Button from '@mui/material/Button';
+import Box from '@mui/material/Box';
 
 interface CellProps {
 	value: Player;
@@ -23,35 +23,24 @@ export default function Cell({
 	const theme = useTheme();
 
 	return (
-		<Button
-			variant="outlined"
-			onClick={onClick}
-			disabled={!canClick}
+		<Box
+			onClick={canClick ? onClick : undefined}
 			sx={{
-				width: {
-					xs: '32px',
-					sm: '42px',
-					md: '70px',
-					lg: '76px',
-					xl: '82px',
-				},
-				height: {
-					xs: '32px',
-					sm: '42px',
-					md: '70px',
-					lg: '76px',
-					xl: '82px',
-				},
+				color: value === 'O' ? 'evalbar.Otext' : 'evalbar.Xtext',
+				aspectRatio: '1 / 1',
 				minWidth: 'unset',
 				fontSize: {
-					xs: '1rem',
-					sm: '1.25rem',
-					md: '1.5rem',
-					lg: '2rem',
-					xl: '2.5rem',
+					xs: '1.25rem',
+					sm: '1.75rem',
+					md: '2rem',
+					lg: '2.3rem',
 				},
 				fontWeight: 'bold',
-				borderRadius: 1,
+				position: 'relative',
+				borderRadius: {
+					xs: 0.5,
+					sm: 1,
+				},
 				border: isBestMove
 					? `2px solid ${theme.palette.success.main}`
 					: isTopMove
@@ -78,9 +67,9 @@ export default function Cell({
 				'&.Mui-disabled': {
 					color:
 						value === 'X'
-							? theme.palette.primary.main
+							? 'evalbar.Xtext'
 							: value === 'O'
-								? theme.palette.secondary.main
+								? 'evalbar.Otext'
 								: theme.palette.text.disabled,
 					borderColor: isBestMove
 						? theme.palette.success.main
@@ -96,7 +85,16 @@ export default function Cell({
 				},
 			}}
 		>
-			{value}
-		</Button>
+			<div
+				style={{
+					position: 'absolute',
+					top: '50%',
+					left: '50%',
+					transform: 'translate(-50%, -50%)',
+				}}
+			>
+				{value}
+			</div>
+		</Box>
 	);
 }

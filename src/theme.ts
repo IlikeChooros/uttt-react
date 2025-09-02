@@ -112,8 +112,8 @@ const theme = extendTheme({
 				evalbar: {
 					x: '#EADDFF', // Primary 90 (container)
 					o: '#dbd3e7ff',
-					Otext: '#625B71',
-					Xtext: '#6750A4', // Primary 40
+					Xtext: '#7F67BE', // Primary 50
+					Otext: '#7A7289',
 					evalText: '#49454F',
 				},
 				info: { main: '#8fb4d8ff' },
@@ -210,11 +210,11 @@ const theme = extendTheme({
 					contrastText: '#601410',
 				},
 				evalbar: {
-					x: '#381E72', // Primary 90 (container)
-					o: '#332D41',
-					Otext: '#CCC2DC',
-					Xtext: '#D0BCFF', // Primary 40
-					evalText: '#CAC4D0',
+					x: '#583f95ff',
+					o: '#504a5bff',
+					Xtext: '#D0BCFF',
+					Otext: '#B0A7C0',
+					evalText: '#fefefeff',
 				},
 				info: { main: '#66B2FF' },
 				success: { main: '#55D190', light: '#1d5137ff' },

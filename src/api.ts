@@ -8,6 +8,7 @@ const ENGINE_API_LIMITS = '/api/limits';
 
 export interface AnalysisEngineLine {
 	eval: string;
+	abseval: string;
 	pv: string[];
 }
 
@@ -50,6 +51,7 @@ export function getInitialAnalysisState(
 ): AnalysisState {
 	return {
 		currentEvaluation: '',
+		absEvaluation: '',
 		bestMove: null,
 		topMoves: [],
 		thinking: false,
@@ -78,6 +80,7 @@ export type AnaysisWsState =
 
 export interface AnalysisState {
 	currentEvaluation: string;
+	absEvaluation: string;
 	bestMove: EngineMove | null;
 	topMoves: EngineMove[];
 	thinking: boolean;
@@ -92,6 +95,7 @@ export interface AnalysisState {
 }
 
 export interface EngineMove extends Move {
+	abseval: string;
 	evaluation: string;
 	depth: number;
 	principalVariation: string[];
@@ -209,6 +213,7 @@ export class EngineAPI {
 					boardIndex,
 					principalVariation: line.pv,
 					evaluation: line.eval,
+					abseval: line.abseval,
 				};
 			}
 		}

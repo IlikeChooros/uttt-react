@@ -168,6 +168,8 @@ export default function NavHeader() {
 									</Button>
 
 									<IconButton
+										component={Link}
+										href={href}
 										size="small"
 										sx={{
 											display: { sm: 'flex', md: 'none' },

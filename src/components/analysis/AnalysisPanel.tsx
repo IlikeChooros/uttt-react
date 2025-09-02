@@ -82,7 +82,9 @@ export default function AnalysisPanel({
 						alignItems: 'center',
 					}}
 				>
-					<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+					<Box
+						sx={{ textAlign: 'center', display: 'flex', gap: 0.5 }}
+					>
 						<AnalysisIcon color="primary" fontSize="large" />
 						<Typography variant="h4">Engine Analysis</Typography>
 					</Box>
@@ -104,7 +106,7 @@ export default function AnalysisPanel({
 						mt: { xs: 1, sm: 0 },
 					}}
 				>
-					{thinking && (
+					{thinking ? (
 						<LinearProgress
 							sx={{
 								width: '90%',
@@ -112,6 +114,14 @@ export default function AnalysisPanel({
 								borderRadius: 4,
 							}}
 						/>
+					) : (
+						<div
+							style={{
+								width: '100%',
+								height: 6,
+								backgroundColor: 'transparent',
+							}}
+						></div>
 					)}
 				</Box>
 			</Box>

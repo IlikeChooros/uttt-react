@@ -178,12 +178,16 @@ function gameLogicReducer(
 			};
 
 		case 'reset':
-			return gameLogicInit(
-				action.settingsInit === undefined
-					? getInitalBoardSettings
-					: action.settingsInit,
-				getInitialBoardState,
-			)();
+			return {
+				...gameLogicInit(
+					action.settingsInit === undefined
+						? getInitalBoardSettings
+						: action.settingsInit,
+					getInitialBoardState,
+				)(),
+				action: 'reset',
+				prevAction: prevstate.action,
+			};
 
 		case 'set-limits':
 			const limits = action.limits || prevstate.limits;

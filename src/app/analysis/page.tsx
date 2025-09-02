@@ -51,10 +51,16 @@ export default function Analysis() {
 			gameLogic.action === null ||
 			gameLogic.action === 'change-settings' ||
 			gameLogic.action === 'makemove' ||
-			gameLogic.action === 'undomove' ||
-			(gameLogic.action === 'reset' && gameLogic.prevAction !== 'reset')
+			(gameLogic.action === 'undomove' &&
+				gameLogic.game.history.length > 0) ||
+			gameLogic.action === 'reset'
 		) {
-			console.log('Sending analysis request, cause: ', gameLogic.action);
+			console.log(
+				'Sending analysis request, cause: ',
+				gameLogic.action,
+				'prev',
+				gameLogic.prevAction,
+			);
 			dispatchAnalysis({
 				type: 'analyze',
 				state: {
@@ -119,25 +125,65 @@ export default function Analysis() {
 						}
 					/>
 
-					<Box display={'flex'} flexDirection={'row'}>
+					<Box
+						sx={{
+							display: 'flex',
+							flexDirection: 'row',
+							gap: {
+								xs: 1.5,
+								sm: 2,
+							},
+						}}
+					>
 						<EvalBar
-							width={'48px'}
+							fonts={{
+								sides: {
+									xs: '1.2rem',
+									sm: '1.4rem',
+									md: '1.5rem',
+									lg: '1.6rem',
+								},
+								eval: {
+									xs: '0.8rem',
+									sm: '1.0rem',
+									md: '1.1rem',
+									lg: '1.2rem',
+								},
+							}}
+							width={{
+								xs: '32px',
+								sm: '36px',
+								md: '40px',
+								lg: '48px',
+							}}
 							height={'auto'}
 							currentPlayer={gameLogic.game.currentPlayer}
 							evaluation={analysisState.currentEvaluation}
+							abseval={analysisState.absEvaluation}
 							direction="vertical"
+							thinking={analysisState.thinking}
 						/>
-						<GameBoard
-							gameState={gameLogic.game}
-							handleCellClick={(boardIndex, cellIndex) =>
-								gameLogicDispatch({
-									type: 'makemove',
-									move: { boardIndex, cellIndex },
-								})
-							}
-							showBestMoves
-							analysisState={analysisState}
-						/>
+
+						<Box
+							sx={{
+								flexGrow: 1,
+								display: 'flex',
+								justifyContent: 'center',
+							}}
+						>
+							<GameBoard
+								maxSize={'720px'}
+								gameState={gameLogic.game}
+								handleCellClick={(boardIndex, cellIndex) =>
+									gameLogicDispatch({
+										type: 'makemove',
+										move: { boardIndex, cellIndex },
+									})
+								}
+								showBestMoves
+								analysisState={analysisState}
+							/>
+						</Box>
 					</Box>
 				</Box>
 			</Box>

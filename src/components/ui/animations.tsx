@@ -10,6 +10,19 @@ import {
 	useTransform,
 } from 'motion/react';
 
+export const baseAnimation = {
+	initial: { opacity: 0 },
+	animate: { opacity: 1 },
+	exit: { opacity: 0 },
+	transition: { duration: 0.2 },
+};
+
+export const boardAnimation = {
+	initial: { opacity: 0, scale: 0.9 },
+	animate: { opacity: 1, scale: 1 },
+	transition: { duration: 0.3 },
+};
+
 export function AnimatedNumber() {
 	const base = useMotionValue(0);
 	const smooth = useSpring(base, { stiffness: 120, damping: 18 });

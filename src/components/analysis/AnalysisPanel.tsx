@@ -6,9 +6,7 @@ import React, { useMemo } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import LinearProgress from '@mui/material/LinearProgress';
-import Paper from '@mui/material/Paper';
 import Tooltip from '@mui/material/Tooltip';
-import { alpha, useTheme } from '@mui/material/styles';
 
 // icons
 import AnalysisIcon from '@mui/icons-material/Psychology';
@@ -18,6 +16,7 @@ import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { AnalysisState } from '@/api';
 import { BoardSettings } from '@/board';
 import BestMoveChip from '@/components/analysis/BestMoveChip';
+import { SettingsPaper } from '../ui/SettingsPaper';
 
 interface AnalysisPanelProps {
 	settings: BoardSettings;
@@ -30,7 +29,6 @@ export default function AnalysisPanel({
 	analysisState,
 	thinking,
 }: AnalysisPanelProps) {
-	const theme = useTheme();
 	const analysisStats = useMemo<
 		{ name: string; data: string; helpText?: string }[]
 	>(
@@ -58,15 +56,7 @@ export default function AnalysisPanel({
 	);
 
 	return (
-		<Paper
-			sx={{
-				p: 2,
-				mb: 3,
-				backgroundColor: alpha(theme.palette.primary.main, 0.05),
-				borderRadius: 2,
-			}}
-			elevation={0}
-		>
+		<SettingsPaper>
 			<Box
 				sx={{
 					display: 'flex',
@@ -86,7 +76,9 @@ export default function AnalysisPanel({
 						sx={{ textAlign: 'center', display: 'flex', gap: 0.5 }}
 					>
 						<AnalysisIcon color="primary" fontSize="large" />
-						<Typography variant="h4">Engine Analysis</Typography>
+						<Typography variant="h4" fontSize={'2rem'}>
+							Engine Analysis
+						</Typography>
 					</Box>
 					<Box sx={{ display: 'flex', textAlign: 'center' }}>
 						<Typography variant="caption" color="text.secondary">
@@ -179,6 +171,6 @@ export default function AnalysisPanel({
 					</Box>
 				</Box>
 			</Box>
-		</Paper>
+		</SettingsPaper>
 	);
 }

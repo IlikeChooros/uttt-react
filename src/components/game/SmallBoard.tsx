@@ -9,10 +9,12 @@ import { alpha, useTheme } from '@mui/material/styles';
 
 // my components
 import Cell from '@/components/game/Cell';
-import { SmallBoardState } from '@/board';
+import { Move, SmallBoardState } from '@/board';
 import { EngineMove } from '@/api';
 
 interface SmallBoardProps {
+	lastMoveHighlight?: boolean;
+	lastMove?: Move;
 	boardIndex: number;
 	smallBoard: SmallBoardState;
 	isActive: boolean;
@@ -29,6 +31,8 @@ export default function SmallBoard({
 	showAnalysis,
 	bestMove,
 	topMoves,
+	lastMoveHighlight,
+	lastMove,
 	onCellClick,
 }: SmallBoardProps) {
 	const theme = useTheme();
@@ -133,9 +137,15 @@ export default function SmallBoard({
 							move.boardIndex === boardIndex &&
 							move.cellIndex === cellIndex,
 					);
+					const isHighlighted =
+						lastMoveHighlight &&
+						lastMove !== undefined &&
+						lastMove.boardIndex === boardIndex &&
+						lastMove.cellIndex === cellIndex;
 
 					return (
 						<Cell
+							isHighlighted={isHighlighted}
 							key={cellIndex}
 							value={value}
 							canClick={canClick}

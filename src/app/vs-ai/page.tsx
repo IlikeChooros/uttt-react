@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 
+import * as motion from 'motion/react';
+import { baseAnimation, boardAnimation } from '@/components/ui/animations';
+
 // api stuff
 import {
 	EngineAPI,
@@ -9,19 +12,59 @@ import {
 	toAnalysisRequest,
 	getInitialAnalysisState,
 } from '@/api';
-import { GameState, Player, getInitialBoardState } from '@/board';
+import {
+	GameState,
+	Player,
+	getInitialBoardState,
+	getInitialBoardSettings,
+} from '@/board';
 
 // mui
 import Box from '@mui/material/Box';
-import Alert from '@mui/material/Alert';
-import Button from '@mui/material/Button';
 
 // my components
 import Copyright from '@/components/Copyright';
 import GameBoard from '@/components/game/GameBoard';
-import GameControls from '@/components/game/GameControls';
 import { useGameLogic } from '@/components/game/GameLogic';
-import AiSettings from '@/components/vs-ai/AiSettings';
+import AiSettings, {
+	DifficultyLevelsType,
+	DifficultyType,
+} from '@/components/vs-ai/AiSettings';
+import { SettingsPaper } from '@/components/ui/SettingsPaper';
+import { AnimatePresence } from 'motion/react';
+import { Typography } from '@mui/material';
+import VersusAiStatus from '@/components/vs-ai/VersusAiStatus';
+import VersusAiResult from '@/components/vs-ai/VersusAiResult';
+
+const difficultyLevels: DifficultyLevelsType = [
+	{
+		label: 'Easy' as DifficultyType,
+		limits: {
+			engineDepth: 1,
+			nThreads: 1,
+			memorySizeMb: 4,
+			multiPv: 1,
+		},
+	},
+	{
+		label: 'Medium' as DifficultyType,
+		limits: {
+			engineDepth: 4,
+			nThreads: 2,
+			memorySizeMb: 8,
+			multiPv: 1,
+		},
+	},
+	{
+		label: 'Hard' as DifficultyType,
+		limits: {
+			engineDepth: 6,
+			nThreads: 3,
+			memorySizeMb: 16,
+			multiPv: 1,
+		},
+	},
+];
 
 interface VersusState {
 	ready: boolean;
@@ -29,6 +72,16 @@ interface VersusState {
 	thinking: boolean;
 	engineTurn: Player;
 	gameMode: 'setup' | 'playing' | 'finished';
+}
+
+function initialVersusState(): VersusState {
+	return {
+		ready: false,
+		on: false,
+		thinking: false,
+		engineTurn: 'O', // Default: human starts (X)
+		gameMode: 'setup',
+	};
 }
 
 function initialVsAiBoardState(): GameState {
@@ -40,18 +93,17 @@ export default function VersusAiGame() {
 		getInitialAnalysisState,
 	);
 	const [gameLogic, dispatchGameLogic] = useGameLogic(
-		null,
+		// Use 'Easy' settings as default
+		() => ({ ...getInitialBoardSettings(), ...difficultyLevels[0].limits }),
 		initialVsAiBoardState,
 	);
-	const [versusState, setVersusState] = useState<VersusState>({
-		ready: false,
-		on: false,
-		thinking: false,
-		engineTurn: 'O', // Default: human starts (X)
-		gameMode: 'setup',
-	});
+	const [versusState, setVersusState] =
+		useState<VersusState>(initialVersusState);
+
 	// selected engine turn while configuring (AI will play as this mark when game starts)
 	const [pendingEngineTurn, setPendingEngineTurn] = useState<'X' | 'O'>('O');
+	const [selectedDifficulty, setSelectedDifficulty] =
+		useState<DifficultyType>('Easy');
 
 	// AI move logic
 	useEffect(() => {
@@ -168,13 +220,7 @@ export default function VersusAiGame() {
 			newGameState: getInitialBoardState(),
 		});
 		setAnalysisState(getInitialAnalysisState());
-		if (versusState.on) {
-			setVersusState((prev) => ({
-				...prev,
-				thinking: false,
-				gameMode: 'playing',
-			}));
-		}
+		setVersusState(initialVersusState());
 	};
 
 	const handleStartConfiguredGame = () => {
@@ -210,91 +256,83 @@ export default function VersusAiGame() {
 						alignItems: 'center',
 					}}
 				>
-					{/* <VersusAiControls
-						loading={gameLogic.loadingLimits}
-						versusState={versusState}
-						onStartGame={startVersusAi}
-						onStopGame={stopVersusAi}
-						onReset={resetGame}
-					/> */}
-
 					<Box sx={{ maxWidth: '900px', width: '100%' }}>
-						<AiSettings
-							limits={gameLogic.limits}
-							settings={gameLogic.settings}
-							onSettingsChange={(s) =>
-								dispatchGameLogic({
-									type: 'change-settings',
-									newSettings: s,
-								})
-							}
-							engineTurn={pendingEngineTurn}
-							onEngineTurnChange={(et) =>
-								setPendingEngineTurn(et)
-							}
-						/>
+						<AnimatePresence>
+							{versusState.gameMode === 'setup' && (
+								<AiSettings
+									difficulty={selectedDifficulty}
+									difficultyLevels={difficultyLevels}
+									onDifficultyChange={(diff) =>
+										setSelectedDifficulty(diff)
+									}
+									motion={baseAnimation}
+									title="Play vs AI"
+									limits={gameLogic.limits}
+									settings={gameLogic.settings}
+									onSettingsChange={(s) =>
+										dispatchGameLogic({
+											type: 'change-settings',
+											newSettings: s,
+										})
+									}
+									engineTurn={pendingEngineTurn}
+									onEngineTurnChange={(et) =>
+										setPendingEngineTurn(et)
+									}
+									handleStart={handleStartConfiguredGame}
+								/>
+							)}
+
+							{versusState.gameMode === 'playing' && (
+								<SettingsPaper {...baseAnimation}>
+									<Typography
+										variant="h5"
+										textAlign={'center'}
+										fontWeight={400}
+										gutterBottom
+									>
+										Game in progress
+									</Typography>
+
+									<VersusAiStatus
+										difficulty={selectedDifficulty}
+										versusState={versusState}
+										gameState={gameLogic.game}
+										settings={gameLogic.settings}
+									/>
+								</SettingsPaper>
+							)}
+
+							{versusState.gameMode === 'finished' && (
+								<SettingsPaper {...baseAnimation}>
+									<VersusAiResult
+										onNewGame={resetGame}
+										gameState={gameLogic.game}
+										engineTurn={versusState.engineTurn}
+										settings={gameLogic.settings}
+										difficulty={selectedDifficulty}
+									/>
+								</SettingsPaper>
+							)}
+						</AnimatePresence>
 					</Box>
 
-					{versusState.gameMode === 'setup' && (
-						<Box
-							sx={{
-								mt: 1.5,
-								display: 'flex',
-								gap: 1,
-								width: '100%',
-								maxWidth: 600,
-							}}
-						>
-							<Box sx={{ flex: 1 }} />
-							<Button
-								variant="contained"
-								sx={{
-									borderRadius: 2,
-									textTransform: 'none',
-									fontWeight: 600,
-								}}
-								onClick={handleStartConfiguredGame}
-							>
-								Start Game
-							</Button>
-						</Box>
-					)}
-
-					<Box
-						sx={{
+					<motion.motion.div
+						{...boardAnimation}
+						style={{
 							display: 'flex',
 							justifyContent: 'center',
 							width: '100%',
 						}}
 					>
 						<GameBoard
-							maxSize={'800px'}
+							disabled={!canMakeMove}
+							maxSize={'700px'}
 							gameState={gameLogic.game}
-							handleCellClick={
-								canMakeMove ? handlePlayerMove : () => {}
-							}
+							handleCellClick={handlePlayerMove}
 							analysisState={analysisState}
 						/>
-					</Box>
-
-					{(gameLogic.game.winner || gameLogic.game.isDraw) && (
-						<Box sx={{ textAlign: 'center', mt: 3 }}>
-							<Alert
-								severity={
-									gameLogic.game.winner ? 'success' : 'info'
-								}
-								sx={{ mb: 2 }}
-							>
-								{gameLogic.game.winner
-									? `${gameLogic.game.winner === versusState.engineTurn ? 'AI' : 'You'} won!`
-									: 'Game ended in a draw!'}
-							</Alert>
-							<GameControls
-								onReset={resetGame}
-								showNewGameButton
-							/>
-						</Box>
-					)}
+					</motion.motion.div>
 				</Box>
 			</Box>
 			<Copyright />

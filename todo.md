@@ -18,6 +18,12 @@
 - [x] Add more top moves (multipv) to the analysis
 - [x] Make the navbar responsive, especially on mobile:
   - Add a drawer for the menu
+- [ ] Animate main pages:
+  - [ ] Home page
+  - [x] Pass and play
+  - [x] VS AI
+  - [ ] Analysis page
+    - The menus should appear like in the VS-AI page along with the board
 
 ## Bug fixes
 - [x] Make no engine recommendation when analysis is turned off (after turning it on)
@@ -25,3 +31,4 @@
 - [x] Add rate limiting to analysis, when changing the engine settings
 - [ ] Fix ddos attack when backend is down (on vs AI mode)
 - [x] Fix analysis bug, when hiding the available websocket closes, and falls back to http requests
+- [ ] Analysis bug: when in ws connection and changing the position before the analysis is done, it stops completely current analysis and doesn't start a new one

@@ -103,7 +103,7 @@ export default function EvalBar({
 				alignSelf: 'stretch',
 				height,
 				width,
-				backgroundColor: 'evalbar.o',
+				backgroundColor: 'unset',
 				borderRadius: 1,
 				borderColor: 'secondary.main',
 				// borderWidth: 2,
@@ -175,6 +175,7 @@ export default function EvalBar({
 			</Box>
 
 			<EvalPercentage evalNum={absevalNum} direction={direction} />
+			<Box sx={{ backgroundColor: 'evalbar.o', flexGrow: 1 }} />
 		</Box>
 	);
 }

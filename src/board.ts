@@ -31,7 +31,7 @@ export interface GameState {
 
 export type BoardSizeOption = 'small' | 'normal' | 'large';
 
-export function getInitalBoardSettings(): BoardSettings {
+export function getInitialBoardSettings(): BoardSettings {
 	return {
 		boardSize: 'normal',
 		showAnalysis: false,

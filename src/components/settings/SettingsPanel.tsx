@@ -6,7 +6,6 @@ import React, { useMemo } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 
 // mui
-import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
@@ -22,7 +21,7 @@ import { BoardSettings, GameState } from '@/board';
 import { EngineLimits } from '@/api';
 import EngineSettings from './EngineSettings';
 
-import { alpha, useTheme } from '@mui/material/styles';
+import { SettingsPaper } from '../ui/SettingsPaper';
 
 const AnimatedBox = motion.create(Box);
 
@@ -46,8 +45,6 @@ export default function SettingsPanel({
 	onUndo,
 	loading,
 }: SettingsPanelProps) {
-	const theme = useTheme();
-
 	const buttonData = useMemo(
 		() => [
 			{
@@ -81,15 +78,7 @@ export default function SettingsPanel({
 	);
 
 	return (
-		<Paper
-			sx={{
-				p: { xs: 1, sm: 2 },
-				mb: 3,
-				backgroundColor: alpha(theme.palette.primary.main, 0.05),
-				borderRadius: 2,
-			}}
-			elevation={0}
-		>
+		<SettingsPaper sx={{ minHeight: 0 }}>
 			<Box
 				sx={{
 					display: 'flex',
@@ -165,6 +154,6 @@ export default function SettingsPanel({
 					</AnimatedBox>
 				)}
 			</AnimatePresence>
-		</Paper>
+		</SettingsPaper>
 	);
 }

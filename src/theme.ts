@@ -124,7 +124,7 @@ const theme = extendTheme({
 					paper: '#FFFBFE',
 				},
 				surface: {
-					main: '#FFFBFE',
+					main: '#6650a408', // primary main with 4% opacity
 				},
 				outline: {
 					main: '#79747E',
@@ -210,8 +210,8 @@ const theme = extendTheme({
 					contrastText: '#601410',
 				},
 				evalbar: {
-					x: '#583f95ff',
-					o: '#504a5bff',
+					x: '#6650a439', // 583f95ff
+					o: '#504a5bff', // 504a5bff
 					Xtext: '#D0BCFF',
 					Otext: '#B0A7C0',
 					evalText: '#fefefeff',
@@ -224,7 +224,7 @@ const theme = extendTheme({
 					paper: '#1C1B1F',
 				},
 				surface: {
-					main: '#1C1B1F',
+					main: '#6650a413', // primary light with 8% opacity
 				},
 				outline: {
 					main: '#938F99',
@@ -270,6 +270,7 @@ const theme = extendTheme({
 		},
 		MuiPaper: {
 			styleOverrides: {
+				elevation: 0,
 				root: {
 					backgroundImage: 'none', // Remove MUI default elevation overlay pattern when using MD3 surfaces
 				},

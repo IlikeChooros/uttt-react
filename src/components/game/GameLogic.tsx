@@ -5,7 +5,7 @@ import {
 	BoardSettings,
 	GameState,
 	getInitialBoardState,
-	getInitalBoardSettings,
+	getInitialBoardSettings,
 	Move,
 	Player,
 	SmallBoard,
@@ -181,7 +181,7 @@ function gameLogicReducer(
 			return {
 				...gameLogicInit(
 					action.settingsInit === undefined
-						? getInitalBoardSettings
+						? getInitialBoardSettings
 						: action.settingsInit,
 					getInitialBoardState,
 				)(),
@@ -278,7 +278,7 @@ export function useGameLogic(
 		gameLogicReducer,
 		settingsInit,
 		gameLogicInit(
-			settingsInit == null ? getInitalBoardSettings : settingsInit,
+			settingsInit == null ? getInitialBoardSettings : settingsInit,
 			gameStateInit == null ? getInitialBoardState : gameStateInit,
 		),
 	);

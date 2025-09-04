@@ -1,9 +1,12 @@
 'use client';
 
 import React, { useCallback } from 'react';
-import { GameState } from '@/board';
+
+// mui
 import Box from '@mui/material/Box';
-import Alert from '@mui/material/Alert';
+import { Typography } from '@mui/material';
+
+import { GameState } from '@/board';
 
 interface GameStatusProps {
 	gameState: GameState;
@@ -34,24 +37,11 @@ export default function GameStatus({ gameState }: GameStatusProps) {
 		gameState.currentPlayer,
 	]);
 
-	const getStatusSeverity = useCallback(() => {
-		if (gameState.winner) return 'success';
-		if (gameState.isDraw) return 'warning';
-		return 'info';
-	}, [gameState.winner, gameState.isDraw]);
-
 	return (
 		<Box sx={{ textAlign: 'center', mb: 3 }}>
-			<Alert
-				severity={getStatusSeverity()}
-				sx={{
-					justifyContent: 'center',
-					fontSize: '0.9rem',
-					width: '100%',
-				}}
-			>
+			<Typography variant="body1" color="text.secondary" gutterBottom>
 				{getStatusMessage()}
-			</Alert>
+			</Typography>
 		</Box>
 	);
 }

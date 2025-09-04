@@ -2,11 +2,13 @@
 
 import React, { useCallback } from 'react';
 import Box, { BoxProps } from '@mui/material/Box';
-import { GameState, BoardSettings } from '@/board';
+import { GameState } from '@/board';
 import { AnalysisState } from '@/api';
 import SmallBoardComponent from '@/components/game/SmallBoard';
 
 interface GameBoardProps {
+	disabled?: boolean;
+	lastMoveHighlight?: boolean;
 	gameState: GameState;
 	handleCellClick: (boardIndex: number, cellIndex: number) => void;
 	showBestMoves?: boolean;
@@ -15,6 +17,8 @@ interface GameBoardProps {
 }
 
 export default function GameBoard({
+	disabled = false,
+	lastMoveHighlight = true,
 	gameState,
 	handleCellClick,
 	showBestMoves,
@@ -66,10 +70,18 @@ export default function GameBoard({
 			>
 				{Array.from({ length: 9 }, (_, boardIndex) => (
 					<SmallBoardComponent
+						lastMoveHighlight={lastMoveHighlight}
+						lastMove={
+							gameState.history.length > 0
+								? gameState.history[
+										gameState.history.length - 1
+									].move
+								: undefined
+						}
 						key={boardIndex}
 						boardIndex={boardIndex}
 						smallBoard={gameState.boards[boardIndex]}
-						isActive={isBoardActive(boardIndex)}
+						isActive={!disabled && isBoardActive(boardIndex)}
 						showAnalysis={showBestMoves}
 						bestMove={analysisState?.bestMove}
 						topMoves={analysisState?.topMoves}

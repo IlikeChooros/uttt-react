@@ -83,17 +83,16 @@ export default function Analysis() {
 	return (
 		<Box
 			sx={{
-				my: 4,
 				display: 'flex',
 				flexDirection: 'column',
 				justifyContent: 'center',
 				alignItems: 'center',
 			}}
 		>
-			<Box sx={{ mb: 4, width: '100%' }}>
+			<Box sx={{ mb: 2, width: '100%' }}>
 				<Box
 					sx={{
-						mb: 4,
+						mb: 2,
 						px: {
 							sm: 1,
 							md: 4,

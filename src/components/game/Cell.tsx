@@ -8,6 +8,7 @@ import Box from '@mui/material/Box';
 interface CellProps {
 	value: Player;
 	canClick: boolean;
+	isHighlighted?: boolean;
 	isBestMove?: boolean;
 	isTopMove?: boolean;
 	onClick: () => void;
@@ -18,6 +19,7 @@ export default function Cell({
 	canClick,
 	isBestMove,
 	isTopMove,
+	isHighlighted,
 	onClick,
 }: CellProps) {
 	const theme = useTheme();
@@ -45,12 +47,16 @@ export default function Cell({
 					? `2px solid ${theme.palette.success.main}`
 					: isTopMove
 						? `2px solid ${theme.palette.warning.main}`
-						: `1px solid ${theme.palette.divider}`,
+						: isHighlighted
+							? `2px solid ${alpha(theme.palette.secondary.main, 0.5)}`
+							: `1px solid ${theme.palette.divider}`,
 				backgroundColor: isBestMove
 					? alpha(theme.palette.success.main, 0.1)
 					: isTopMove
 						? alpha(theme.palette.warning.main, 0.05)
-						: 'transparent',
+						: isHighlighted
+							? alpha(theme.palette.secondary.main, 0.2)
+							: 'transparent',
 				cursor: canClick ? 'pointer' : 'not-allowed',
 				transition: 'all 0.2s ease-in-out',
 				'&:hover': canClick

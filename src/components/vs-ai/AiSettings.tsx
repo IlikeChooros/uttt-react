@@ -2,16 +2,16 @@
 
 import { useState } from 'react';
 
-import { motion } from 'motion/react';
+import * as motion from 'motion/react';
 
 import Box from '@mui/material/Box';
-import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import { useTheme, alpha } from '@mui/material/styles';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import ToggleButton from '@mui/material/ToggleButton';
 import Collapse from '@mui/material/Collapse';
 import Tooltip from '@mui/material/Tooltip';
+import Button from '@mui/material/Button';
 
 // icons
 // import SettingsIcon from '@mui/icons-material/Settings';
@@ -24,114 +24,88 @@ import { BoardSettings } from '@/board';
 import { EngineLimits } from '@/api';
 import EngineSettings from '../settings/EngineSettings';
 import { IconButton } from '@mui/material';
+import { SettingsPaper } from '@/components/ui/SettingsPaper';
+
+const AnimatedBox = motion.motion.create(Box);
+export type DifficultyType = 'Easy' | 'Medium' | 'Hard' | 'custom';
+export type DifficultyLimits = {
+	engineDepth: number;
+	nThreads: number;
+	memorySizeMb: number;
+	multiPv: number;
+};
+export type DifficultyLevelsType = Array<{
+	label: DifficultyType;
+	limits: DifficultyLimits;
+}>;
 
 interface AiSettingsProps {
+	motion?: motion.HTMLMotionProps<'div'>;
+	difficultyLevels: DifficultyLevelsType;
+	difficulty: DifficultyType;
+	title: string;
 	settings: BoardSettings;
 	limits: EngineLimits;
 	onSettingsChange: (v: BoardSettings) => void;
 	engineTurn?: 'X' | 'O'; // which mark AI plays as
 	onEngineTurnChange?: (engineTurn: 'X' | 'O') => void;
+	handleStart: () => void;
+	onDifficultyChange: (
+		difficulty: 'Easy' | 'Medium' | 'Hard' | 'custom',
+	) => void;
 }
 
-const difficultyLevels = [
-	{
-		label: 'Easy',
-		limits: {
-			engineDepth: 1,
-			nThreads: 1,
-			memorySizeMb: 4,
-			multiPv: 1,
-		},
-	},
-	{
-		label: 'Medium',
-		limits: {
-			engineDepth: 4,
-			nThreads: 2,
-			memorySizeMb: 8,
-			multiPv: 1,
-		},
-	},
-	{
-		label: 'Hard',
-		limits: {
-			engineDepth: 6,
-			nThreads: 3,
-			memorySizeMb: 16,
-			multiPv: 1,
-		},
-	},
-];
-
-const AnimatedBox = motion.create(Box);
-
 export default function AiSettings({
+	motion,
+	difficultyLevels,
+	difficulty,
+	title,
 	settings,
 	limits,
 	onSettingsChange,
 	engineTurn = 'O',
 	onEngineTurnChange,
+	handleStart,
+	onDifficultyChange,
 }: AiSettingsProps) {
-	const [selectedDifficulty, setSelectedDifficulty] = useState(
-		difficultyLevels[0],
-	);
 	const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
 
 	const theme = useTheme();
 
 	return (
-		<Paper
-			sx={{
-				p: 2.5,
-				mb: 3,
-				backgroundColor: alpha(theme.palette.primary.main, 0.04),
-				borderRadius: 3,
-				width: '100%',
-				minHeight: '100px',
-			}}
-			elevation={0}
-		>
-			<Box
-				sx={{
-					display: 'flex',
-					alignItems: 'center',
-					justifyContent: 'space-between',
-					mb: 1.5,
-				}}
+		<SettingsPaper {...motion}>
+			<Typography textAlign={'center'} variant="h4" fontSize={'2rem'}>
+				{title}
+			</Typography>
+
+			<Tooltip
+				title={
+					showAdvancedSettings
+						? 'Hide advanced'
+						: 'Show advanced settings'
+				}
 			>
-				<Typography
-					variant="subtitle1"
-					fontWeight={500}
-					sx={{ letterSpacing: 0.5 }}
-				>
-					Game Setup
-				</Typography>
-				<Tooltip
-					title={
+				<IconButton
+					size="large"
+					onClick={() => setShowAdvancedSettings((p) => !p)}
+					sx={{
+						transform: showAdvancedSettings
+							? 'rotate(180deg)'
+							: 'rotate(0deg)',
+						transition: 'transform 0.25s',
+						position: 'absolute',
+						top: '12px',
+						right: '12px',
+					}}
+					aria-label={
 						showAdvancedSettings
-							? 'Hide advanced'
+							? 'Hide advanced settings'
 							: 'Show advanced settings'
 					}
 				>
-					<IconButton
-						size="large"
-						onClick={() => setShowAdvancedSettings((p) => !p)}
-						sx={{
-							transform: showAdvancedSettings
-								? 'rotate(180deg)'
-								: 'rotate(0deg)',
-							transition: 'transform 0.25s',
-						}}
-						aria-label={
-							showAdvancedSettings
-								? 'Hide advanced settings'
-								: 'Show advanced settings'
-						}
-					>
-						<ExpandMoreIcon fontSize="small" />
-					</IconButton>
-				</Tooltip>
-			</Box>
+					<ExpandMoreIcon fontSize="small" />
+				</IconButton>
+			</Tooltip>
 
 			{/* Difficulty selection */}
 			<Box sx={{ mb: 2 }}>
@@ -152,14 +126,14 @@ export default function AiSettings({
 					exclusive
 					size="small"
 					fullWidth
-					value={selectedDifficulty.label}
+					value={difficulty}
 					onChange={(_, val) => {
 						if (!val) return;
 						const level = difficultyLevels.find(
 							(l) => l.label === val,
 						);
 						if (!level) return;
-						setSelectedDifficulty(level);
+						onDifficultyChange(level.label);
 						onSettingsChange({ ...settings, ...level.limits });
 					}}
 					sx={{
@@ -188,7 +162,7 @@ export default function AiSettings({
 			</Box>
 
 			{/* Turn selection: choose who starts (X) */}
-			<Box sx={{ mb: 1.5 }}>
+			<Box sx={{ mb: 0 }}>
 				<Typography
 					variant="caption"
 					sx={{
@@ -202,44 +176,65 @@ export default function AiSettings({
 				>
 					First Move
 				</Typography>
-				<ToggleButtonGroup
-					exclusive
-					size="small"
-					value={engineTurn === 'O' ? 'you' : 'ai'}
-					onChange={(_, val) => {
-						if (!val) return;
-						// if you start, AI is O; if AI starts, AI is X
-						if (val === 'you') {
-							onEngineTurnChange?.('O');
-						} else {
-							onEngineTurnChange?.('X');
-						}
-					}}
-					sx={{
-						'& .MuiToggleButtonGroup-grouped': {
-							flex: 1,
-							border: 'none',
-							m: 0.5,
-							borderRadius: 1.5,
-							textTransform: 'none',
-							fontWeight: 500,
-							display: 'flex',
-							gap: 4,
-						},
-						'& .Mui-selected': {
-							bgcolor: theme.palette.secondary.main + '22',
-						},
+
+				<div
+					style={{
+						display: 'flex',
+						flexDirection: 'row',
 					}}
 				>
-					<ToggleButton value="you">
-						<PersonIcon fontSize="small" />
-						&nbsp;You (X)
-					</ToggleButton>
-					<ToggleButton value="ai">
-						<PsychologyIcon fontSize="small" />
-						&nbsp;AI (X)
-					</ToggleButton>
-				</ToggleButtonGroup>
+					<ToggleButtonGroup
+						exclusive
+						color="primary"
+						size="small"
+						value={engineTurn === 'O' ? 'you' : 'ai'}
+						onChange={(_, val) => {
+							if (!val) return;
+							// if you start, AI is O; if AI starts, AI is X
+							if (val === 'you') {
+								onEngineTurnChange?.('O');
+							} else {
+								onEngineTurnChange?.('X');
+							}
+						}}
+						sx={{
+							fontWeight: 400,
+						}}
+					>
+						<ToggleButton value="you" color="secondary">
+							<PersonIcon fontSize="small" sx={{ ml: 2 }} />
+							<Typography
+								variant="body1"
+								sx={{ mr: 2, textTransform: 'none' }}
+							>
+								&nbsp;You (X)
+							</Typography>
+						</ToggleButton>
+						<ToggleButton value="ai" color="secondary">
+							<PsychologyIcon fontSize="small" sx={{ ml: 2 }} />
+							<Typography
+								variant="body1"
+								sx={{ mr: 2, textTransform: 'none' }}
+							>
+								&nbsp;AI (X)
+							</Typography>
+						</ToggleButton>
+					</ToggleButtonGroup>
+
+					<div style={{ flexGrow: 1 }} />
+
+					<Button
+						variant="contained"
+						sx={{
+							borderRadius: 2,
+							textTransform: 'none',
+							fontWeight: 600,
+						}}
+						onClick={handleStart}
+					>
+						Start Game
+					</Button>
+				</div>
 			</Box>
 
 			{/* Advanced settings collapse */}
@@ -261,10 +256,13 @@ export default function AiSettings({
 						show
 						settings={settings}
 						limits={limits}
-						onSettingsChange={onSettingsChange}
+						onSettingsChange={(v) => {
+							onSettingsChange(v);
+							onDifficultyChange('custom');
+						}}
 					/>
 				</AnimatedBox>
 			</Collapse>
-		</Paper>
+		</SettingsPaper>
 	);
 }

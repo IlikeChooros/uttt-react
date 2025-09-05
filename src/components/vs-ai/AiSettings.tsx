@@ -177,10 +177,11 @@ export default function AiSettings({
 					First Move
 				</Typography>
 
-				<div
-					style={{
+				<Box
+					sx={{
 						display: 'flex',
-						flexDirection: 'row',
+						flexDirection: { xs: 'column', sm: 'row' },
+						gap: 1,
 					}}
 				>
 					<ToggleButtonGroup
@@ -234,7 +235,7 @@ export default function AiSettings({
 					>
 						Start Game
 					</Button>
-				</div>
+				</Box>
 			</Box>
 
 			{/* Advanced settings collapse */}

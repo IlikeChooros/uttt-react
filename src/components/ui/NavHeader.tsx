@@ -114,30 +114,38 @@ export default function NavHeader() {
 
 					{/* Always on */}
 					<Box
-						component={Link}
-						href="/"
-						display={'flex'}
-						alignItems={'center'}
 						sx={{
-							textDecoration: 'none',
+							display: 'flex',
 							flexGrow: { xs: 1, sm: 0 },
-							color: 'InfoText',
-							gap: 1,
 							py: 2,
 						}}
 					>
-						<BlurOn sx={{ fontSize: '2rem', display: 'flex' }} />
-						<Typography
-							variant="h6"
+						<Box
+							component={Link}
+							href="/"
 							sx={{
 								display: 'flex',
-								fontWeight: 600,
-								fontFamily: 'monospace',
-								letterSpacing: '0.2rem',
+								alignItems: 'center',
+								textDecoration: 'none',
+								color: 'InfoText',
+								gap: 1,
 							}}
 						>
-							UTTT
-						</Typography>
+							<BlurOn
+								sx={{ fontSize: '2rem', display: 'flex' }}
+							/>
+							<Typography
+								variant="h6"
+								sx={{
+									display: 'flex',
+									fontWeight: 600,
+									fontFamily: 'monospace',
+									letterSpacing: '0.2rem',
+								}}
+							>
+								UTTT
+							</Typography>
+						</Box>
 					</Box>
 
 					{/* If the window is too small, these components disappear */}

@@ -21,6 +21,7 @@ import {
 
 // mui
 import Box from '@mui/material/Box';
+import CloseIcon from '@mui/icons-material/Close';
 
 // my components
 import Copyright from '@/components/Copyright';
@@ -32,7 +33,7 @@ import AiSettings, {
 } from '@/components/vs-ai/AiSettings';
 import { SettingsPaper } from '@/components/ui/SettingsPaper';
 import { AnimatePresence } from 'motion/react';
-import { Typography } from '@mui/material';
+import { Button, Typography } from '@mui/material';
 import VersusAiStatus from '@/components/vs-ai/VersusAiStatus';
 import VersusAiResult from '@/components/vs-ai/VersusAiResult';
 
@@ -232,6 +233,8 @@ export default function VersusAiGame() {
 		!versusState.on ||
 		versusState.engineTurn !== gameLogic.game.currentPlayer;
 	const canMakeMove =
+		versusState.on &&
+		versusState.ready &&
 		isHumanTurn &&
 		!versusState.thinking &&
 		!gameLogic.game.winner &&
@@ -300,6 +303,23 @@ export default function VersusAiGame() {
 										gameState={gameLogic.game}
 										settings={gameLogic.settings}
 									/>
+
+									<Box
+										sx={{
+											mt: 2,
+											display: 'flex',
+											justifyContent: 'center',
+										}}
+									>
+										<Button
+											startIcon={<CloseIcon />}
+											variant="contained"
+											color="error"
+											onClick={resetGame}
+										>
+											Exit
+										</Button>
+									</Box>
 								</SettingsPaper>
 							)}
 

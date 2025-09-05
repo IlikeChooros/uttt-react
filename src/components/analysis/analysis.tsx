@@ -5,8 +5,10 @@ import { ActionDispatch, useEffect, useReducer } from 'react';
 
 // mine components
 import {
+	AnalysisActionType,
 	AnalysisOptions,
 	AnalysisState,
+	ENGINE_API_WS_ANALYSIS,
 	EngineAPI,
 	getInitialAnalysisState,
 } from '@/api';
@@ -15,20 +17,7 @@ import {
 export type Analysis = [AnalysisState, ActionDispatch<[AnalysisAction]>];
 
 export interface AnalysisAction {
-	type: // public
-	| 'request-connection'
-		| 'request-disconnection'
-		| 'analyze'
-		| 'fallback'
-		| 'close'
-		| 'set-options'
-		// private
-		| 'set-ws'
-		| 'start-thinking'
-		| 'stop-thinking'
-		| 'set-response'
-		| 'set-ws-state';
-
+	type: AnalysisActionType;
 	ws?: WebSocket | null;
 	state?: {
 		thinking?: AnalysisState['thinking'];
@@ -57,18 +46,20 @@ function analysisReducer(
 				...prev,
 				ws: action.ws,
 				wsState: action.ws ? 'connected' : 'disconnected',
+				action: 'set-ws',
 			};
 		case 'set-ws-state':
 			if (action.wsState === undefined) {
 				return prev;
 			}
-			return { ...prev, wsState: action.wsState };
+			return { ...prev, wsState: action.wsState, action: 'set-ws-state' };
 		case 'start-thinking':
 			return {
 				...prev,
 				thinking: true,
 				lastRequest: prev.request,
 				request: null,
+				action: 'start-thinking',
 			};
 		case 'stop-thinking':
 			return { ...prev, thinking: false };
@@ -79,6 +70,7 @@ function analysisReducer(
 				...prev,
 				lastRequest: null,
 				thinking: false,
+				action: 'set-response',
 				...action.state,
 			};
 
@@ -87,19 +79,20 @@ function analysisReducer(
 			if (action.options === undefined) {
 				return prev;
 			}
-			return { ...prev, ...action.options };
+			return { ...prev, ...action.options, action: 'set-options' };
 		case 'fallback': // used if 'fallbackOnWebSocketError' is true and we got an error in web socket
 			console.log('fallback', prev);
 			return {
 				...prev,
 				lastRequest: null,
-				request: prev.lastRequest,
+				request: prev.request,
 				useWebSocket: false,
 				shouldConnect: false,
 				wsFailed: true,
 				thinking: false,
 				ws: null,
 				wsState: 'failed',
+				action: 'fallback',
 			};
 
 		// simply close the the connection
@@ -113,6 +106,7 @@ function analysisReducer(
 				thinking: false,
 				ws: null,
 				wsState: 'closed',
+				action: 'close',
 			};
 
 		// make a new request to analyze the position only if we aren't currenlty
@@ -124,6 +118,7 @@ function analysisReducer(
 			return {
 				...prev,
 				request: action.state.request,
+				action: 'analyze',
 			};
 		// requests websocket connection
 		case 'request-connection':
@@ -133,6 +128,7 @@ function analysisReducer(
 				shouldConnect: true,
 				request: null,
 				wsState: 'request-connection',
+				action: 'request-connection',
 			};
 		// requests websocket disconnection
 		case 'request-disconnection':
@@ -142,6 +138,7 @@ function analysisReducer(
 				shouldConnect: false,
 				request: null,
 				wsState: 'request-disconnection',
+				action: 'request-disconnection',
 			};
 		default:
 			break;
@@ -171,6 +168,7 @@ export function useAnalysis(
 	useEffect(() => {
 		// If we aren't analyzing the position AND there is an request
 		if (!state.thinking && state.request !== null) {
+			console.log('request', state.request);
 			// Using web socket for real-time analysis
 			if (
 				state.useWebSocket &&
@@ -213,7 +211,7 @@ export function useAnalysis(
 
 	// Requests for connection/disconnection
 	useEffect(() => {
-		if (!state.useWebSocket || state.wsState === 'null') {
+		if (!state.useWebSocket || state.wsState === 'null' || state.wsFailed) {
 			return;
 		}
 
@@ -224,9 +222,9 @@ export function useAnalysis(
 		) {
 			try {
 				// Make sure we're using the correct protocol (ws:// for http, wss:// for https)
-				const protocol =
-					window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-				const wsUrl = `${protocol}//localhost:8080/rt-analysis`;
+				// const protocol =
+				// 	window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+				const wsUrl = `${ENGINE_API_WS_ANALYSIS}`;
 				// const wsUrl = 'ws://127.0.0.1:8080/rt-analysis2';
 				console.log(`Connecting to WebSocket at ${wsUrl}`);
 
@@ -270,17 +268,13 @@ export function useAnalysis(
 
 				ws.onclose = (ev) => {
 					console.log('WebSocket closed:', ev);
-					dispatch({ type: 'close' });
+					if (!state.wsFailed && state.fallbackOnWebSocketError) {
+						dispatch({ type: 'fallback' });
+					}
 				};
 
 				ws.onerror = (error) => {
-					console.error('WebSocket error:', error);
-
-					if (state.fallbackOnWebSocketError) {
-						dispatch({ type: 'fallback' });
-						return;
-					}
-					dispatch({ type: 'close' });
+					console.info('WebSocket error:', error);
 				};
 			} catch (error) {
 				console.error('Failed to create WebSocket:', error);
@@ -292,6 +286,7 @@ export function useAnalysis(
 		}
 	}, [
 		state.ws,
+		state.wsFailed,
 		state.wsState,
 		state.shouldConnect,
 		state.useWebSocket,

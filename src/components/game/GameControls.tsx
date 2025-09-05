@@ -2,7 +2,6 @@
 
 import React from 'react';
 import Button from '@mui/material/Button';
-import IconButton from '@mui/material/IconButton';
 import Box from '@mui/material/Box';
 import RestartIcon from '@mui/icons-material/RestartAlt';
 

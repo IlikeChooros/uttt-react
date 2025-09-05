@@ -1,10 +1,30 @@
-'use client';
-
 import { ToNotation, Move, BoardSettings, GameState } from '@/board';
 
-const ENGINE_API_ANALYSIS = '/api/analysis';
-const ENGINE_API_LIMITS = '/api/limits';
-// const ENGINE_API_WS_ANALYSIS = "/api/rt-analysis"
+type BuildType = 'development' | 'production' | 'test';
+
+export const BUILD: BuildType = process.env.NODE_ENV as BuildType;
+
+// Public override (available in client bundle)
+const PUBLIC_HOST = process.env.NEXT_PUBLIC_PROD_HOST || '';
+
+// Dev-only host (only available server-side since no NEXT_PUBLIC_ prefix).
+// Will be undefined in the client bundle if this file ever gets client-side imported.
+const DEV_HOST = process.env.NEXT_PUBLIC_DEV_HOST || 'localhost:8080';
+
+// Choose base host:
+// 1. If a public override provided, use it.
+// 2. Else if dev mode and DEV_HOST defined, use that.
+// 3. Else same-origin (empty string so we build relative URLs).
+const baseHost =
+	PUBLIC_HOST !== '' ? PUBLIC_HOST : BUILD === 'development' ? DEV_HOST : '';
+
+// Backend server URLs
+export const SERVER_URL_HTTP = baseHost !== '' ? `http://${baseHost}` : '';
+export const SERVER_URL_WS = baseHost !== '' ? `ws://${baseHost}` : '';
+
+export const ENGINE_API_ANALYSIS = `${SERVER_URL_HTTP}/api/analysis`;
+export const ENGINE_API_LIMITS = `${SERVER_URL_HTTP}/api/limits`;
+export const ENGINE_API_WS_ANALYSIS = `${SERVER_URL_WS}/api/rt-analysis`;
 
 export interface AnalysisEngineLine {
 	eval: string;
@@ -15,7 +35,7 @@ export interface AnalysisEngineLine {
 export interface AnalysisResponse {
 	depth: number;
 	lines: AnalysisEngineLine[];
-	nps: number;
+	cps: number;
 	final: boolean;
 	error?: string;
 }
@@ -50,6 +70,7 @@ export function getInitialAnalysisState(
 	options: AnalysisOptions | undefined = undefined,
 ): AnalysisState {
 	return {
+		action: null,
 		currentEvaluation: '',
 		absEvaluation: '',
 		bestMove: null,
@@ -67,6 +88,21 @@ export function getInitialAnalysisState(
 	};
 }
 
+export type AnalysisActionType =
+	// public
+	| 'request-connection'
+	| 'request-disconnection'
+	| 'analyze'
+	| 'fallback'
+	| 'close'
+	| 'set-options'
+	// private
+	| 'set-ws'
+	| 'start-thinking'
+	| 'stop-thinking'
+	| 'set-response'
+	| 'set-ws-state';
+
 export type AnaysisWsState =
 	| 'null'
 	| 'request-connection'
@@ -79,6 +115,7 @@ export type AnaysisWsState =
 	| 'closed';
 
 export interface AnalysisState {
+	action: AnalysisActionType | null;
 	currentEvaluation: string;
 	absEvaluation: string;
 	bestMove: EngineMove | null;
@@ -136,30 +173,24 @@ function IsInstance<T>(
 
 // Fetch engine limits at /api/limits, returns the response
 export async function getEngineLimits(): Promise<EngineLimits> {
-	const response = fetch(ENGINE_API_LIMITS, { method: 'GET' });
+	console.log(process.env.DEV_HOST, process.env.NEXT_PUBLIC_ENGINE_HOST);
 
-	return response
-		.then((resp) => {
-			return resp.json();
-		})
-		.then((json) => {
-			if (
-				!IsInstance<EngineLimits>(
-					json,
-					['depth', 'mbsize', 'threads', 'multipv'],
-					['depth', 'mbsize', 'threads', 'multipv'],
-				)
-			) {
-				throw new Error(
-					'Limits: invalid json structure, got:' + json.toString(),
-				);
-			}
-
-			return json;
-		})
-		.catch((error) => {
-			console.log(error);
-		});
+	try {
+		const resp = await fetch(ENGINE_API_LIMITS, { method: 'GET' });
+		const json = await resp.json();
+		const valid = IsInstance<EngineLimits>(
+			json,
+			['depth', 'mbsize', 'threads', 'multipv'],
+			['depth', 'mbsize', 'threads', 'multipv'],
+		);
+		if (!valid) {
+			throw new Error('Limits: invalid json structure');
+		}
+		return json;
+	} catch (e) {
+		// Surface error upward so UI can handle (retry / message)
+		throw e;
+	}
 }
 
 export class EngineAPI {
@@ -179,8 +210,8 @@ export class EngineAPI {
 		if (
 			!IsInstance<AnalysisResponse>(
 				json,
-				['lines', 'nps', 'depth', 'final'],
-				['error', 'nps', 'lines', 'depth', 'final'],
+				['lines', 'cps', 'depth', 'final'],
+				['error', 'cps', 'lines', 'depth', 'final'],
 			)
 		) {
 			throw new Error('Invalid json structure, got:' + json.toString());
@@ -238,10 +269,6 @@ export class EngineAPI {
 			})
 			.then((json) => {
 				return this.parseAnalysisResponse(json);
-			})
-			.catch((err) => {
-				console.log(err);
-				return new Array<EngineMove>(0);
 			});
 	}
 }

@@ -20,11 +20,13 @@ const baseHost =
 
 // Backend server URLs
 export const SERVER_URL_HTTP = baseHost !== '' ? `http://${baseHost}` : '';
-export const SERVER_URL_WS = baseHost !== '' ? `ws://${baseHost}` : '';
+export const SERVER_URL_WS = baseHost !== '' ? `ws://${baseHost}` : ''; // left for backwards compat if needed elsewhere
 
 export const ENGINE_API_ANALYSIS = `${SERVER_URL_HTTP}/api/analysis`;
 export const ENGINE_API_LIMITS = `${SERVER_URL_HTTP}/api/limits`;
-export const ENGINE_API_WS_ANALYSIS = `${SERVER_URL_WS}/api/rt-analysis`;
+// Real-time (single session) analysis over Server-Sent Events (SSE) via POST
+// NOTE: kept the existing constant name so callers don't need to change imports.
+export const ENGINE_API_RT_ANALYSIS = `${SERVER_URL_HTTP}/api/rt-analysis`;
 
 export interface AnalysisEngineLine {
 	eval: string;
@@ -98,6 +100,7 @@ export type AnalysisActionType =
 	| 'set-options'
 	// private
 	| 'set-ws'
+	| 'set-event-source'
 	| 'start-thinking'
 	| 'stop-thinking'
 	| 'set-response'
@@ -129,6 +132,7 @@ export interface AnalysisState {
 	wsFailed: boolean;
 	ws: WebSocket | null;
 	wsState: AnaysisWsState;
+	eventSource?: EventSource | null;
 }
 
 export interface EngineMove extends Move {
@@ -171,12 +175,30 @@ function IsInstance<T>(
 	);
 }
 
+export function analysisToQuery(request: AnalysisRequest): string {
+	const params = new URLSearchParams();
+	// Only include defined values and skip 'position'
+	for (const [key, value] of Object.entries(request)) {
+		if (value !== undefined && key !== 'position') {
+			params.append(key, value.toString());
+		}
+	}
+	params.append(
+		'position',
+		request.position.replaceAll('/', 'n').replaceAll(' ', '_'),
+	);
+
+	return params.toString();
+}
+
 // Fetch engine limits at /api/limits, returns the response
 export async function getEngineLimits(): Promise<EngineLimits> {
 	console.log(process.env.DEV_HOST, process.env.NEXT_PUBLIC_ENGINE_HOST);
 
 	try {
-		const resp = await fetch(ENGINE_API_LIMITS, { method: 'GET' });
+		const resp = await fetch(ENGINE_API_LIMITS, {
+			method: 'GET',
+		});
 		const json = await resp.json();
 		const valid = IsInstance<EngineLimits>(
 			json,
@@ -206,14 +228,16 @@ export class EngineAPI {
 		['c1', 8],
 	]);
 
-	static parseAnalysisResponse(json: AnalysisResponse): EngineMove[] {
-		if (
-			!IsInstance<AnalysisResponse>(
-				json,
-				['lines', 'cps', 'depth', 'final'],
-				['error', 'cps', 'lines', 'depth', 'final'],
-			)
-		) {
+	static isAnalysisResponse(json: object): json is AnalysisResponse {
+		return IsInstance<AnalysisResponse>(
+			json,
+			['lines', 'cps', 'depth', 'final'],
+			['error', 'cps', 'lines', 'depth', 'final'],
+		);
+	}
+
+	static parseAnalysisResponse(json: object): EngineMove[] {
+		if (!EngineAPI.isAnalysisResponse(json)) {
 			throw new Error('Invalid json structure, got:' + json.toString());
 		}
 

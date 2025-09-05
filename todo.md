@@ -3,6 +3,9 @@
 ## Chores
 - [x] Refactor UTTT game component so that as much code as possible is shared with the 'versus ai' component
   - Used the `useGameLogic` hook as a reducer for the game state.
+- [ ] Move to SSE instead of websockets for the analysis page, to allow static export of the app
+  - what the fuck is even SSE?
+
 
 ## UI
 - [ ] Use 'Material Design 3' recommended practices for the UI
@@ -32,3 +35,7 @@
 - [ ] Fix ddos attack when backend is down (on vs AI mode)
 - [x] Fix analysis bug, when hiding the available websocket closes, and falls back to http requests
 - [ ] Analysis bug: when in ws connection and changing the position before the analysis is done, it stops completely current analysis and doesn't start a new one
+
+
+## Misc
+- [ ] Add icon for the app 

@@ -7,8 +7,10 @@ import { ActionDispatch, useEffect, useReducer } from 'react';
 import {
 	AnalysisActionType,
 	AnalysisOptions,
+	AnalysisResponse,
 	AnalysisState,
-	ENGINE_API_WS_ANALYSIS,
+	analysisToQuery,
+	ENGINE_API_RT_ANALYSIS,
 	EngineAPI,
 	getInitialAnalysisState,
 } from '@/api';
@@ -19,6 +21,7 @@ export type Analysis = [AnalysisState, ActionDispatch<[AnalysisAction]>];
 export interface AnalysisAction {
 	type: AnalysisActionType;
 	ws?: WebSocket | null;
+	eventSource?: EventSource | null;
 	state?: {
 		thinking?: AnalysisState['thinking'];
 		currentEvaluation?: AnalysisState['currentEvaluation'];
@@ -47,6 +50,16 @@ function analysisReducer(
 				ws: action.ws,
 				wsState: action.ws ? 'connected' : 'disconnected',
 				action: 'set-ws',
+			};
+		case 'set-event-source':
+			if (action.eventSource === undefined) {
+				return prev;
+			}
+			return {
+				...prev,
+				ws: null,
+				wsState: action.eventSource ? 'connected' : 'disconnected',
+				action: 'set-event-source',
 			};
 		case 'set-ws-state':
 			if (action.wsState === undefined) {
@@ -164,20 +177,55 @@ export function useAnalysis(
 		};
 	}, [state.ws]);
 
-	// Analyze position
+	const rtAnalysis = () => {
+		if (
+			state.eventSource &&
+			state.eventSource.readyState !== EventSource.CLOSED
+		) {
+			state.eventSource.close();
+		}
+
+		// Open SSE connection with analysis params
+		const params = analysisToQuery(state.request!);
+		const url = `${ENGINE_API_RT_ANALYSIS}?${params}`;
+		console.log('Opening EventSource connection to ', url);
+		state.eventSource = new EventSource(url);
+		state.eventSource.onmessage = (event) => {
+			const data = JSON.parse(event.data);
+			const valid = EngineAPI.isAnalysisResponse(data);
+			if (!valid) {
+				console.error('Invalid analysis response', data);
+				return;
+			}
+
+			const bestMoves = EngineAPI.parseAnalysisResponse(data);
+			dispatch({
+				type: 'set-response',
+				state: {
+					currentEvaluation: bestMoves[0].evaluation,
+					absEvaluation: bestMoves[0].abseval,
+					thinking: !data.final,
+					bestMove: bestMoves[0],
+					topMoves: bestMoves,
+				},
+			});
+		};
+		state.eventSource.onerror = (error) => {
+			console.error('EventSource failed:', error);
+			dispatch({ type: 'close' });
+		};
+		dispatch({ type: 'set-event-source', eventSource: state.eventSource });
+	};
+
 	useEffect(() => {
 		// If we aren't analyzing the position AND there is an request
 		if (!state.thinking && state.request !== null) {
 			console.log('request', state.request);
 			// Using web socket for real-time analysis
-			if (
-				state.useWebSocket &&
-				state.ws !== null &&
-				state.ws.readyState === WebSocket.OPEN
-			) {
-				console.log('ws analysis');
+			if (state.useWebSocket && !state.wsFailed) {
+				console.log('sse analysis');
 				dispatch({ type: 'start-thinking' });
-				state.ws.send(JSON.stringify(state.request));
+				rtAnalysis();
 			}
 
 			// Just a one-time request
@@ -209,82 +257,7 @@ export function useAnalysis(
 		state.wsFailed,
 	]);
 
-	// Requests for connection/disconnection
-	useEffect(() => {
-		if (!state.useWebSocket || state.wsState === 'null' || state.wsFailed) {
-			return;
-		}
-
-		if (
-			state.shouldConnect &&
-			!state.ws &&
-			state.wsState === 'request-connection'
-		) {
-			try {
-				// Make sure we're using the correct protocol (ws:// for http, wss:// for https)
-				// const protocol =
-				// 	window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-				const wsUrl = `${ENGINE_API_WS_ANALYSIS}`;
-				// const wsUrl = 'ws://127.0.0.1:8080/rt-analysis2';
-				console.log(`Connecting to WebSocket at ${wsUrl}`);
-
-				const ws = new WebSocket(wsUrl);
-
-				ws.onopen = (event) => {
-					console.log('Connected to websocket', event);
-					dispatch({ type: 'set-ws', ws });
-				};
-
-				ws.onmessage = (event) => {
-					try {
-						const response = JSON.parse(event.data);
-						console.log('Analysis response:', response);
-
-						if (response.error) {
-							console.error('Analysis error:', response.error);
-							dispatch({ type: 'stop-thinking' });
-							return;
-						}
-
-						const bestMoves =
-							EngineAPI.parseAnalysisResponse(response);
-						dispatch({
-							type: 'set-response',
-							state: {
-								currentEvaluation: bestMoves[0].evaluation,
-								absEvaluation: bestMoves[0].abseval,
-								thinking: !response.final,
-								bestMove: bestMoves[0],
-								topMoves: bestMoves,
-							},
-						});
-					} catch (error) {
-						console.error(
-							'Failed to parse WebSocket message:',
-							error,
-						);
-					}
-				};
-
-				ws.onclose = (ev) => {
-					console.log('WebSocket closed:', ev);
-					if (!state.wsFailed && state.fallbackOnWebSocketError) {
-						dispatch({ type: 'fallback' });
-					}
-				};
-
-				ws.onerror = (error) => {
-					console.info('WebSocket error:', error);
-				};
-			} catch (error) {
-				console.error('Failed to create WebSocket:', error);
-			}
-			dispatch({ type: 'set-ws-state', wsState: 'connecting' });
-		} else if (!state.shouldConnect && state.ws) {
-			state.ws.close();
-			dispatch({ type: 'set-ws', ws: null });
-		}
-	}, [
+	useEffect(() => {}, [
 		state.ws,
 		state.wsFailed,
 		state.wsState,

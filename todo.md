@@ -5,7 +5,9 @@
   - Used the `useGameLogic` hook as a reducer for the game state.
 - [ ] Move to SSE instead of websockets for the analysis page, to allow static export of the app
   - what the fuck is even SSE?
-
+- [ ] Implement error handling for the every engine API 
+- [ ] Disable related part of the UI on errors
+  - Show a snackbar notification on errors
 
 ## UI
 - [ ] Use 'Material Design 3' recommended practices for the UI
@@ -27,6 +29,7 @@
   - [x] VS AI
   - [ ] Analysis page
     - The menus should appear like in the VS-AI page along with the board
+    - If the engine responds in shorter time than ~400ms, then artificially slow down the move making to match the 400ms duration.
 
 ## Bug fixes
 - [x] Make no engine recommendation when analysis is turned off (after turning it on)
@@ -34,8 +37,6 @@
 - [x] Add rate limiting to analysis, when changing the engine settings
 - [ ] Fix ddos attack when backend is down (on vs AI mode)
 - [x] Fix analysis bug, when hiding the available websocket closes, and falls back to http requests
-- [ ] Analysis bug: when in ws connection and changing the position before the analysis is done, it stops completely current analysis and doesn't start a new one
-
 
 ## Misc
 - [ ] Add icon for the app 

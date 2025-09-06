@@ -7,6 +7,10 @@ import theme from '@/theme';
 import NavHeader from '@/components/ui/NavHeader';
 import Container from '@mui/material/Container';
 
+// vercel analytics
+import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
+
 export default function RootLayout(props: { children: React.ReactNode }) {
 	return (
 		<html lang="en" suppressHydrationWarning>
@@ -19,6 +23,8 @@ export default function RootLayout(props: { children: React.ReactNode }) {
 						<NavHeader />
 						<Container maxWidth="lg" sx={{ mt: 2 }}>
 							{props.children}
+							<Analytics />
+							<SpeedInsights />
 						</Container>
 					</ThemeProvider>
 				</AppRouterCacheProvider>

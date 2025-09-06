@@ -51,6 +51,10 @@ export interface AnalysisRequest {
 	multipv?: number;
 }
 
+export interface AnalysisRequestWithId extends AnalysisRequest {
+	connId: string;
+}
+
 export function toAnalysisRequest(
 	settings: BoardSettings,
 	gameState: GameState,
@@ -133,6 +137,7 @@ export interface AnalysisState {
 	ws: WebSocket | null;
 	wsState: AnaysisWsState;
 	eventSource?: EventSource | null;
+	connectionId?: string; // for SSE connections
 }
 
 export interface EngineMove extends Move {
@@ -294,5 +299,28 @@ export class EngineAPI {
 			.then((json) => {
 				return this.parseAnalysisResponse(json);
 			});
+	}
+
+	static createEventSource(): EventSource {
+		// Make sure we're using the correct protocol (http:// for http, https:// for https)
+		const protocol =
+			window.location.protocol === 'https:' ? 'https:' : 'http:';
+		const sseUrl = `${protocol}//${ENGINE_API_RT_ANALYSIS}/api/rt-analysis`;
+		console.log(`Connecting to SSE at ${sseUrl}`);
+
+		const eventSource = new EventSource(sseUrl, { withCredentials: true });
+		return eventSource;
+	}
+
+	// Make a POST request for SSE analysis
+	static async analyzeSSE(request: AnalysisRequestWithId): Promise<Response> {
+		const response = await fetch(ENGINE_API_RT_ANALYSIS, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(request),
+		});
+
+		// This is either a 204 or an error
+		return response;
 	}
 }

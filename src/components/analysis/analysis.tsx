@@ -7,10 +7,9 @@ import { ActionDispatch, useEffect, useReducer } from 'react';
 import {
 	AnalysisActionType,
 	AnalysisOptions,
+	AnalysisRequest,
 	AnalysisResponse,
 	AnalysisState,
-	analysisToQuery,
-	ENGINE_API_RT_ANALYSIS,
 	EngineAPI,
 	getInitialAnalysisState,
 } from '@/api';
@@ -171,51 +170,9 @@ export function useAnalysis(
 	// Close on unmount
 	useEffect(() => {
 		return () => {
-			if (state.ws && state.ws.readyState !== WebSocket.CLOSED) {
-				dispatch({ type: 'close' });
-			}
-		};
-	}, [state.ws]);
-
-	const rtAnalysis = () => {
-		if (
-			state.eventSource &&
-			state.eventSource.readyState !== EventSource.CLOSED
-		) {
-			state.eventSource.close();
-		}
-
-		// Open SSE connection with analysis params
-		const params = analysisToQuery(state.request!);
-		const url = `${ENGINE_API_RT_ANALYSIS}?${params}`;
-		console.log('Opening EventSource connection to ', url);
-		state.eventSource = new EventSource(url);
-		state.eventSource.onmessage = (event) => {
-			const data = JSON.parse(event.data);
-			const valid = EngineAPI.isAnalysisResponse(data);
-			if (!valid) {
-				console.error('Invalid analysis response', data);
-				return;
-			}
-
-			const bestMoves = EngineAPI.parseAnalysisResponse(data);
-			dispatch({
-				type: 'set-response',
-				state: {
-					currentEvaluation: bestMoves[0].evaluation,
-					absEvaluation: bestMoves[0].abseval,
-					thinking: !data.final,
-					bestMove: bestMoves[0],
-					topMoves: bestMoves,
-				},
-			});
-		};
-		state.eventSource.onerror = (error) => {
-			console.error('EventSource failed:', error);
 			dispatch({ type: 'close' });
 		};
-		dispatch({ type: 'set-event-source', eventSource: state.eventSource });
-	};
+	}, [state.ws]);
 
 	useEffect(() => {
 		// If we aren't analyzing the position AND there is an request
@@ -225,7 +182,12 @@ export function useAnalysis(
 			if (state.useWebSocket && !state.wsFailed) {
 				console.log('sse analysis');
 				dispatch({ type: 'start-thinking' });
-				rtAnalysis();
+				EngineAPI.analyzeSSE({
+					...state.request,
+					connId: state.connectionId || '',
+				}).catch((error) => {
+					console.error(error);
+				});
 			}
 
 			// Just a one-time request
@@ -255,11 +217,58 @@ export function useAnalysis(
 		state.thinking,
 		state.request,
 		state.wsFailed,
+		state.connectionId,
 	]);
 
-	useEffect(() => {}, [
+	// Requests for connection/disconnection
+	useEffect(() => {
+		if (!state.useWebSocket || state.wsState === 'null') {
+			return;
+		}
+
+		if (
+			state.shouldConnect &&
+			!state.connectionId &&
+			!state.eventSource &&
+			state.wsState === 'request-connection'
+		) {
+			try {
+				// Open the event source connection
+				const eventSource = EngineAPI.createEventSource();
+
+				// Set connection id on connection event
+				eventSource.addEventListener('connection', (event) => {
+					state.connectionId = event.data.connId;
+					console.log('connection', event);
+				});
+
+				eventSource.addEventListener('analysis', (event) => {
+					console.log('analysis', event);
+				});
+
+				eventSource.addEventListener('ping', (event) => {
+					console.log('ping', event);
+				});
+
+				eventSource.onopen = (event) => {
+					console.log('Connected to event source', event);
+					dispatch({ type: 'set-event-source', eventSource });
+				};
+
+				eventSource.onerror = (error) => {
+					console.error('EventSource error:', error);
+					dispatch({ type: 'close' });
+				};
+			} catch (error) {
+				console.error('Failed to create EventSource:', error);
+			}
+			dispatch({ type: 'set-ws-state', wsState: 'connecting' });
+		} else if (!state.shouldConnect && state.ws) {
+			state.ws.close();
+			dispatch({ type: 'set-ws', ws: null });
+		}
+	}, [
 		state.ws,
-		state.wsFailed,
 		state.wsState,
 		state.shouldConnect,
 		state.useWebSocket,

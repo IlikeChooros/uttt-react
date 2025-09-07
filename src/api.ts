@@ -70,12 +70,11 @@ export function toAnalysisRequest(
 }
 
 export interface AnalysisOptions {
-	fallbackToHttp?: AnalysisState['fallbackToHttp']; // Fallback on failed websocket connection to http requests
+	fallbackToHttp?: boolean; // Fallback on failed websocket connection to http requests
+	useRtAnalysis?: boolean; // Whether to use real-time analysis over websockets
 }
 
-export function getInitialAnalysisState(
-	options: AnalysisOptions | undefined = undefined,
-): AnalysisState {
+export function getInitialAnalysisState(): AnalysisState {
 	return {
 		action: null,
 		currentEvaluation: '',
@@ -85,12 +84,8 @@ export function getInitialAnalysisState(
 		thinking: false,
 		request: null,
 		lastRequest: null,
-		shouldConnect: false,
-		useRtAnalysis: false,
-		fallbackToHttp: false,
 		rtFailed: false,
 		rtState: 'null',
-		...options,
 	};
 }
 
@@ -103,6 +98,7 @@ export type AnalysisActionType =
 	| 'close'
 	| 'set-options'
 	// private
+	| 'cleanup'
 	| 'sse-connected'
 	| 'set-event-source'
 	| 'start-thinking'
@@ -128,11 +124,8 @@ export interface AnalysisState {
 	bestMove: EngineMove | null;
 	topMoves: EngineMove[];
 	thinking: boolean;
-	shouldConnect: boolean;
 	request: AnalysisRequest | null;
 	lastRequest: AnalysisRequest | null;
-	useRtAnalysis: boolean;
-	fallbackToHttp: boolean;
 	rtFailed: boolean;
 	rtState: AnaysisRtState;
 	eventSource?: EventSource | null;

@@ -25,6 +25,7 @@ import { EngineLimits } from '@/api';
 import EngineSettings from '../settings/EngineSettings';
 import { IconButton } from '@mui/material';
 import { SettingsPaper } from '@/components/ui/SettingsPaper';
+import { AnimatePresence } from 'motion/react';
 
 const AnimatedBox = motion.motion.create(Box);
 export type DifficultyType = 'Easy' | 'Medium' | 'Hard' | 'custom';
@@ -241,31 +242,33 @@ export default function AiSettings({
 			</Box>
 
 			{/* Advanced settings collapse */}
-			<Collapse in={showAdvancedSettings} unmountOnExit>
-				<AnimatedBox
-					sx={{
-						display: 'flex',
-						flexDirection: { xs: 'column', md: 'row' },
-						gap: { xs: 2, sm: 4 },
-						px: 0.5,
-						pt: 1,
-					}}
-					initial={{ opacity: 0 }}
-					animate={{ opacity: 1 }}
-					exit={{ opacity: 0 }}
-					transition={{ duration: 0.2 }}
-				>
-					<EngineSettings
-						show
-						settings={settings}
-						limits={limits}
-						onSettingsChange={(v) => {
-							onSettingsChange(v);
-							onDifficultyChange('custom');
+			<AnimatePresence>
+				{showAdvancedSettings && (
+					<AnimatedBox
+						sx={{
+							display: 'flex',
+							flexDirection: { xs: 'column', md: 'row' },
+							gap: { xs: 2, sm: 4 },
+							px: 0.5,
+							pt: 1,
 						}}
-					/>
-				</AnimatedBox>
-			</Collapse>
+						initial={{ opacity: 0, height: 0 }}
+						animate={{ opacity: 1, height: 'auto' }}
+						exit={{ opacity: 0, height: 0 }}
+						transition={{ duration: 0.1 }}
+					>
+						<EngineSettings
+							show
+							settings={settings}
+							limits={limits}
+							onSettingsChange={(v) => {
+								onSettingsChange(v);
+								onDifficultyChange('custom');
+							}}
+						/>
+					</AnimatedBox>
+				)}
+			</AnimatePresence>
 		</SettingsPaper>
 	);
 }

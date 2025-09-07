@@ -145,18 +145,27 @@ export default function VersusAiGame() {
 
 			setVersusState((prev) => ({ ...prev, thinking: true }));
 
+			const startTime = Date.now();
+			const minThinkTime = 450; // ms
+
 			try {
 				const moves = await EngineAPI.analyze(
 					toAnalysisRequest(gameLogic.settings, gameLogic.game),
 				);
 
-				const bestMove = moves[0] || null;
+				// Ensure the "thinking" state is visible for at least `minThinkTime` ms
+				const elapsed = Date.now() - startTime;
+				if (elapsed < minThinkTime) {
+					await new Promise((r) =>
+						setTimeout(r, minThinkTime - elapsed),
+					);
+				}
 
+				const bestMove = moves[0] || null;
 				if (bestMove != null) {
 					console.log('made move', bestMove);
 					dispatchGameLogic({ type: 'makemove', move: bestMove });
 				}
-
 				setVersusState((prev) => ({ ...prev, thinking: false }));
 			} catch (error) {
 				console.error('AI move failed:', error);

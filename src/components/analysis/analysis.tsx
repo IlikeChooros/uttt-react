@@ -1,13 +1,12 @@
 'use client';
 
 // react stuff
-import { ActionDispatch, useEffect, useReducer } from 'react';
+import { act, ActionDispatch, useEffect, useReducer } from 'react';
 
 // mine components
 import {
 	AnalysisActionType,
 	AnalysisOptions,
-	AnalysisRequest,
 	AnalysisResponse,
 	AnalysisState,
 	EngineAPI,
@@ -31,6 +30,7 @@ export interface AnalysisAction {
 		connectionId?: string;
 	};
 
+	default?: AnalysisState;
 	rtState?: AnalysisState['rtState'];
 	options?: AnalysisOptions;
 }
@@ -86,8 +86,6 @@ function analysisReducer(
 				...prev,
 				lastRequest: null,
 				request: prev.request,
-				useRtAnalysis: false,
-				shouldConnect: false,
 				rtFailed: true,
 				thinking: false,
 				rtState: 'failed',
@@ -110,14 +108,18 @@ function analysisReducer(
 			return {
 				...prev,
 				request: null,
-				useRtAnalysis: false,
-				shouldConnect: false,
 				thinking: false,
 				rtState: 'closed',
 				action: 'close',
 				eventSource: null,
 				connectionId: undefined,
 			};
+		case 'cleanup':
+			if (action.default === undefined) {
+				return prev;
+			}
+			console.log('Closing event source on cleanup');
+			return action.default;
 
 		// make a new request to analyze the position only if we aren't currenlty
 		// analyzing other position
@@ -134,8 +136,6 @@ function analysisReducer(
 		case 'request-connection':
 			return {
 				...prev,
-				useRtAnalysis: true,
-				shouldConnect: true,
 				request: null,
 				rtState: 'request-connection',
 				action: 'request-connection',
@@ -144,8 +144,6 @@ function analysisReducer(
 		case 'request-disconnection':
 			return {
 				...prev,
-				useRtAnalysis: false,
-				shouldConnect: false,
 				request: null,
 				rtState: 'request-disconnection',
 				action: 'request-disconnection',
@@ -157,148 +155,134 @@ function analysisReducer(
 }
 
 export function useAnalysis(
-	options: AnalysisOptions | undefined = undefined,
+	options: AnalysisOptions = { useRtAnalysis: false, fallbackToHttp: false },
 ): Analysis {
 	const [state, dispatch] = useReducer(
 		analysisReducer,
-		options,
+		undefined,
 		getInitialAnalysisState,
 	);
 
-	// Close on unmount
-	useEffect(() => {
-		return () => {
-			if (
-				state.eventSource &&
-				state.eventSource.readyState !== EventSource.CLOSED
-			) {
-				state.eventSource.close();
-				dispatch({ type: 'close' });
-			}
-		};
-	}, [state.eventSource]);
-
 	useEffect(() => {
 		// If we aren't analyzing the position AND there is an request
-		if (!state.thinking && state.request !== null) {
+
+		if (
+			state.request &&
+			options.useRtAnalysis &&
+			!state.rtFailed &&
+			state.connectionId
+		) {
+			console.log('sse analysis', state.request);
+			dispatch({ type: 'start-thinking' });
+			EngineAPI.analyzeSSE({
+				...state.request,
+				connId: state.connectionId || '',
+			}).catch((error) => {
+				console.error(error);
+			});
+		}
+
+		// If we aren't analyzing the position AND there is an request
+		if (
+			state.request &&
+			!state.thinking &&
+			(!options.useRtAnalysis ||
+				(state.rtFailed && options.fallbackToHttp))
+		) {
 			console.log('request', state.request);
-			// Using web socket for real-time analysis
-			if (
-				state.useRtAnalysis &&
-				!state.rtFailed &&
-				state.connectionId !== undefined
-			) {
-				console.log('sse analysis');
-				dispatch({ type: 'start-thinking' });
-				EngineAPI.analyzeSSE({
-					...state.request,
-					connId: state.connectionId || '',
-				}).catch((error) => {
+			dispatch({ type: 'start-thinking' });
+			EngineAPI.analyze(state.request)
+				.then((bestMoves) => {
+					dispatch({
+						type: 'set-response',
+						state: {
+							currentEvaluation: bestMoves[0].evaluation,
+							absEvaluation: bestMoves[0].abseval,
+							bestMove: bestMoves[0],
+							topMoves: bestMoves,
+						},
+					});
+				})
+				.catch((error) => {
 					console.error(error);
 				});
-			}
-
-			// Just a one-time request
-			else if (!state.useRtAnalysis || state.rtFailed) {
-				console.log('http request analysis');
-				dispatch({ type: 'start-thinking' });
-				EngineAPI.analyze(state.request)
-					.then((bestMoves) => {
-						dispatch({
-							type: 'set-response',
-							state: {
-								currentEvaluation: bestMoves[0].evaluation,
-								absEvaluation: bestMoves[0].abseval,
-								bestMove: bestMoves[0],
-								topMoves: bestMoves,
-							},
-						});
-					})
-					.catch((error) => {
-						console.error(error);
-					});
-			}
 		}
 	}, [
-		state.useRtAnalysis,
+		options.useRtAnalysis,
+		options.fallbackToHttp,
 		state.thinking,
 		state.request,
 		state.rtFailed,
 		state.connectionId,
 	]);
 
-	// Requests for connection/disconnection
+	// Setup/teardown of event source connection
 	useEffect(() => {
-		if (!state.useRtAnalysis || state.rtState === 'null') {
+		if (!options.useRtAnalysis) {
 			return;
 		}
 
-		if (
-			state.shouldConnect &&
-			!state.connectionId &&
-			!state.eventSource &&
-			state.rtState === 'request-connection'
-		) {
-			try {
-				// Open the event source connection
-				const eventSource = EngineAPI.createEventSource();
+		let eventSource: EventSource | null = null;
+		try {
+			// Open the event source connection
+			eventSource = EngineAPI.createEventSource();
 
-				// Set connection id on connection event
-				eventSource.addEventListener('connected', (event) => {
-					if (typeof event.data !== 'string') {
-						console.error(
-							'Invalid connection event data:',
-							event.data,
-						);
-						return;
-					}
-					const { connId } = JSON.parse(event.data);
-					dispatch({
-						type: 'sse-connected',
-						state: { connectionId: connId },
-					});
-					console.log('connection', event);
-				});
-
-				eventSource.addEventListener('analysis', (event) => {
-					const analysis: AnalysisResponse = JSON.parse(event.data);
-					const lines = EngineAPI.parseAnalysisResponse(analysis);
-					dispatch({
-						type: 'set-response',
-						state: {
-							currentEvaluation: lines[0].evaluation,
-							absEvaluation: lines[0].abseval,
-							bestMove: lines[0],
-							topMoves: lines,
-							thinking: !analysis.final,
-						},
-					});
-				});
-
-				eventSource.onopen = (event) => {
-					console.log('Connected to event source', event);
-					dispatch({ type: 'set-rt-state', rtState: 'connected' });
-				};
-
-				eventSource.onerror = () => {
-					eventSource.close();
-					dispatch({ type: 'close' });
-				};
-
+			// Set connection id on connection event
+			eventSource.addEventListener('connected', (event) => {
+				if (typeof event.data !== 'string') {
+					console.error('Invalid connection event data:', event.data);
+					return;
+				}
+				const { connId } = JSON.parse(event.data);
 				dispatch({
-					type: 'set-event-source',
-					eventSource,
-					rtState: 'connecting',
+					type: 'sse-connected',
+					state: { connectionId: connId },
 				});
-			} catch (error) {
-				console.error('Failed to create EventSource:', error);
-			}
-			dispatch({ type: 'set-rt-state', rtState: 'connecting' });
-		} else if (!state.shouldConnect && state.eventSource) {
-			state.eventSource.close();
-			dispatch({ type: 'set-event-source', eventSource: null });
+				console.log('connection', event);
+			});
+
+			eventSource.addEventListener('analysis', (event) => {
+				const analysis: AnalysisResponse = JSON.parse(event.data);
+				const lines = EngineAPI.parseAnalysisResponse(analysis);
+				dispatch({
+					type: 'set-response',
+					state: {
+						currentEvaluation: lines[0].evaluation,
+						absEvaluation: lines[0].abseval,
+						bestMove: lines[0],
+						topMoves: lines,
+						thinking: !analysis.final,
+					},
+				});
+			});
+
+			eventSource.onopen = (event) => {
+				console.log('Connected to event source', event);
+				dispatch({ type: 'set-rt-state', rtState: 'connected' });
+			};
+
+			eventSource.onerror = () => {
+				eventSource?.close();
+				dispatch({ type: 'close' });
+			};
+
+			dispatch({
+				type: 'set-event-source',
+				eventSource,
+				rtState: 'connecting',
+			});
+		} catch (error) {
+			console.error('Failed to create EventSource:', error);
 		}
-	}, [state]);
+
+		return () => {
+			eventSource?.close();
+			dispatch({
+				type: 'cleanup',
+				default: getInitialAnalysisState(),
+			});
+		};
+	}, [options.useRtAnalysis]);
 
 	return [state, dispatch];
 }

@@ -192,6 +192,7 @@ function gameLogicReducer(
 						: action.settingsInit,
 					getInitialBoardState,
 				)(),
+				available: prevstate.available,
 				action: 'reset',
 				prevAction: prevstate.action,
 			};
@@ -201,7 +202,7 @@ function gameLogicReducer(
 			const loadingLimits =
 				action.loadingLimits !== undefined
 					? action.loadingLimits
-					: prevstate.loadingLimits;
+					: false;
 			return {
 				...prevstate,
 				settings: {

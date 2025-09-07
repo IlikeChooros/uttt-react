@@ -64,27 +64,9 @@ const Unavailable = ({ minHeight }: { minHeight: number | string }) => (
 export default function Analysis() {
 	const [analysisState, dispatchAnalysis] = useAnalysis({
 		fallbackToHttp: true,
+		useRtAnalysis: true,
 	});
 	const [gameLogic, gameLogicDispatch] = useGameLogic();
-
-	// Handle WebSocket connection for analysis
-	useEffect(() => {
-		if (analysisState.rtFailed || analysisState.rtState === 'closed') {
-			return;
-		}
-
-		// Open web socket on mount
-		if (!analysisState.eventSource && analysisState.rtState === 'null') {
-			console.log('Request connection');
-			dispatchAnalysis({ type: 'request-connection' });
-		}
-	}, [
-		gameLogic.settings,
-		analysisState.rtFailed,
-		analysisState.eventSource,
-		dispatchAnalysis,
-		analysisState.rtState,
-	]);
 
 	// Send analysis requests when game state changes
 	useEffect(() => {

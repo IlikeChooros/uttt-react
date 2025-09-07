@@ -28,6 +28,7 @@ export interface AnalysisAction {
 		topMoves?: AnalysisState['topMoves'];
 		request?: AnalysisState['request'];
 		absEvaluation?: AnalysisState['absEvaluation'];
+		connectionId?: string;
 	};
 
 	wsState?: AnalysisState['wsState'];
@@ -57,7 +58,7 @@ function analysisReducer(
 			return {
 				...prev,
 				ws: null,
-				wsState: action.eventSource ? 'connected' : 'disconnected',
+				wsState: action.wsState || 'connected',
 				action: 'set-event-source',
 			};
 		case 'set-ws-state':
@@ -107,6 +108,17 @@ function analysisReducer(
 				action: 'fallback',
 			};
 
+		case 'sse-connected':
+			if (action.state?.connectionId === undefined) {
+				return prev;
+			}
+			return {
+				...prev,
+				connectionId: action.state.connectionId,
+				wsState: 'connected',
+				action: 'sse-connected',
+			};
+
 		// simply close the the connection
 		case 'close':
 			console.log('closing', prev);
@@ -119,6 +131,8 @@ function analysisReducer(
 				ws: null,
 				wsState: 'closed',
 				action: 'close',
+				eventSource: null,
+				connectionId: undefined,
 			};
 
 		// make a new request to analyze the position only if we aren't currenlty
@@ -179,7 +193,11 @@ export function useAnalysis(
 		if (!state.thinking && state.request !== null) {
 			console.log('request', state.request);
 			// Using web socket for real-time analysis
-			if (state.useWebSocket && !state.wsFailed) {
+			if (
+				state.useWebSocket &&
+				!state.wsFailed &&
+				state.connectionId !== undefined
+			) {
 				console.log('sse analysis');
 				dispatch({ type: 'start-thinking' });
 				EngineAPI.analyzeSSE({
@@ -237,13 +255,36 @@ export function useAnalysis(
 				const eventSource = EngineAPI.createEventSource();
 
 				// Set connection id on connection event
-				eventSource.addEventListener('connection', (event) => {
-					state.connectionId = event.data.connId;
+				eventSource.addEventListener('connected', (event) => {
+					if (typeof event.data !== 'string') {
+						console.error(
+							'Invalid connection event data:',
+							event.data,
+						);
+						return;
+					}
+					const { connId } = JSON.parse(event.data);
+					dispatch({
+						type: 'sse-connected',
+						state: { connectionId: connId },
+					});
 					console.log('connection', event);
 				});
 
 				eventSource.addEventListener('analysis', (event) => {
 					console.log('analysis', event);
+					const analysis: AnalysisResponse = JSON.parse(event.data);
+					const lines = EngineAPI.parseAnalysisResponse(analysis);
+					dispatch({
+						type: 'set-response',
+						state: {
+							currentEvaluation: lines[0].evaluation,
+							absEvaluation: lines[0].abseval,
+							bestMove: lines[0],
+							topMoves: lines,
+							thinking: !analysis.final,
+						},
+					});
 				});
 
 				eventSource.addEventListener('ping', (event) => {
@@ -252,13 +293,20 @@ export function useAnalysis(
 
 				eventSource.onopen = (event) => {
 					console.log('Connected to event source', event);
-					dispatch({ type: 'set-event-source', eventSource });
+					dispatch({ type: 'set-ws-state', wsState: 'connected' });
 				};
 
 				eventSource.onerror = (error) => {
+					eventSource.close();
 					console.error('EventSource error:', error);
 					dispatch({ type: 'close' });
 				};
+
+				dispatch({
+					type: 'set-event-source',
+					eventSource,
+					wsState: 'connecting',
+				});
 			} catch (error) {
 				console.error('Failed to create EventSource:', error);
 			}
@@ -267,15 +315,7 @@ export function useAnalysis(
 			state.ws.close();
 			dispatch({ type: 'set-ws', ws: null });
 		}
-	}, [
-		state.ws,
-		state.wsState,
-		state.shouldConnect,
-		state.useWebSocket,
-		state.fallbackOnWebSocketError,
-		state.lastRequest,
-		state.request,
-	]);
+	}, [state]);
 
 	return [state, dispatch];
 }

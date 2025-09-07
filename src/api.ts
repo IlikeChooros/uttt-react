@@ -27,6 +27,7 @@ export const ENGINE_API_LIMITS = `${SERVER_URL_HTTP}/api/limits`;
 // Real-time (single session) analysis over Server-Sent Events (SSE) via POST
 // NOTE: kept the existing constant name so callers don't need to change imports.
 export const ENGINE_API_RT_ANALYSIS = `${SERVER_URL_HTTP}/api/rt-analysis`;
+export const ENGINE_API_SUBMIT_RT_ANALYSIS = `${SERVER_URL_HTTP}/api/submit-rt-analysis`;
 
 export interface AnalysisEngineLine {
 	eval: string;
@@ -103,6 +104,7 @@ export type AnalysisActionType =
 	| 'close'
 	| 'set-options'
 	// private
+	| 'sse-connected'
 	| 'set-ws'
 	| 'set-event-source'
 	| 'start-thinking'
@@ -303,20 +305,18 @@ export class EngineAPI {
 
 	static createEventSource(): EventSource {
 		// Make sure we're using the correct protocol (http:// for http, https:// for https)
-		const protocol =
-			window.location.protocol === 'https:' ? 'https:' : 'http:';
-		const sseUrl = `${protocol}//${ENGINE_API_RT_ANALYSIS}/api/rt-analysis`;
-		console.log(`Connecting to SSE at ${sseUrl}`);
-
-		const eventSource = new EventSource(sseUrl, { withCredentials: true });
+		const eventSource = new EventSource(ENGINE_API_RT_ANALYSIS, {
+			withCredentials: true,
+		});
 		return eventSource;
 	}
 
 	// Make a POST request for SSE analysis
 	static async analyzeSSE(request: AnalysisRequestWithId): Promise<Response> {
-		const response = await fetch(ENGINE_API_RT_ANALYSIS, {
+		const response = await fetch(ENGINE_API_SUBMIT_RT_ANALYSIS, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
+			credentials: 'include',
 			body: JSON.stringify(request),
 		});
 

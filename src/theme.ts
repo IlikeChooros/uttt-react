@@ -13,6 +13,7 @@ declare module '@mui/material/styles' {
 			Xtext: string;
 			evalText: string;
 		};
+		loading: { main: string };
 		surface: { main: string };
 		outline: { main: string };
 	}
@@ -25,6 +26,7 @@ declare module '@mui/material/styles' {
 			Xtext: string;
 			evalText: string;
 		};
+		loading?: { main: string };
 		surface?: { main: string };
 		outline?: { main: string };
 	}
@@ -108,6 +110,9 @@ const theme = extendTheme({
 					light: '#F9DEDC',
 					dark: '#8C1D18',
 					contrastText: '#FFFFFF',
+				},
+				loading: {
+					main: '#6650a408', // sufface main
 				},
 				evalbar: {
 					x: '#EADDFF', // Primary 90 (container)
@@ -208,6 +213,9 @@ const theme = extendTheme({
 					light: '#601410',
 					dark: '#8C1D18',
 					contrastText: '#601410',
+				},
+				loading: {
+					main: '#222222ff', // sufface main
 				},
 				evalbar: {
 					x: '#6650a439', // 583f95ff

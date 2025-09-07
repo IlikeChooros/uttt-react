@@ -27,7 +27,13 @@ export default function VersusAiResult({
 	difficulty,
 }: VersusAiResultProps) {
 	return (
-		<Box textAlign={'center'}>
+		<Box
+			textAlign={'center'}
+			minHeight={'190px'}
+			display={'flex'}
+			flexDirection={'column'}
+			justifyContent={'space-between'}
+		>
 			<Typography variant="h6">Game Over</Typography>
 
 			<AiDiffSettings difficulty={difficulty} settings={settings} />

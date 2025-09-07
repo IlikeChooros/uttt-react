@@ -1,5 +1,6 @@
 import * as React from 'react';
 import Typography from '@mui/material/Typography';
+import { Link } from '@mui/material';
 
 export default function Copyright() {
 	return (
@@ -10,7 +11,16 @@ export default function Copyright() {
 				color: 'text.secondary',
 			}}
 		>
-			{'Copyright © Ultimate Tic Tac Toe'} {new Date().getFullYear()}.
+			Made by <strong>IlikeChooros</strong>, source code available on{' '}
+			<Link
+				href="https://github.com/IlikeChooros/UTTT"
+				target="_blank"
+				rel="noopener"
+				color="info"
+			>
+				GitHub
+			</Link>
+			. All rights reserved.
 		</Typography>
 	);
 }

@@ -2,6 +2,8 @@
 
 import React, { useMemo } from 'react';
 
+import * as motion from 'motion/react';
+
 // mui
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -22,12 +24,14 @@ interface AnalysisPanelProps {
 	settings: BoardSettings;
 	analysisState: AnalysisState;
 	thinking: boolean;
+	motion?: motion.HTMLMotionProps<'div'>;
 }
 
 export default function AnalysisPanel({
 	settings,
 	analysisState,
 	thinking,
+	motion,
 }: AnalysisPanelProps) {
 	const analysisStats = useMemo<
 		{ name: string; data: string; helpText?: string }[]
@@ -56,7 +60,7 @@ export default function AnalysisPanel({
 	);
 
 	return (
-		<SettingsPaper>
+		<SettingsPaper {...motion}>
 			<Box
 				sx={{
 					display: 'flex',

@@ -24,7 +24,7 @@ import { SettingsPaper } from '@/components/ui/SettingsPaper';
 import { PlayerChip } from '@/components/ui/PlayerChip';
 
 export default function Local() {
-	const [gameLogic, gameLogicDispatch] = useGameLogic();
+	const [gameLogic, gameLogicDispatch] = useGameLogic({ local: true });
 
 	return (
 		<Box

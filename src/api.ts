@@ -70,7 +70,7 @@ export function toAnalysisRequest(
 }
 
 export interface AnalysisOptions {
-	fallbackOnWebSocketError?: AnalysisState['fallbackOnWebSocketError']; // Fallback on failed websocket connection to http requests
+	fallbackToHttp?: AnalysisState['fallbackToHttp']; // Fallback on failed websocket connection to http requests
 }
 
 export function getInitialAnalysisState(
@@ -86,11 +86,10 @@ export function getInitialAnalysisState(
 		request: null,
 		lastRequest: null,
 		shouldConnect: false,
-		useWebSocket: false,
-		fallbackOnWebSocketError: false,
-		wsFailed: false,
-		ws: null,
-		wsState: 'null',
+		useRtAnalysis: false,
+		fallbackToHttp: false,
+		rtFailed: false,
+		rtState: 'null',
 		...options,
 	};
 }
@@ -105,14 +104,13 @@ export type AnalysisActionType =
 	| 'set-options'
 	// private
 	| 'sse-connected'
-	| 'set-ws'
 	| 'set-event-source'
 	| 'start-thinking'
 	| 'stop-thinking'
 	| 'set-response'
-	| 'set-ws-state';
+	| 'set-rt-state';
 
-export type AnaysisWsState =
+export type AnaysisRtState =
 	| 'null'
 	| 'request-connection'
 	| 'connecting'
@@ -133,11 +131,10 @@ export interface AnalysisState {
 	shouldConnect: boolean;
 	request: AnalysisRequest | null;
 	lastRequest: AnalysisRequest | null;
-	useWebSocket: boolean;
-	fallbackOnWebSocketError: boolean;
-	wsFailed: boolean;
-	ws: WebSocket | null;
-	wsState: AnaysisWsState;
+	useRtAnalysis: boolean;
+	fallbackToHttp: boolean;
+	rtFailed: boolean;
+	rtState: AnaysisRtState;
 	eventSource?: EventSource | null;
 	connectionId?: string; // for SSE connections
 }

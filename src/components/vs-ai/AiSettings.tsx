@@ -48,6 +48,7 @@ interface AiSettingsProps {
 	limits: EngineLimits;
 	onSettingsChange: (v: BoardSettings) => void;
 	engineTurn?: 'X' | 'O'; // which mark AI plays as
+	minHeight?: number | string;
 	onEngineTurnChange?: (engineTurn: 'X' | 'O') => void;
 	handleStart: () => void;
 	onDifficultyChange: (
@@ -56,6 +57,7 @@ interface AiSettingsProps {
 }
 
 export default function AiSettings({
+	minHeight,
 	motion,
 	difficultyLevels,
 	difficulty,
@@ -73,7 +75,7 @@ export default function AiSettings({
 	const theme = useTheme();
 
 	return (
-		<SettingsPaper {...motion}>
+		<SettingsPaper sx={[{ minHeight }]} minHeight={minHeight} {...motion}>
 			<Typography textAlign={'center'} variant="h4" fontSize={'2rem'}>
 				{title}
 			</Typography>

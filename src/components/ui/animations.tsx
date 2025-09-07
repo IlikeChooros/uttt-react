@@ -17,6 +17,13 @@ export const baseAnimation = {
 	transition: { duration: 0.2 },
 };
 
+export const errorAnimation = {
+	initial: { opacity: 1 },
+	// animate: { opacity: 1 },
+	exit: { opacity: 0 },
+	transition: { duration: 0.5 },
+};
+
 export const boardAnimation = {
 	initial: { opacity: 0, scale: 0.9 },
 	animate: { opacity: 1, scale: 1 },

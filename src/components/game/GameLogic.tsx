@@ -1,6 +1,11 @@
 'use client';
 
-import { EngineLimits, getEngineLimits, getInitialEngineLimits } from '@/api';
+import {
+	EngineAPI,
+	EngineLimits,
+	getEngineLimits,
+	getInitialEngineLimits,
+} from '@/api';
 import {
 	BoardSettings,
 	GameState,
@@ -20,7 +25,8 @@ export type GameActionType =
 	| 'set-limits'
 	| 'change-settings'
 	| 'toggle-settings'
-	| 'change-gamestate';
+	| 'change-gamestate'
+	| 'unavailable';
 export type SettingsInitializer = () => BoardSettings;
 export type GameStateInitializer = () => GameState;
 
@@ -41,6 +47,7 @@ export interface GameLogicState {
 	loadingLimits: boolean;
 	action: GameActionType | null;
 	prevAction: GameActionType | null;
+	available?: boolean; // whether the engine is available (backend responds)
 }
 
 // Checks if there is a winner in tic tac toe sense on provided board
@@ -216,6 +223,7 @@ function gameLogicReducer(
 				loadingLimits,
 				action: 'set-limits',
 				prevAction: prevstate.action,
+				available: true,
 			};
 
 		case 'change-settings':
@@ -249,6 +257,18 @@ function gameLogicReducer(
 						? action.newGameState
 						: prevstate.game,
 			};
+		case 'unavailable':
+			return {
+				...prevstate,
+				action: 'unavailable',
+				prevAction: prevstate.action,
+				loadingLimits: false,
+				game: {
+					...prevstate.game,
+					enabled: false,
+				},
+				available: false,
+			};
 	}
 
 	return prevstate;
@@ -266,42 +286,46 @@ function gameLogicInit(
 		loadingLimits: false,
 		action: null,
 		prevAction: null,
+		available: undefined,
 	});
 }
 
+interface UseGameLogicParams {
+	settingsInit?: SettingsInitializer;
+	gameStateInit?: GameStateInitializer;
+	local?: boolean; // if true, won't fetch engine limits
+}
+
 // Returns reducer [state, dispatch] for handling the ultimate tic tac toe game state
-export function useGameLogic(
-	settingsInit: SettingsInitializer | null = null,
-	gameStateInit: GameStateInitializer | null = null,
-): [GameLogicState, ActionDispatch<[GameAction]>] {
+export function useGameLogic({
+	settingsInit,
+	gameStateInit,
+	local = false,
+}: UseGameLogicParams = {}): [GameLogicState, ActionDispatch<[GameAction]>] {
 	const [state, dispatch] = useReducer(
 		gameLogicReducer,
 		settingsInit,
 		gameLogicInit(
-			settingsInit == null ? getInitialBoardSettings : settingsInit,
-			gameStateInit == null ? getInitialBoardState : gameStateInit,
+			settingsInit == undefined ? getInitialBoardSettings : settingsInit,
+			gameStateInit == undefined ? getInitialBoardState : gameStateInit,
 		),
 	);
 
 	// Fetch limits
 	useEffect(() => {
+		if (local) {
+			return;
+		}
+
 		dispatch({ type: 'set-limits', loadingLimits: true });
 		getEngineLimits()
 			.then((limits) => {
 				dispatch({ type: 'set-limits', limits: limits });
 			})
-			.catch((err) => {
-				console.error(err);
-			})
-			.finally(() => {
-				// DEBUG
-				setTimeout(
-					() =>
-						dispatch({ type: 'set-limits', loadingLimits: false }),
-					1000,
-				);
+			.catch(() => {
+				dispatch({ type: 'unavailable' });
 			});
-	}, []);
+	}, [local]);
 
 	return [state, dispatch];
 }

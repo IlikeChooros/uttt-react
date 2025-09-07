@@ -31,7 +31,7 @@ export interface AnalysisAction {
 		connectionId?: string;
 	};
 
-	wsState?: AnalysisState['wsState'];
+	rtState?: AnalysisState['rtState'];
 	options?: AnalysisOptions;
 }
 
@@ -41,31 +41,20 @@ function analysisReducer(
 	action: AnalysisAction,
 ): AnalysisState {
 	switch (action.type) {
-		case 'set-ws':
-			if (action.ws === undefined) {
-				return prev;
-			}
-			return {
-				...prev,
-				ws: action.ws,
-				wsState: action.ws ? 'connected' : 'disconnected',
-				action: 'set-ws',
-			};
 		case 'set-event-source':
 			if (action.eventSource === undefined) {
 				return prev;
 			}
 			return {
 				...prev,
-				ws: null,
-				wsState: action.wsState || 'connected',
+				rtState: action.rtState || 'connected',
 				action: 'set-event-source',
 			};
-		case 'set-ws-state':
-			if (action.wsState === undefined) {
+		case 'set-rt-state':
+			if (action.rtState === undefined) {
 				return prev;
 			}
-			return { ...prev, wsState: action.wsState, action: 'set-ws-state' };
+			return { ...prev, rtState: action.rtState, action: 'set-rt-state' };
 		case 'start-thinking':
 			return {
 				...prev,
@@ -77,7 +66,6 @@ function analysisReducer(
 		case 'stop-thinking':
 			return { ...prev, thinking: false };
 		case 'set-response':
-			console.log('set response', prev);
 			// expects: 'bestMove', 'topMoves', 'currentEvaluation'
 			return {
 				...prev,
@@ -93,18 +81,16 @@ function analysisReducer(
 				return prev;
 			}
 			return { ...prev, ...action.options, action: 'set-options' };
-		case 'fallback': // used if 'fallbackOnWebSocketError' is true and we got an error in web socket
-			console.log('fallback', prev);
+		case 'fallback': // used if 'fallbackToHttp' is true and we got an error in web socket
 			return {
 				...prev,
 				lastRequest: null,
 				request: prev.request,
-				useWebSocket: false,
+				useRtAnalysis: false,
 				shouldConnect: false,
-				wsFailed: true,
+				rtFailed: true,
 				thinking: false,
-				ws: null,
-				wsState: 'failed',
+				rtState: 'failed',
 				action: 'fallback',
 			};
 
@@ -115,21 +101,19 @@ function analysisReducer(
 			return {
 				...prev,
 				connectionId: action.state.connectionId,
-				wsState: 'connected',
+				rtState: 'connected',
 				action: 'sse-connected',
 			};
 
 		// simply close the the connection
 		case 'close':
-			console.log('closing', prev);
 			return {
 				...prev,
 				request: null,
-				useWebSocket: false,
+				useRtAnalysis: false,
 				shouldConnect: false,
 				thinking: false,
-				ws: null,
-				wsState: 'closed',
+				rtState: 'closed',
 				action: 'close',
 				eventSource: null,
 				connectionId: undefined,
@@ -150,20 +134,20 @@ function analysisReducer(
 		case 'request-connection':
 			return {
 				...prev,
-				useWebSocket: true,
+				useRtAnalysis: true,
 				shouldConnect: true,
 				request: null,
-				wsState: 'request-connection',
+				rtState: 'request-connection',
 				action: 'request-connection',
 			};
 		// requests websocket disconnection
 		case 'request-disconnection':
 			return {
 				...prev,
-				useWebSocket: false,
+				useRtAnalysis: false,
 				shouldConnect: false,
 				request: null,
-				wsState: 'request-disconnection',
+				rtState: 'request-disconnection',
 				action: 'request-disconnection',
 			};
 		default:
@@ -184,9 +168,15 @@ export function useAnalysis(
 	// Close on unmount
 	useEffect(() => {
 		return () => {
-			dispatch({ type: 'close' });
+			if (
+				state.eventSource &&
+				state.eventSource.readyState !== EventSource.CLOSED
+			) {
+				state.eventSource.close();
+				dispatch({ type: 'close' });
+			}
 		};
-	}, [state.ws]);
+	}, [state.eventSource]);
 
 	useEffect(() => {
 		// If we aren't analyzing the position AND there is an request
@@ -194,8 +184,8 @@ export function useAnalysis(
 			console.log('request', state.request);
 			// Using web socket for real-time analysis
 			if (
-				state.useWebSocket &&
-				!state.wsFailed &&
+				state.useRtAnalysis &&
+				!state.rtFailed &&
 				state.connectionId !== undefined
 			) {
 				console.log('sse analysis');
@@ -209,7 +199,7 @@ export function useAnalysis(
 			}
 
 			// Just a one-time request
-			else if (!state.useWebSocket || state.wsFailed) {
+			else if (!state.useRtAnalysis || state.rtFailed) {
 				console.log('http request analysis');
 				dispatch({ type: 'start-thinking' });
 				EngineAPI.analyze(state.request)
@@ -230,17 +220,16 @@ export function useAnalysis(
 			}
 		}
 	}, [
-		state.useWebSocket,
-		state.ws,
+		state.useRtAnalysis,
 		state.thinking,
 		state.request,
-		state.wsFailed,
+		state.rtFailed,
 		state.connectionId,
 	]);
 
 	// Requests for connection/disconnection
 	useEffect(() => {
-		if (!state.useWebSocket || state.wsState === 'null') {
+		if (!state.useRtAnalysis || state.rtState === 'null') {
 			return;
 		}
 
@@ -248,7 +237,7 @@ export function useAnalysis(
 			state.shouldConnect &&
 			!state.connectionId &&
 			!state.eventSource &&
-			state.wsState === 'request-connection'
+			state.rtState === 'request-connection'
 		) {
 			try {
 				// Open the event source connection
@@ -272,7 +261,6 @@ export function useAnalysis(
 				});
 
 				eventSource.addEventListener('analysis', (event) => {
-					console.log('analysis', event);
 					const analysis: AnalysisResponse = JSON.parse(event.data);
 					const lines = EngineAPI.parseAnalysisResponse(analysis);
 					dispatch({
@@ -287,33 +275,28 @@ export function useAnalysis(
 					});
 				});
 
-				eventSource.addEventListener('ping', (event) => {
-					console.log('ping', event);
-				});
-
 				eventSource.onopen = (event) => {
 					console.log('Connected to event source', event);
-					dispatch({ type: 'set-ws-state', wsState: 'connected' });
+					dispatch({ type: 'set-rt-state', rtState: 'connected' });
 				};
 
-				eventSource.onerror = (error) => {
+				eventSource.onerror = () => {
 					eventSource.close();
-					console.error('EventSource error:', error);
 					dispatch({ type: 'close' });
 				};
 
 				dispatch({
 					type: 'set-event-source',
 					eventSource,
-					wsState: 'connecting',
+					rtState: 'connecting',
 				});
 			} catch (error) {
 				console.error('Failed to create EventSource:', error);
 			}
-			dispatch({ type: 'set-ws-state', wsState: 'connecting' });
-		} else if (!state.shouldConnect && state.ws) {
-			state.ws.close();
-			dispatch({ type: 'set-ws', ws: null });
+			dispatch({ type: 'set-rt-state', rtState: 'connecting' });
+		} else if (!state.shouldConnect && state.eventSource) {
+			state.eventSource.close();
+			dispatch({ type: 'set-event-source', eventSource: null });
 		}
 	}, [state]);
 

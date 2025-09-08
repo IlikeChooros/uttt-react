@@ -4,30 +4,30 @@ type BuildType = 'development' | 'production' | 'test';
 
 export const BUILD: BuildType = process.env.NODE_ENV as BuildType;
 
-// Public override (available in client bundle)
-const PUBLIC_HOST = process.env.NEXT_PUBLIC_PROD_HOST || '';
+// // Public override (available in client bundle)
+// const PUBLIC_HOST = process.env.NEXT_PUBLIC_PROD_HOST || '';
 
-// Dev-only host (only available server-side since no NEXT_PUBLIC_ prefix).
-// Will be undefined in the client bundle if this file ever gets client-side imported.
-const DEV_HOST = process.env.NEXT_PUBLIC_DEV_HOST || 'localhost:8080';
+// // Dev-only host (only available server-side since no NEXT_PUBLIC_ prefix).
+// // Will be undefined in the client bundle if this file ever gets client-side imported.
+// const DEV_HOST = process.env.NEXT_PUBLIC_DEV_HOST || 'localhost:8080';
 
-// Choose base host:
-// 1. If a public override provided, use it.
-// 2. Else if dev mode and DEV_HOST defined, use that.
-// 3. Else same-origin (empty string so we build relative URLs).
-const baseHost =
-	PUBLIC_HOST !== '' ? PUBLIC_HOST : BUILD === 'development' ? DEV_HOST : '';
+// // Choose base host:
+// // 1. If a public override provided, use it.
+// // 2. Else if dev mode and DEV_HOST defined, use that.
+// // 3. Else same-origin (empty string so we build relative URLs).
+// const baseHost =
+// 	PUBLIC_HOST !== '' ? PUBLIC_HOST : BUILD === 'development' ? DEV_HOST : '';
 
-// Backend server URLs
-export const SERVER_URL_HTTP = baseHost !== '' ? `http://${baseHost}` : '';
-export const SERVER_URL_WS = baseHost !== '' ? `ws://${baseHost}` : ''; // left for backwards compat if needed elsewhere
+// // Backend server URLs
+// export const SERVER_URL_HTTP = baseHost !== '' ? `http://${baseHost}` : '';
+// export const SERVER_URL_WS = baseHost !== '' ? `ws://${baseHost}` : ''; // left for backwards compat if needed elsewhere
 
-export const ENGINE_API_ANALYSIS = `${SERVER_URL_HTTP}/api/analysis`;
-export const ENGINE_API_LIMITS = `${SERVER_URL_HTTP}/api/limits`;
+export const ENGINE_API_ANALYSIS = `/api/analysis`;
+export const ENGINE_API_LIMITS = `/api/limits`;
 // Real-time (single session) analysis over Server-Sent Events (SSE) via POST
 // NOTE: kept the existing constant name so callers don't need to change imports.
-export const ENGINE_API_RT_ANALYSIS = `${SERVER_URL_HTTP}/api/rt-analysis`;
-export const ENGINE_API_SUBMIT_RT_ANALYSIS = `${SERVER_URL_HTTP}/api/submit-rt-analysis`;
+export const ENGINE_API_RT_ANALYSIS = `/api/rt-analysis`;
+export const ENGINE_API_SUBMIT_RT_ANALYSIS = `/api/submit-rt-analysis`;
 
 export interface AnalysisEngineLine {
 	eval: string;

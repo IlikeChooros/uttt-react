@@ -13,7 +13,7 @@ export default function Copyright() {
 		>
 			Made by <strong>IlikeChooros</strong>, source code available on{' '}
 			<Link
-				href="https://github.com/IlikeChooros/UTTT"
+				href="https://github.com/IlikeChooros/go-uttt/tree/fileserver"
 				target="_blank"
 				rel="noopener"
 				color="info"

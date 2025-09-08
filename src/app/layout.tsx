@@ -7,10 +7,6 @@ import theme from '@/theme';
 import NavHeader from '@/components/ui/NavHeader';
 import Container from '@mui/material/Container';
 
-// vercel analytics
-import { Analytics } from '@vercel/analytics/next';
-import { SpeedInsights } from '@vercel/speed-insights/next';
-
 export default function RootLayout(props: { children: React.ReactNode }) {
 	return (
 		<html lang="en" suppressHydrationWarning>
@@ -21,10 +17,11 @@ export default function RootLayout(props: { children: React.ReactNode }) {
 						{/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
 						<CssBaseline />
 						<NavHeader />
-						<Container maxWidth="lg" sx={{ mt: 2 }}>
+						<Container
+							maxWidth="lg"
+							sx={{ mt: 2, backgroundImage: 'backgroundImg' }}
+						>
 							{props.children}
-							<Analytics />
-							<SpeedInsights />
 						</Container>
 					</ThemeProvider>
 				</AppRouterCacheProvider>

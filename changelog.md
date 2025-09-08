@@ -3,7 +3,6 @@
 ## 6 IX 2025 - 7 IX 2025
 - [x] Move the SSE architecture [Chores](#chores)
   - [x] Write sensible backend 
-- [ ] Upload to Vercel
 - [ ] Add icon for the app [Misc](#misc)
 - [x] Implement error handling for the every engine API [Chores](#chores)
   - [x] Vs-Ai page

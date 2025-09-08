@@ -93,9 +93,11 @@ export default function NavHeader() {
 		<Box display={'flex'}>
 			<AppBar
 				position="static"
-				color="default"
 				elevation={1}
-				sx={{ zIndex: theme.zIndex.drawer + 1 }}
+				color="default"
+				sx={{
+					zIndex: theme.zIndex.drawer + 1,
+				}}
 			>
 				<Toolbar>
 					{/* Only visible if the screen is small enough */}

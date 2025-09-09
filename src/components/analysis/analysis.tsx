@@ -1,11 +1,12 @@
 'use client';
 
 // react stuff
-import { act, ActionDispatch, useEffect, useReducer } from 'react';
+import { ActionDispatch, useEffect, useReducer } from 'react';
 
 // mine components
 import {
 	AnalysisActionType,
+	AnalysisError,
 	AnalysisOptions,
 	AnalysisResponse,
 	AnalysisState,
@@ -16,20 +17,24 @@ import {
 // return value of useAnalysis, state and dispatch
 export type Analysis = [AnalysisState, ActionDispatch<[AnalysisAction]>];
 
+interface ActionState {
+	thinking?: AnalysisState['thinking'];
+	currentEvaluation?: AnalysisState['currentEvaluation'];
+	bestMove?: AnalysisState['bestMove'];
+	topMoves?: AnalysisState['topMoves'];
+	request?: AnalysisState['request'];
+	absEvaluation?: AnalysisState['absEvaluation'];
+	connectionId?: string;
+	serverBusy?: boolean;
+}
+
 export interface AnalysisAction {
 	type: AnalysisActionType;
 	ws?: WebSocket | null;
 	eventSource?: EventSource | null;
-	state?: {
-		thinking?: AnalysisState['thinking'];
-		currentEvaluation?: AnalysisState['currentEvaluation'];
-		bestMove?: AnalysisState['bestMove'];
-		topMoves?: AnalysisState['topMoves'];
-		request?: AnalysisState['request'];
-		absEvaluation?: AnalysisState['absEvaluation'];
-		connectionId?: string;
-	};
+	state?: ActionState;
 
+	error?: AnalysisError;
 	default?: AnalysisState;
 	rtState?: AnalysisState['rtState'];
 	options?: AnalysisOptions;
@@ -103,6 +108,29 @@ function analysisReducer(
 				action: 'sse-connected',
 			};
 
+		case 'remove-error':
+			if (prev.errorStack.length == 0) {
+				return prev;
+			}
+
+			return {
+				...prev,
+				errorStack: prev.errorStack.slice(0, -1),
+			};
+
+		case 'append-error':
+			// append error
+			if (action.error === undefined) {
+				return prev;
+			}
+
+			return {
+				...prev,
+				thinking: false,
+				errorStack: prev.errorStack.concat(action.error),
+				...action.state,
+			};
+
 		// simply close the the connection
 		case 'close':
 			return {
@@ -121,6 +149,16 @@ function analysisReducer(
 			console.log('Closing event source on cleanup');
 			return action.default;
 
+		case 're-analyze':
+			if (!prev.request && !prev.lastRequest) {
+				return prev;
+			}
+
+			return {
+				...prev,
+				thinking: false,
+				request: prev.request ? prev.request : prev.lastRequest,
+			};
 		// make a new request to analyze the position only if we aren't currenlty
 		// analyzing other position
 		case 'analyze':
@@ -177,8 +215,22 @@ export function useAnalysis(
 			EngineAPI.analyzeSSE({
 				...state.request,
 				connId: state.connectionId || '',
-			}).catch((error) => {
-				console.error(error);
+			}).catch((error: Error) => {
+				// Server is too busy
+				if (error.message.includes('NetworkError')) {
+					return; // don't show error if network error, could be offline
+				}
+				console.error('server too busy', error);
+				dispatch({
+					type: 'append-error',
+					error: {
+						msg: error.message,
+						type: 'rt-analysis-submit',
+					},
+					state: {
+						serverBusy: true,
+					},
+				});
 			});
 		}
 
@@ -189,9 +241,10 @@ export function useAnalysis(
 			(!options.useRtAnalysis ||
 				(state.rtFailed && options.fallbackToHttp))
 		) {
-			console.log('request', state.request);
+			const req = state.request;
+			console.log('request', req);
 			dispatch({ type: 'start-thinking' });
-			EngineAPI.analyze(state.request)
+			EngineAPI.analyze(req)
 				.then((bestMoves) => {
 					dispatch({
 						type: 'set-response',
@@ -200,11 +253,27 @@ export function useAnalysis(
 							absEvaluation: bestMoves[0].abseval,
 							bestMove: bestMoves[0],
 							topMoves: bestMoves,
+							request: null, // infinite analysis
+							thinking: false,
+							serverBusy: false,
 						},
 					});
 				})
-				.catch((error) => {
-					console.error(error);
+				.catch((error: Error) => {
+					console.error('analysis error', error);
+					if (error.message.includes('NetworkError')) {
+						return; // don't show error if network error, could be offline
+					}
+					dispatch({
+						type: 'append-error',
+						error: {
+							msg: error.message,
+							type: 'analysis-submit',
+						},
+						state: {
+							serverBusy: true,
+						},
+					});
 				});
 		}
 	}, [
@@ -252,6 +321,7 @@ export function useAnalysis(
 						bestMove: lines[0],
 						topMoves: lines,
 						thinking: !analysis.final,
+						serverBusy: false,
 					},
 				});
 			});
@@ -261,9 +331,16 @@ export function useAnalysis(
 				dispatch({ type: 'set-rt-state', rtState: 'connected' });
 			};
 
-			eventSource.onerror = () => {
+			eventSource.onerror = (event) => {
 				eventSource?.close();
 				dispatch({ type: 'close' });
+				dispatch({
+					type: 'append-error',
+					error: {
+						msg: event.type,
+						type: 'rt-analysis-lost-connection',
+					},
+				});
 			};
 
 			dispatch({

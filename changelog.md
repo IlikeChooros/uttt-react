@@ -1,9 +1,15 @@
 # Changelog
 
-## 6 IX 2025 - 7 IX 2025
+## 6 IX 2025 - 8 IX 2025
 - [x] Move the SSE architecture [Chores](#chores)
   - [x] Write sensible backend 
 - [ ] Add icon for the app [Misc](#misc)
 - [x] Implement error handling for the every engine API [Chores](#chores)
   - [x] Vs-Ai page
   - [x] Analysis page 
+
+## 9 IX 2025
+- [x] Animate main page [Features](#features)
+- [ ] Add 'notation' string to load the game state [Features](#features)
+- [x] Add submit analysis error handling
+- [ ] Add proper aborting of requests, when changing the position while analysis is ongoing

@@ -8,13 +8,9 @@ import Typography from '@mui/material/Typography';
 
 // motion
 import * as motion from 'motion/react';
-import {
-	baseAnimation,
-	boardAnimation,
-	errorAnimation,
-} from '@/components/ui/animations';
+import { baseAnimation, errorAnimation } from '@/components/ui/animations';
 
-import { toAnalysisRequest } from '@/api';
+import { AnalysisError, toAnalysisRequest } from '@/api';
 import { useGameLogic } from '@/components/game/GameLogic';
 
 // my components
@@ -27,11 +23,27 @@ import EvalBar from '@/components/analysis/EvalBar';
 
 import { GameBoardSkeleton } from '@/components/ui/skeletons';
 import { SettingsPaper } from '@/components/ui/SettingsPaper';
+import ErrorSnackbar, {
+	ErrorSnackbarAction,
+} from '@/components/ui/ErrorSnackbar';
+
+interface ErrorStack {
+	errors: AnalysisError[];
+	action: ErrorSnackbarAction | null;
+}
 
 const AnimatedSkeleton = motion.motion.create(Skeleton);
 
 // Component to show when AI is unavailable
-const Unavailable = ({ minHeight }: { minHeight: number | string }) => (
+const Unavailable = ({
+	minHeight,
+	title,
+	subtitle,
+}: {
+	minHeight: number | string;
+	title?: string;
+	subtitle?: string;
+}) => (
 	<SettingsPaper
 		key="ai-unavailable"
 		{...baseAnimation}
@@ -51,11 +63,11 @@ const Unavailable = ({ minHeight }: { minHeight: number | string }) => (
 				fontWeight={400}
 				gutterBottom
 			>
-				Sorry, the AI engine is currently unavailable.
+				{title || 'Sorry, the AI engine is currently unavailable.'}
 			</Typography>
 			<Typography variant="body1" textAlign={'center'} fontWeight={300}>
-				This could be due to server issues or maintenance. Please try
-				again later.
+				{subtitle ||
+					`This could be due to server issues or maintenance. Please try again later.`}
 			</Typography>
 		</Box>
 	</SettingsPaper>
@@ -67,6 +79,58 @@ export default function Analysis() {
 		useRtAnalysis: true,
 	});
 	const [gameLogic, gameLogicDispatch] = useGameLogic();
+	const [errorStack, setErrorStack] = React.useState<ErrorStack>({
+		errors: [],
+		action: null,
+	});
+
+	// Listen for errors
+	useEffect(() => {
+		if (analysisState.errorStack.length === 0) {
+			setErrorStack({ errors: [], action: null });
+			return;
+		}
+
+		const action = {
+			onClose: () => dispatchAnalysis({ type: 'remove-error' }),
+		};
+
+		// Take the last error and put it on the snackbar
+		switch (analysisState.errorStack[0].type) {
+			case 'analysis-submit':
+			case 'rt-analysis-submit':
+				setErrorStack({
+					errors: analysisState.errorStack,
+					action: {
+						...action,
+						onClick: () => {
+							dispatchAnalysis({
+								type: 're-analyze',
+							});
+						},
+						name: 'Try again',
+					},
+				});
+				break;
+			case 'rt-analysis-connect':
+				setErrorStack({
+					errors: analysisState.errorStack,
+					action: {
+						...action,
+						name: 'Try again',
+					},
+				});
+				break;
+			case 'rt-analysis-lost-connection':
+				setErrorStack({
+					errors: analysisState.errorStack,
+					action: {
+						...action,
+						name: 'Reconnect',
+					},
+				});
+		}
+	}, [analysisState.errorStack, dispatchAnalysis]);
 
 	// Send analysis requests when game state changes
 	useEffect(() => {
@@ -108,6 +172,11 @@ export default function Analysis() {
 		dispatchAnalysis,
 	]);
 
+	const showLoadingState =
+		gameLogic.available === undefined ||
+		analysisState.serverBusy ||
+		gameLogic.available === false;
+
 	return (
 		<Box
 			sx={{
@@ -128,15 +197,30 @@ export default function Analysis() {
 						width: '100%',
 					}}
 				>
+					{/* Snackbar for error messaging */}
+					<ErrorSnackbar
+						errors={errorStack.errors}
+						action={errorStack.action}
+					/>
+
 					<motion.AnimatePresence mode="wait">
-						{gameLogic.available === undefined ||
-						gameLogic.available === false ? (
+						{showLoadingState ? (
 							gameLogic.available === false ? (
+								// Unavailable state, means the backend is down or unreachable
 								<Unavailable
 									key={'unavailable-title'}
 									minHeight={158}
 								/>
+							) : analysisState.serverBusy ? (
+								// Server busy state, means the backend is up but busy
+								<Unavailable
+									key={'server-busy-title'}
+									minHeight={158}
+									title="The analysis server is currently busy."
+									subtitle="Please try again later."
+								/>
 							) : (
+								// Loading state, means we are waiting for the backend to respond
 								<AnimatedSkeleton
 									key="analysis-panel-skel"
 									{...errorAnimation}
@@ -148,6 +232,7 @@ export default function Analysis() {
 								</AnimatedSkeleton>
 							)
 						) : (
+							// Everything is normal, show the analysis panel
 							<AnalysisPanel
 								key="analysis-panel"
 								motion={baseAnimation}
@@ -159,8 +244,7 @@ export default function Analysis() {
 					</motion.AnimatePresence>
 
 					<motion.AnimatePresence mode="wait">
-						{gameLogic.available === undefined ||
-						gameLogic.available === false ? (
+						{showLoadingState ? (
 							<AnimatedSkeleton
 								key="settings-panel-skel"
 								{...errorAnimation}
@@ -218,8 +302,7 @@ export default function Analysis() {
 							},
 						}}
 					>
-						{gameLogic.available === undefined ||
-						gameLogic.available === false ? (
+						{showLoadingState ? (
 							<Skeleton
 								variant="rectangular"
 								height="auto"
@@ -271,8 +354,7 @@ export default function Analysis() {
 								justifyContent: 'center',
 							}}
 						>
-							{gameLogic.available === undefined ||
-							gameLogic.available === false ? (
+							{showLoadingState ? (
 								<GameBoardSkeleton maxSize={'720px'} />
 							) : (
 								<GameBoard

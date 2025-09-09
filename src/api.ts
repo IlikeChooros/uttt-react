@@ -9,7 +9,7 @@ const PUBLIC_HOST = process.env.NEXT_PUBLIC_PROD_HOST || '';
 
 // Dev-only host (only available server-side since no NEXT_PUBLIC_ prefix).
 // Will be undefined in the client bundle if this file ever gets client-side imported.
-const DEV_HOST = process.env.NEXT_PUBLIC_DEV_HOST || 'localhost:8080';
+const DEV_HOST = process.env.NEXT_PUBLIC_DEV_HOST || 'localhost:8000';
 
 // Choose base host:
 // 1. If a public override provided, use it.
@@ -73,30 +73,18 @@ export interface AnalysisOptions {
 	useRtAnalysis?: boolean; // Whether to use real-time analysis over websockets
 }
 
-export function getInitialAnalysisState(): AnalysisState {
-	return {
-		action: null,
-		currentEvaluation: '',
-		absEvaluation: '',
-		bestMove: null,
-		topMoves: [],
-		thinking: false,
-		request: null,
-		lastRequest: null,
-		rtFailed: false,
-		rtState: 'null',
-	};
-}
-
 export type AnalysisActionType =
 	// public
 	| 'request-connection'
 	| 'request-disconnection'
 	| 'analyze'
+	| 're-analyze'
 	| 'fallback'
 	| 'close'
 	| 'set-options'
 	// private
+	| 'remove-error'
+	| 'append-error'
 	| 'cleanup'
 	| 'sse-connected'
 	| 'set-event-source'
@@ -116,6 +104,17 @@ export type AnaysisRtState =
 	| 'disconnected'
 	| 'closed';
 
+export type AnalysisErrorType =
+	| 'rt-analysis-submit'
+	| 'analysis-submit'
+	| 'rt-analysis-connect'
+	| 'rt-analysis-lost-connection';
+
+export interface AnalysisError {
+	msg: string;
+	type: AnalysisErrorType;
+}
+
 export interface AnalysisState {
 	action: AnalysisActionType | null;
 	currentEvaluation: string;
@@ -129,6 +128,25 @@ export interface AnalysisState {
 	rtState: AnaysisRtState;
 	eventSource?: EventSource | null;
 	connectionId?: string; // for SSE connections
+	errorStack: Array<AnalysisError>;
+	serverBusy: boolean;
+}
+
+export function getInitialAnalysisState(): AnalysisState {
+	return {
+		action: null,
+		currentEvaluation: '',
+		absEvaluation: '',
+		bestMove: null,
+		topMoves: [],
+		thinking: false,
+		request: null,
+		lastRequest: null,
+		rtFailed: false,
+		rtState: 'null',
+		errorStack: [],
+		serverBusy: false,
+	};
 }
 
 export interface EngineMove extends Move {
@@ -143,6 +161,7 @@ export interface EngineLimits {
 	mbsize: number;
 	threads: number;
 	multipv: number;
+	max_movetime: number;
 }
 
 export function getInitialEngineLimits(): EngineLimits {
@@ -151,6 +170,7 @@ export function getInitialEngineLimits(): EngineLimits {
 		mbsize: 16,
 		threads: 4,
 		multipv: 3,
+		max_movetime: 1000,
 	};
 }
 
@@ -189,8 +209,6 @@ export function analysisToQuery(request: AnalysisRequest): string {
 
 // Fetch engine limits at /api/limits, returns the response
 export async function getEngineLimits(): Promise<EngineLimits> {
-	console.log(process.env.DEV_HOST, process.env.NEXT_PUBLIC_ENGINE_HOST);
-
 	try {
 		const resp = await fetch(ENGINE_API_LIMITS, {
 			method: 'GET',
@@ -198,8 +216,8 @@ export async function getEngineLimits(): Promise<EngineLimits> {
 		const json = await resp.json();
 		const valid = IsInstance<EngineLimits>(
 			json,
-			['depth', 'mbsize', 'threads', 'multipv'],
-			['depth', 'mbsize', 'threads', 'multipv'],
+			['depth', 'mbsize', 'threads', 'multipv', 'max_movetime'],
+			['depth', 'mbsize', 'threads', 'multipv', 'max_movetime'],
 		);
 		if (!valid) {
 			throw new Error('Limits: invalid json structure');
@@ -277,19 +295,24 @@ export class EngineAPI {
 	static async analyze(
 		request: AnalysisRequest = { position: '' },
 	): Promise<EngineMove[]> {
-		const response = fetch(ENGINE_API_ANALYSIS, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(request),
-		});
+		try {
+			const response = await fetch(ENGINE_API_ANALYSIS, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(request),
+			});
 
-		return response
-			.then((resp) => {
-				return resp.json();
-			})
-			.then((json) => {
+			if (!response.ok) {
+				const text = await response.text();
+				throw new Error(text);
+			}
+
+			return response.json().then((json) => {
 				return this.parseAnalysisResponse(json);
 			});
+		} catch (error) {
+			throw error;
+		}
 	}
 
 	static createEventSource(): EventSource {
@@ -302,14 +325,20 @@ export class EngineAPI {
 
 	// Make a POST request for SSE analysis
 	static async analyzeSSE(request: AnalysisRequestWithId): Promise<Response> {
-		const response = await fetch(ENGINE_API_SUBMIT_RT_ANALYSIS, {
+		// This is either a 204 or an error
+
+		const resp = await fetch(ENGINE_API_SUBMIT_RT_ANALYSIS, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			credentials: 'include',
 			body: JSON.stringify(request),
 		});
 
-		// This is either a 204 or an error
-		return response;
+		if (!resp.ok) {
+			const text = await resp.text();
+			throw new Error(text);
+		}
+
+		return resp;
 	}
 }

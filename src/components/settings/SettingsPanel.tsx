@@ -48,6 +48,7 @@ export default function SettingsPanel({
 	const buttonData = useMemo(
 		() => [
 			{
+				disabled: true,
 				label: 'Set position',
 				icon: <EditIcon />,
 				onClick: () => {},
@@ -97,6 +98,7 @@ export default function SettingsPanel({
 									sm: 'flex',
 								},
 							}}
+							disabled={button.disabled}
 							color="primary"
 							variant="outlined"
 							startIcon={button.icon}
@@ -111,6 +113,7 @@ export default function SettingsPanel({
 									sm: 'none',
 								},
 							}}
+							disabled={button.disabled}
 							onClick={button.onClick}
 						>
 							{button.icon}

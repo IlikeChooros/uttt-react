@@ -86,6 +86,7 @@ export default function GameBoard({
 						bestMove={analysisState?.bestMove}
 						topMoves={analysisState?.topMoves}
 						onCellClick={handleCellClick}
+						freshAnalysis={analysisState?.freshAnalysis}
 					/>
 				))}
 			</Box>

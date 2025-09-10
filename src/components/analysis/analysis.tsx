@@ -1,7 +1,6 @@
 'use client';
 
-// react stuff
-import { ActionDispatch, useEffect, useReducer } from 'react';
+import React from 'react';
 
 // mine components
 import {
@@ -15,7 +14,7 @@ import {
 } from '@/api';
 
 // return value of useAnalysis, state and dispatch
-export type Analysis = [AnalysisState, ActionDispatch<[AnalysisAction]>];
+export type Analysis = [AnalysisState, React.ActionDispatch<[AnalysisAction]>];
 
 interface ActionState {
 	thinking?: AnalysisState['thinking'];
@@ -24,8 +23,9 @@ interface ActionState {
 	topMoves?: AnalysisState['topMoves'];
 	request?: AnalysisState['request'];
 	absEvaluation?: AnalysisState['absEvaluation'];
-	connectionId?: string;
-	serverBusy?: boolean;
+	connectionId?: AnalysisState['connectionId'];
+	serverBusy?: AnalysisState['serverBusy'];
+	freshAnalysis?: AnalysisState['freshAnalysis'];
 }
 
 export interface AnalysisAction {
@@ -64,18 +64,25 @@ function analysisReducer(
 			return {
 				...prev,
 				thinking: true,
+				freshAnalysis: false,
 				lastRequest: prev.request,
 				request: null,
+				requestCount: prev.requestCount + 1,
 				action: 'start-thinking',
 			};
 		case 'stop-thinking':
-			return { ...prev, thinking: false };
+			const rc = Math.max(0, prev.requestCount - 1);
+			return {
+				...prev,
+				thinking: rc > 0,
+				requestCount: rc,
+			};
 		case 'set-response':
 			// expects: 'bestMove', 'topMoves', 'currentEvaluation'
 			return {
 				...prev,
 				lastRequest: null,
-				thinking: false,
+				freshAnalysis: true,
 				action: 'set-response',
 				...action.state,
 			};
@@ -127,6 +134,7 @@ function analysisReducer(
 			return {
 				...prev,
 				thinking: false,
+				requestCount: 0,
 				errorStack: prev.errorStack.concat(action.error),
 				...action.state,
 			};
@@ -159,10 +167,20 @@ function analysisReducer(
 				thinking: false,
 				request: prev.request ? prev.request : prev.lastRequest,
 			};
-		// make a new request to analyze the position only if we aren't currenlty
-		// analyzing other position
+
+		case 'force-analyze':
+			if (action.state?.request === undefined) {
+				return prev;
+			}
+			return {
+				...prev,
+				request: action.state.request,
+				action: 'force-analyze',
+			};
+
+		// make a new request to analyze the position
 		case 'analyze':
-			if (action.state?.request === undefined || prev.thinking) {
+			if (!action.state?.request || prev.thinking) {
 				return prev;
 			}
 			return {
@@ -192,21 +210,26 @@ function analysisReducer(
 	return prev;
 }
 
-export function useAnalysis(
-	options: AnalysisOptions = { useRtAnalysis: false, fallbackToHttp: false },
-): Analysis {
-	const [state, dispatch] = useReducer(
+export function useAnalysis({
+	useRtAnalysis = false,
+	fallbackToHttp = true,
+	slowDownMs = 700,
+}: AnalysisOptions): Analysis {
+	const [state, dispatch] = React.useReducer(
 		analysisReducer,
 		undefined,
 		getInitialAnalysisState,
 	);
+	const analysisSlowdown = React.useRef({
+		waitTime: slowDownMs,
+		startTime: 0,
+	});
 
-	useEffect(() => {
+	React.useEffect(() => {
 		// If we aren't analyzing the position AND there is an request
-
 		if (
 			state.request &&
-			options.useRtAnalysis &&
+			useRtAnalysis &&
 			!state.rtFailed &&
 			state.connectionId
 		) {
@@ -214,7 +237,7 @@ export function useAnalysis(
 			dispatch({ type: 'start-thinking' });
 			EngineAPI.analyzeSSE({
 				...state.request,
-				connId: state.connectionId || '',
+				connId: state.connectionId,
 			}).catch((error: Error) => {
 				// Server is too busy
 				if (error.message.includes('NetworkError')) {
@@ -237,27 +260,39 @@ export function useAnalysis(
 		// If we aren't analyzing the position AND there is an request
 		if (
 			state.request &&
-			!state.thinking &&
-			(!options.useRtAnalysis ||
-				(state.rtFailed && options.fallbackToHttp))
+			(!useRtAnalysis || (state.rtFailed && fallbackToHttp))
 		) {
+			analysisSlowdown.current.startTime = Date.now();
 			const req = state.request;
-			console.log('request', req);
+			console.log('request', req, 'slowdown', analysisSlowdown);
 			dispatch({ type: 'start-thinking' });
 			EngineAPI.analyze(req)
 				.then((bestMoves) => {
-					dispatch({
-						type: 'set-response',
-						state: {
-							currentEvaluation: bestMoves[0].evaluation,
-							absEvaluation: bestMoves[0].abseval,
-							bestMove: bestMoves[0],
-							topMoves: bestMoves,
-							request: null, // infinite analysis
-							thinking: false,
-							serverBusy: false,
-						},
-					});
+					const disp = () => {
+						dispatch({
+							type: 'set-response',
+							state: {
+								currentEvaluation: bestMoves[0].evaluation,
+								absEvaluation: bestMoves[0].abseval,
+								bestMove: bestMoves[0],
+								topMoves: bestMoves,
+								request: null, // infinite analysis
+								serverBusy: false,
+							},
+						});
+						dispatch({ type: 'stop-thinking' });
+					};
+
+					// Apply 'slow down' if needed
+					const elapsed =
+						Date.now() - analysisSlowdown.current.startTime;
+					const waitTime = analysisSlowdown.current.waitTime;
+					analysisSlowdown.current.startTime = 0;
+					if (elapsed < waitTime) {
+						setTimeout(() => disp(), waitTime - elapsed);
+					} else {
+						disp();
+					}
 				})
 				.catch((error: Error) => {
 					console.error('analysis error', error);
@@ -277,8 +312,8 @@ export function useAnalysis(
 				});
 		}
 	}, [
-		options.useRtAnalysis,
-		options.fallbackToHttp,
+		useRtAnalysis,
+		fallbackToHttp,
 		state.thinking,
 		state.request,
 		state.rtFailed,
@@ -286,8 +321,8 @@ export function useAnalysis(
 	]);
 
 	// Setup/teardown of event source connection
-	useEffect(() => {
-		if (!options.useRtAnalysis) {
+	React.useEffect(() => {
+		if (!useRtAnalysis) {
 			return;
 		}
 
@@ -320,10 +355,33 @@ export function useAnalysis(
 						absEvaluation: lines[0].abseval,
 						bestMove: lines[0],
 						topMoves: lines,
-						thinking: !analysis.final,
+						request: null,
 						serverBusy: false,
 					},
 				});
+
+				if (analysisSlowdown.current.startTime === 0) {
+					analysisSlowdown.current.startTime = Date.now();
+				}
+
+				if (!analysis.final) {
+					return;
+				}
+
+				// wait a bit before allowing new analysis
+				const now = Date.now();
+				const elapsed = now - analysisSlowdown.current.startTime;
+				const waitTime = analysisSlowdown.current.waitTime;
+				analysisSlowdown.current.startTime = 0;
+				if (elapsed < waitTime) {
+					setTimeout(() => {
+						if (analysisSlowdown.current.startTime === 0) {
+							dispatch({ type: 'stop-thinking' });
+						}
+					}, waitTime - elapsed);
+				} else {
+					dispatch({ type: 'stop-thinking' });
+				}
 			});
 
 			eventSource.onopen = (event) => {
@@ -359,7 +417,7 @@ export function useAnalysis(
 				default: getInitialAnalysisState(),
 			});
 		};
-	}, [options.useRtAnalysis]);
+	}, [useRtAnalysis]);
 
 	return [state, dispatch];
 }

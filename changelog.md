@@ -8,7 +8,7 @@
   - [x] Vs-Ai page
   - [x] Analysis page 
 
-## 9 IX 2025
+## 9 IX 2025 - 10 IX 2025
 - [x] Animate main page [Features](#features)
 - [ ] Add 'notation' string to load the game state [Features](#features)
 - [x] Add submit analysis error handling

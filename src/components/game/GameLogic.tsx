@@ -1,10 +1,11 @@
 'use client';
 
 import {
-	EngineAPI,
+	analysisToQuery,
 	EngineLimits,
 	getEngineLimits,
 	getInitialEngineLimits,
+	toAnalysisRequest,
 } from '@/api';
 import {
 	BoardSettings,
@@ -12,13 +13,14 @@ import {
 	getInitialBoardState,
 	getInitialBoardSettings,
 	Move,
-	Player,
-	SmallBoard,
-	SmallBoardState,
+	updateSmallBoardState,
+	checkTerminalState,
+	fromNotation,
 } from '@/board';
 import { ActionDispatch, useEffect, useReducer } from 'react';
 
 export type GameActionType =
+	| 'load-query'
 	| 'makemove'
 	| 'undomove'
 	| 'reset'
@@ -38,6 +40,7 @@ export interface GameAction {
 	loadingLimits?: boolean;
 	newSettings?: BoardSettings;
 	newGameState?: GameState;
+	queryParams?: URLSearchParams; // if provided, will load game state from these params
 }
 
 export interface GameLogicState {
@@ -48,36 +51,6 @@ export interface GameLogicState {
 	action: GameActionType | null;
 	prevAction: GameActionType | null;
 	available?: boolean; // whether the engine is available (backend responds)
-}
-
-// Checks if there is a winner in tic tac toe sense on provided board
-function checkWinner(board: SmallBoard): null | Player {
-	const patterns = [
-		[0, 1, 2],
-		[3, 4, 5],
-		[6, 7, 8],
-		[0, 3, 6],
-		[1, 4, 7],
-		[2, 5, 8],
-		[2, 4, 6],
-		[0, 4, 8],
-	];
-
-	for (const [a, b, c] of patterns) {
-		if (board[a] && board[a] === board[b] && board[b] === board[c]) {
-			return board[a];
-		}
-	}
-	return null;
-}
-
-// returns new small board state, with updated 'winner' and 'isDraw' fields
-function updateSmallBoardState(
-	board: SmallBoardState['board'],
-): SmallBoardState {
-	const winner = checkWinner(board);
-	const isDraw = !winner && board.every((cell) => cell !== null);
-	return { board, winner, isDraw };
 }
 
 // Main function to handle moves, returns new state
@@ -112,9 +85,7 @@ function handleMakeMove(
 			: cellIndex;
 
 	// Check for overall winner
-	const overallWinner = checkWinner(newBoards.map((v) => v.winner));
-	const overallDraw =
-		!overallWinner && newBoards.every((b) => b.winner || b.isDraw);
+	const [overallDraw, overallWinner] = checkTerminalState(newBoards);
 
 	const newHistory = game.history.concat({
 		move: { boardIndex, cellIndex },
@@ -159,6 +130,49 @@ function handleUndoMove({ game, ...other }: GameLogicState): GameLogicState {
 			history: game.history.slice(0, -1),
 		},
 		...other,
+	};
+}
+
+function loadQuery(defaultState: GameLogicState, params: URLSearchParams) {
+	let gameState = defaultState.game;
+	const pos = params.get('position');
+	if (pos !== null) {
+		try {
+			gameState = fromNotation(
+				pos.replaceAll('n', '/').replaceAll('_', ' '),
+			);
+		} catch (e) {
+			console.error('Failed to parse position from query:', e);
+		}
+	}
+
+	function parseIntParam(param: string | null, defaultValue: number): number {
+		if (param === null) {
+			return defaultValue;
+		}
+		const v = parseInt(param, 10);
+		if (isNaN(v)) {
+			return defaultValue;
+		}
+		return v;
+	}
+
+	let settings = defaultState.settings;
+	settings = {
+		...settings,
+		engineDepth: parseIntParam(params.get('depth'), settings.engineDepth),
+		nThreads: parseIntParam(params.get('threads'), settings.nThreads),
+		memorySizeMb: parseIntParam(
+			params.get('sizemb'),
+			settings.memorySizeMb,
+		),
+		multiPv: parseIntParam(params.get('multipv'), settings.multiPv),
+	};
+
+	return {
+		...defaultState,
+		game: gameState,
+		settings,
 	};
 }
 
@@ -279,8 +293,9 @@ function gameLogicReducer(
 function gameLogicInit(
 	settingsInit: SettingsInitializer,
 	gameStateInit: GameStateInitializer,
+	loadQueryParams?: boolean,
 ): () => GameLogicState {
-	return () => ({
+	const defaultState: GameLogicState = {
 		game: gameStateInit(),
 		settings: settingsInit(),
 		limits: getInitialEngineLimits(),
@@ -288,13 +303,32 @@ function gameLogicInit(
 		action: null,
 		prevAction: null,
 		available: undefined,
-	});
+	};
+
+	if (loadQueryParams) {
+		if (typeof window === 'undefined') {
+			return () => defaultState;
+		}
+
+		console.log(
+			'Loading game state from URL query params',
+			window.location.search,
+		);
+		return () =>
+			loadQuery(
+				defaultState,
+				new URLSearchParams(window.location.search),
+			);
+	}
+
+	return () => defaultState;
 }
 
 interface UseGameLogicParams {
 	settingsInit?: SettingsInitializer;
 	gameStateInit?: GameStateInitializer;
 	local?: boolean; // if true, won't fetch engine limits
+	useQuery?: boolean; // if true, will update URL search params on game state change
 }
 
 // Returns reducer [state, dispatch] for handling the ultimate tic tac toe game state
@@ -302,6 +336,7 @@ export function useGameLogic({
 	settingsInit,
 	gameStateInit,
 	local = false,
+	useQuery = false,
 }: UseGameLogicParams = {}): [GameLogicState, ActionDispatch<[GameAction]>] {
 	const [state, dispatch] = useReducer(
 		gameLogicReducer,
@@ -309,8 +344,25 @@ export function useGameLogic({
 		gameLogicInit(
 			settingsInit == undefined ? getInitialBoardSettings : settingsInit,
 			gameStateInit == undefined ? getInitialBoardState : gameStateInit,
+			useQuery,
 		),
 	);
+
+	// Update URL search params to reflect game state
+	useEffect(() => {
+		if (!useQuery) {
+			return;
+		}
+
+		// Update URL search params to reflect game state
+		const url = new URL(window.location.href);
+		const params = analysisToQuery(
+			toAnalysisRequest(state.settings, state.game),
+		);
+
+		url.search = params.toString();
+		window.history.replaceState({}, '', url.toString());
+	}, [state.game, state.settings, useQuery]);
 
 	// Fetch limits
 	useEffect(() => {

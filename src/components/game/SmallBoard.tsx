@@ -21,6 +21,7 @@ interface SmallBoardProps {
 	showAnalysis?: boolean;
 	bestMove?: EngineMove | null;
 	topMoves?: EngineMove[];
+	freshAnalysis?: boolean;
 	onCellClick: (boardIndex: number, cellIndex: number) => void;
 }
 
@@ -33,6 +34,7 @@ export default function SmallBoard({
 	topMoves,
 	lastMoveHighlight,
 	lastMove,
+	freshAnalysis,
 	onCellClick,
 }: SmallBoardProps) {
 	const theme = useTheme();
@@ -132,7 +134,7 @@ export default function SmallBoard({
 					const isBestMove =
 						bestMove?.boardIndex === boardIndex &&
 						bestMove?.cellIndex === cellIndex;
-					const isTopMove = topMoves?.some(
+					const isGoodMove = topMoves?.some(
 						(move) =>
 							move.boardIndex === boardIndex &&
 							move.cellIndex === cellIndex,
@@ -150,8 +152,9 @@ export default function SmallBoard({
 							value={value}
 							canClick={canClick}
 							isBestMove={isBestMove && showAnalysis}
-							isTopMove={isTopMove && showAnalysis}
+							isGoodMove={isGoodMove && showAnalysis}
 							onClick={() => onCellClick(boardIndex, cellIndex)}
+							isStale={!freshAnalysis}
 						/>
 					);
 				})}

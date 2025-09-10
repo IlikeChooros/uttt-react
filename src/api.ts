@@ -1,4 +1,4 @@
-import { ToNotation, Move, BoardSettings, GameState } from '@/board';
+import { toNotation, Move, BoardSettings, GameState } from '@/board';
 
 type BuildType = 'development' | 'production' | 'test';
 
@@ -60,7 +60,7 @@ export function toAnalysisRequest(
 	gameState: GameState,
 ): AnalysisRequest {
 	return {
-		position: ToNotation(gameState),
+		position: toNotation(gameState),
 		depth: settings.engineDepth,
 		threads: settings.nThreads,
 		sizemb: settings.memorySizeMb,
@@ -71,6 +71,7 @@ export function toAnalysisRequest(
 export interface AnalysisOptions {
 	fallbackToHttp?: boolean; // Fallback on failed websocket connection to http requests
 	useRtAnalysis?: boolean; // Whether to use real-time analysis over websockets
+	slowDownMs?: number; // Minimum time (ms) to show "thinking" state
 }
 
 export type AnalysisActionType =
@@ -78,6 +79,7 @@ export type AnalysisActionType =
 	| 'request-connection'
 	| 'request-disconnection'
 	| 'analyze'
+	| 'force-analyze'
 	| 're-analyze'
 	| 'fallback'
 	| 'close'
@@ -130,6 +132,8 @@ export interface AnalysisState {
 	connectionId?: string; // for SSE connections
 	errorStack: Array<AnalysisError>;
 	serverBusy: boolean;
+	requestCount: number; // number of requests made to the engine
+	freshAnalysis: boolean; // whether the current analysis is fresh (not stale)
 }
 
 export function getInitialAnalysisState(): AnalysisState {
@@ -146,6 +150,8 @@ export function getInitialAnalysisState(): AnalysisState {
 		rtState: 'null',
 		errorStack: [],
 		serverBusy: false,
+		requestCount: 0,
+		freshAnalysis: false,
 	};
 }
 
@@ -191,7 +197,7 @@ function IsInstance<T>(
 	);
 }
 
-export function analysisToQuery(request: AnalysisRequest): string {
+export function analysisToQuery(request: AnalysisRequest): URLSearchParams {
 	const params = new URLSearchParams();
 	// Only include defined values and skip 'position'
 	for (const [key, value] of Object.entries(request)) {
@@ -204,7 +210,7 @@ export function analysisToQuery(request: AnalysisRequest): string {
 		request.position.replaceAll('/', 'n').replaceAll(' ', '_'),
 	);
 
-	return params.toString();
+	return params;
 }
 
 // Fetch engine limits at /api/limits, returns the response
@@ -299,6 +305,7 @@ export class EngineAPI {
 			const response = await fetch(ENGINE_API_ANALYSIS, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
 				body: JSON.stringify(request),
 			});
 

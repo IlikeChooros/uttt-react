@@ -72,12 +72,52 @@ export const getInitialBoardState = (): GameState => {
 	};
 };
 
+// Checks if there is a winner in tic tac toe sense on provided board
+export function checkWinner(board: SmallBoard): null | Player {
+	const patterns = [
+		[0, 1, 2],
+		[3, 4, 5],
+		[6, 7, 8],
+		[0, 3, 6],
+		[1, 4, 7],
+		[2, 5, 8],
+		[2, 4, 6],
+		[0, 4, 8],
+	];
+
+	for (const [a, b, c] of patterns) {
+		if (board[a] && board[a] === board[b] && board[b] === board[c]) {
+			return board[a];
+		}
+	}
+	return null;
+}
+
+// Returns [isDraw, winner]
+export function checkTerminalState(
+	boards: GameState['boards'],
+): [boolean, Player | null] {
+	const overallWinner = checkWinner(boards.map((v) => v.winner));
+	const overallDraw =
+		!overallWinner && boards.every((b) => b.winner || b.isDraw);
+	return [overallWinner !== null || overallDraw, overallWinner];
+}
+
+// returns new small board state, with updated 'winner' and 'isDraw' fields
+export function updateSmallBoardState(
+	board: SmallBoardState['board'],
+): SmallBoardState {
+	const winner = checkWinner(board);
+	const isDraw = !winner && board.every((cell) => cell !== null);
+	return { board, winner, isDraw };
+}
+
 /**
  * Convert given game state into string notation of the board
  * @param state state of the game
  * @returns string notation, as specified in notation.go
  */
-export function ToNotation(state: GameState): string {
+export function toNotation(state: GameState): string {
 	let notation = '';
 	let emptyCounter = 0,
 		rowIndex = 0;
@@ -125,4 +165,74 @@ export function ToNotation(state: GameState): string {
 	}
 
 	return notation;
+}
+
+export function fromNotation(notation: string): GameState {
+	const parts = notation.split(' ');
+	if (parts.length < 3) {
+		throw new Error(
+			'Invalid notation, expected 3 parts, got ' + parts.length,
+		);
+	}
+
+	const boards: SmallBoardState[] = [];
+	const rows = parts[0].split('/');
+	if (rows.length != 9) {
+		throw new Error(
+			'Invalid notation, expected 9 rows, got ' + rows.length,
+		);
+	}
+
+	for (let i = 0; i < 9; i++) {
+		const row = rows[i];
+		const board: SmallBoard = Array(9).fill(null);
+		let cellIndex = 0;
+
+		for (let j = 0; j < row.length; j++) {
+			const char = row[j];
+			switch (row[j]) {
+				case 'X':
+				case 'x':
+				case 'O':
+				case 'o':
+					if (cellIndex >= 9) {
+						throw new Error(
+							'Invalid notation, too many cells in board ' +
+								i.toString(),
+						);
+					}
+					board[cellIndex] = char.toUpperCase() === 'X' ? 'X' : 'O';
+					cellIndex += 1;
+					break;
+				default:
+					// Should be a number
+					const n = parseInt(char, 10);
+					if (isNaN(n) || n < 1 || n > 9) {
+						throw new Error(
+							'Invalid notation, expected digit 1-9, got ' + char,
+						);
+					}
+					if (cellIndex + n > 9) {
+						throw new Error(
+							'Invalid notation, too many cells in board ' +
+								i.toString(),
+						);
+					}
+					cellIndex += n;
+					break;
+			}
+		}
+
+		boards.push(updateSmallBoardState(board));
+	}
+
+	return {
+		boards,
+		currentPlayer: parts[1] === 'x' ? 'X' : 'O',
+		winner: null,
+		isDraw: false,
+		activeBoard: parts[2] === '-' ? null : parseInt(parts[2], 10),
+		history: [],
+		enabled: true,
+	};
 }

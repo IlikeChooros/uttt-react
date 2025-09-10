@@ -25,6 +25,7 @@ interface AnalysisPanelProps {
 	analysisState: AnalysisState;
 	thinking: boolean;
 	motion?: motion.HTMLMotionProps<'div'>;
+	makeMove?: (boardIndex: number, cellIndex: number) => void;
 }
 
 export default function AnalysisPanel({
@@ -32,6 +33,7 @@ export default function AnalysisPanel({
 	analysisState,
 	thinking,
 	motion,
+	makeMove,
 }: AnalysisPanelProps) {
 	const analysisStats = useMemo<
 		{ name: string; data: string; helpText?: string }[]
@@ -167,6 +169,15 @@ export default function AnalysisPanel({
 							.slice(0, 3)
 							.map((move, index) => (
 								<BestMoveChip
+									onClick={
+										makeMove
+											? () =>
+													makeMove(
+														move.boardIndex,
+														move.cellIndex,
+													)
+											: undefined
+									}
 									isTopMove={index === 0}
 									move={move}
 									key={`BestMoveChip-${move.boardIndex}${move.cellIndex}`}

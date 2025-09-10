@@ -74,11 +74,12 @@ const Unavailable = ({
 );
 
 export default function Analysis() {
+	const [gameLogic, gameLogicDispatch] = useGameLogic({ useQuery: true });
 	const [analysisState, dispatchAnalysis] = useAnalysis({
 		fallbackToHttp: true,
 		useRtAnalysis: true,
+		slowDownMs: 500,
 	});
-	const [gameLogic, gameLogicDispatch] = useGameLogic();
 	const [errorStack, setErrorStack] = React.useState<ErrorStack>({
 		errors: [],
 		action: null,
@@ -138,13 +139,12 @@ export default function Analysis() {
 			return;
 		}
 
+		console.log('Game logic action:', gameLogic.action);
+
 		// See if there is a good cause for a request
 		if (
 			gameLogic.action === null ||
 			gameLogic.action === 'change-settings' ||
-			gameLogic.action === 'makemove' ||
-			(gameLogic.action === 'undomove' &&
-				gameLogic.game.history.length > 0) ||
 			gameLogic.action === 'reset'
 		) {
 			console.log(
@@ -153,8 +153,24 @@ export default function Analysis() {
 				'prev',
 				gameLogic.prevAction,
 			);
+			// Try submitting a new request
 			dispatchAnalysis({
 				type: 'analyze',
+				state: {
+					request: toAnalysisRequest(
+						gameLogic.settings,
+						gameLogic.game,
+					),
+				},
+			});
+		} else if (
+			gameLogic.action === 'makemove' ||
+			(gameLogic.action === 'undomove' &&
+				gameLogic.game.history.length > 0)
+		) {
+			console.log('Force analyzing after move');
+			dispatchAnalysis({
+				type: 'force-analyze',
 				state: {
 					request: toAnalysisRequest(
 						gameLogic.settings,
@@ -171,6 +187,12 @@ export default function Analysis() {
 		gameLogic.settings,
 		dispatchAnalysis,
 	]);
+
+	const makeMove = (boardIndex: number, cellIndex: number) =>
+		gameLogicDispatch({
+			type: 'makemove',
+			move: { boardIndex, cellIndex },
+		});
 
 	const showLoadingState =
 		gameLogic.available === undefined ||
@@ -234,6 +256,7 @@ export default function Analysis() {
 						) : (
 							// Everything is normal, show the analysis panel
 							<AnalysisPanel
+								makeMove={makeMove}
 								key="analysis-panel"
 								motion={baseAnimation}
 								settings={gameLogic.settings}
@@ -360,12 +383,7 @@ export default function Analysis() {
 								<GameBoard
 									maxSize={'720px'}
 									gameState={gameLogic.game}
-									handleCellClick={(boardIndex, cellIndex) =>
-										gameLogicDispatch({
-											type: 'makemove',
-											move: { boardIndex, cellIndex },
-										})
-									}
+									handleCellClick={makeMove}
 									showBestMoves
 									analysisState={analysisState}
 								/>

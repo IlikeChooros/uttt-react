@@ -139,20 +139,12 @@ export default function Analysis() {
 			return;
 		}
 
-		console.log('Game logic action:', gameLogic.action);
-
 		// See if there is a good cause for a request
 		if (
 			gameLogic.action === null ||
 			gameLogic.action === 'change-settings' ||
 			gameLogic.action === 'reset'
 		) {
-			console.log(
-				'Sending analysis request, cause: ',
-				gameLogic.action,
-				'prev',
-				gameLogic.prevAction,
-			);
 			// Try submitting a new request
 			dispatchAnalysis({
 				type: 'analyze',
@@ -168,7 +160,6 @@ export default function Analysis() {
 			(gameLogic.action === 'undomove' &&
 				gameLogic.game.history.length > 0)
 		) {
-			console.log('Force analyzing after move');
 			dispatchAnalysis({
 				type: 'force-analyze',
 				state: {

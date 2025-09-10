@@ -200,12 +200,11 @@ function gameLogicReducer(
 
 		case 'reset':
 			return {
-				...gameLogicInit(
-					action.settingsInit === undefined
-						? getInitialBoardSettings
-						: action.settingsInit,
-					getInitialBoardState,
-				)(),
+				...gameLogicInit({
+					settingsInit:
+						action.settingsInit || getInitialBoardSettings,
+					gameStateInit: getInitialBoardState,
+				}),
 				available: prevstate.available,
 				action: 'reset',
 				prevAction: prevstate.action,
@@ -289,12 +288,18 @@ function gameLogicReducer(
 	return prevstate;
 }
 
+interface GameLogicInitParams {
+	settingsInit: SettingsInitializer;
+	gameStateInit: GameStateInitializer;
+	loadQueryParams?: boolean; // if true, will load game state from URL query params
+}
+
 // Initializer function for game logic reducer
-function gameLogicInit(
-	settingsInit: SettingsInitializer,
-	gameStateInit: GameStateInitializer,
-	loadQueryParams?: boolean,
-): () => GameLogicState {
+function gameLogicInit({
+	settingsInit,
+	gameStateInit,
+	loadQueryParams,
+}: GameLogicInitParams): GameLogicState {
 	const defaultState: GameLogicState = {
 		game: gameStateInit(),
 		settings: settingsInit(),
@@ -307,21 +312,16 @@ function gameLogicInit(
 
 	if (loadQueryParams) {
 		if (typeof window === 'undefined') {
-			return () => defaultState;
+			return defaultState;
 		}
 
-		console.log(
-			'Loading game state from URL query params',
-			window.location.search,
+		return loadQuery(
+			defaultState,
+			new URLSearchParams(window.location.search),
 		);
-		return () =>
-			loadQuery(
-				defaultState,
-				new URLSearchParams(window.location.search),
-			);
 	}
 
-	return () => defaultState;
+	return defaultState;
 }
 
 interface UseGameLogicParams {
@@ -340,12 +340,12 @@ export function useGameLogic({
 }: UseGameLogicParams = {}): [GameLogicState, ActionDispatch<[GameAction]>] {
 	const [state, dispatch] = useReducer(
 		gameLogicReducer,
-		settingsInit,
-		gameLogicInit(
-			settingsInit == undefined ? getInitialBoardSettings : settingsInit,
-			gameStateInit == undefined ? getInitialBoardState : gameStateInit,
-			useQuery,
-		),
+		{
+			settingsInit: settingsInit || getInitialBoardSettings,
+			gameStateInit: gameStateInit || getInitialBoardState,
+			loadQueryParams: useQuery,
+		},
+		gameLogicInit,
 	);
 
 	// Update URL search params to reflect game state

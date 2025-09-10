@@ -32,7 +32,6 @@ export default function ErrorSnackbar({ errors, action }: ErrorSnackbarProps) {
 	React.useEffect(() => {
 		// If there are errors and no message currently showing, show the first error
 		if (errors.length && !message) {
-			console.log('setting message to', errors[0].msg);
 			setMessage(errors[0].msg);
 			setOpen(true);
 		}

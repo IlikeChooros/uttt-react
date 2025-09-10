@@ -154,7 +154,6 @@ function analysisReducer(
 			if (action.default === undefined) {
 				return prev;
 			}
-			console.log('Closing event source on cleanup');
 			return action.default;
 
 		case 're-analyze':
@@ -233,7 +232,6 @@ export function useAnalysis({
 			!state.rtFailed &&
 			state.connectionId
 		) {
-			console.log('sse analysis', state.request);
 			dispatch({ type: 'start-thinking' });
 			EngineAPI.analyzeSSE({
 				...state.request,
@@ -264,7 +262,6 @@ export function useAnalysis({
 		) {
 			analysisSlowdown.current.startTime = Date.now();
 			const req = state.request;
-			console.log('request', req, 'slowdown', analysisSlowdown);
 			dispatch({ type: 'start-thinking' });
 			EngineAPI.analyze(req)
 				.then((bestMoves) => {
@@ -342,7 +339,6 @@ export function useAnalysis({
 					type: 'sse-connected',
 					state: { connectionId: connId },
 				});
-				console.log('connection', event);
 			});
 
 			eventSource.addEventListener('analysis', (event) => {
@@ -384,8 +380,7 @@ export function useAnalysis({
 				}
 			});
 
-			eventSource.onopen = (event) => {
-				console.log('Connected to event source', event);
+			eventSource.onopen = () => {
 				dispatch({ type: 'set-rt-state', rtState: 'connected' });
 			};
 

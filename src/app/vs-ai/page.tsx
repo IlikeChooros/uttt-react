@@ -163,7 +163,6 @@ export default function VersusAiGame() {
 
 				const bestMove = moves[0] || null;
 				if (bestMove != null) {
-					console.log('made move', bestMove);
 					dispatchGameLogic({ type: 'makemove', move: bestMove });
 				}
 				setVersusState((prev) => ({ ...prev, thinking: false }));

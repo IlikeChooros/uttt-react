@@ -17,7 +17,7 @@ import AnalysisIcon from '@mui/icons-material/AutoGraph';
 import { DifficultyType } from '@/components/vs-ai/AiSettings';
 import AiDiffSettings from '@/components/vs-ai/AiDiffSettings';
 import RefButton from '@/components/ui/RefButton';
-import { getRoutePath } from '@/routing';
+import { analysisRoute } from '@/routing';
 
 interface VersusAiResultProps {
 	onNewGame: () => void;
@@ -38,7 +38,7 @@ export default function VersusAiResult({
 	const router = useRouter();
 
 	const handleAnalyze = () => {
-		router.push(getRoutePath('/analysis', { gameState, settings }));
+		router.push(analysisRoute(gameState));
 	};
 
 	return (

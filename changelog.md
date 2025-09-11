@@ -13,3 +13,7 @@
 - [x] Add 'notation' string to load the game state [Features](#features)
 - [x] Add submit analysis error handling
 - [x] Add proper aborting of requests, when changing the position while analysis is ongoing
+  
+## 11 IX 2025
+- [x] Fix the re-route bug [Bugfixes](#bugfixes)
+- [x] Add custom 404 page 

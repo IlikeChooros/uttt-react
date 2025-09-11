@@ -4,7 +4,7 @@ import Typography from '@mui/material/Typography';
 import React from 'react';
 
 interface GameRulesProps {
-	showAnalysis: boolean;
+	showAnalysis?: boolean;
 }
 
 export default function GameRules({ showAnalysis }: GameRulesProps) {

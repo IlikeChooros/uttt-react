@@ -2,25 +2,45 @@ import * as React from 'react';
 import Typography from '@mui/material/Typography';
 import { Link } from '@mui/material';
 
+import GithubIcon from '@mui/icons-material/GitHub';
+
 export default function Copyright() {
 	return (
-		<Typography
-			variant="body2"
-			align="center"
-			sx={{
-				color: 'text.secondary',
+		<div
+			style={{
+				marginTop: 'auto',
+				display: 'flex',
+				justifyContent: 'center',
+				alignItems: 'center',
+				flexDirection: 'row',
+				gap: 8,
 			}}
 		>
-			Made by <strong>IlikeChooros</strong>, source code available on{' '}
-			<Link
-				href="https://github.com/IlikeChooros/go-uttt/tree/fileserver"
-				target="_blank"
-				rel="noopener"
-				color="info"
+			<div>
+				<Typography
+					variant="body2"
+					align="center"
+					sx={{
+						color: 'text.secondary',
+					}}
+				>
+					Made by <strong>IlikeChooros</strong>, all rights
+					reserved.{' '}
+				</Typography>
+			</div>
+			<div
+				style={{
+					display: 'flex',
+					alignItems: 'center',
+					justifyContent: 'center',
+					gap: 4,
+				}}
 			>
-				GitHub
-			</Link>
-			. All rights reserved.
-		</Typography>
+				<GithubIcon />
+				<Link color="inherit" href="https://github.com/IlikeChooros">
+					GitHub
+				</Link>
+			</div>
+		</div>
 	);
 }

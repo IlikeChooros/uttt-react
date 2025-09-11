@@ -285,13 +285,45 @@ export default function VersusAiGame() {
 	return (
 		<Box
 			sx={{
-				my: 4,
+				minHeight: '100dvh',
 				display: 'flex',
 				flexDirection: 'column',
-				justifyContent: 'center',
 				alignItems: 'center',
+				justifyContent: 'flex-start',
+				py: { xs: 6, md: 8 },
+				gap: 6,
+				px: 1,
 			}}
 		>
+			<Box sx={{ textAlign: 'center', maxWidth: 760 }}>
+				<Typography
+					variant="h3"
+					component="h1"
+					gutterBottom
+					sx={{
+						fontWeight: 600,
+						fontSize: { xs: '2.25rem', md: '2.8rem' },
+						lineHeight: 1.15,
+						mb: 2,
+					}}
+				>
+					Play vs AI
+				</Typography>
+				<Typography
+					variant="h6"
+					color="text.secondary"
+					sx={{
+						fontWeight: 300,
+						mb: 3,
+						mx: 'auto',
+						maxWidth: 640,
+					}}
+				>
+					Play against our AI opponent. Choose your difficulty, decide
+					who goes first, and test your strategic skills. Can you
+					outsmart the AI and claim victory?
+				</Typography>
+			</Box>
 			<Box sx={{ mb: 4, width: '100%' }}>
 				<Box
 					sx={{
@@ -334,7 +366,6 @@ export default function VersusAiGame() {
 											setSelectedDifficulty(diff)
 										}
 										motion={baseAnimation}
-										title="Play vs AI"
 										limits={gameLogic.limits}
 										settings={gameLogic.settings}
 										onSettingsChange={(s) =>

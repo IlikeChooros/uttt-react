@@ -1,6 +1,5 @@
 'use client';
 import React, { useEffect } from 'react';
-import { type BoardSettings, type GameState } from '@/board';
 
 // mui
 import Box from '@mui/material/Box';
@@ -27,7 +26,9 @@ import { SettingsPaper } from '@/components/ui/SettingsPaper';
 import ErrorSnackbar, {
 	ErrorSnackbarAction,
 } from '@/components/ui/ErrorSnackbar';
-import { readRouteState, makeRouteKey } from '@/routeState';
+import { useSearchParams } from 'next/navigation';
+import { makeRouteKey, readRouteState } from '@/routeState';
+import { BoardSettings, GameState } from '@/board';
 
 interface ErrorStack {
 	errors: AnalysisError[];
@@ -76,6 +77,8 @@ const Unavailable = ({
 );
 
 export default function Analysis() {
+	const searchParams = useSearchParams();
+	const [loaded, setLoaded] = React.useState(false);
 	const [gameLogic, gameLogicDispatch] = useGameLogic({ useQuery: true });
 	const [analysisState, dispatchAnalysis] = useAnalysis({
 		fallbackToHttp: true,
@@ -88,27 +91,41 @@ export default function Analysis() {
 	});
 
 	// Load route state (full game state) if sid is present
-	// useEffect(() => {
-	// 	if (typeof window === 'undefined') return;
-	// 	const params = new URLSearchParams(window.location.search);
-	// 	const sid = params.get('sid');
-	// 	if (!sid) return;
-	// 	const key = makeRouteKey('analysis', sid);
-	// 	const payload = readRouteState<{
-	// 		gameState: GameState;
-	// 		settings: BoardSettings;
-	// 	}>(key);
-
-	// 	if (!payload) return;
-
-	// 	gameLogicDispatch({
-	// 		type: 'load-whole-state',
-	// 		newGameState: payload.gameState,
-	// 	});
-	// }, [gameLogicDispatch]);
+	React.useEffect(() => {
+		if (loaded || searchParams.entries().next().done) return; // if there are no search params, do nothing
+		setLoaded(true);
+		const sid = searchParams.get('sid');
+		if (!sid) return;
+		const payload = readRouteState<{
+			gameState: GameState;
+		}>(makeRouteKey('analysis', sid), { consume: false });
+		if (payload) {
+			gameLogicDispatch({
+				type: 'change-gamestate',
+				newGameState: payload.gameState,
+			});
+			dispatchAnalysis({
+				type: 'force-analyze',
+				state: {
+					request: toAnalysisRequest(
+						gameLogic.settings,
+						payload.gameState,
+					),
+				},
+			});
+		}
+	}, [
+		searchParams,
+		loaded,
+		gameLogicDispatch,
+		dispatchAnalysis,
+		gameLogic.settings,
+	]);
 
 	// Listen for errors
 	useEffect(() => {
+		if (!loaded) return;
+
 		if (analysisState.errorStack.length === 0) {
 			setErrorStack({ errors: [], action: null });
 			return;
@@ -153,21 +170,11 @@ export default function Analysis() {
 					},
 				});
 		}
-	}, [analysisState.errorStack, dispatchAnalysis]);
+	}, [loaded, analysisState.errorStack, dispatchAnalysis]);
 
 	// Send analysis requests when game state changes
 	useEffect(() => {
-		if (gameLogic.prevAction === 'load-whole-state') {
-			dispatchAnalysis({
-				type: 'force-analyze',
-				state: {
-					request: toAnalysisRequest(
-						gameLogic.settings,
-						gameLogic.game,
-					),
-				},
-			});
-		}
+		if (!loaded) return;
 
 		if (gameLogic.game.winner || gameLogic.game.isDraw) {
 			return;
@@ -175,6 +182,7 @@ export default function Analysis() {
 
 		// See if there is a good cause for a request
 		if (
+			gameLogic.action === 'set-limits' ||
 			gameLogic.action === null ||
 			gameLogic.action === 'change-settings' ||
 			gameLogic.action === 'reset'
@@ -205,6 +213,7 @@ export default function Analysis() {
 			});
 		}
 	}, [
+		loaded,
 		analysisState.rtFailed,
 		gameLogic.action,
 		gameLogic.prevAction,

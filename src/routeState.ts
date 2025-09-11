@@ -32,15 +32,15 @@ export function saveRouteState<T>(
 	};
 	memoryStore.set(key, payload as RouteState<unknown>);
 	const ss = safeSession();
-	console.log('Saving route state', key, payload, 'to sessionStorage?', !!ss);
+	// console.log('Saving route state', key, payload, 'to sessionStorage?', !!ss);
 	if (ss) {
 		try {
 			ss.setItem(key, JSON.stringify(payload));
-			console.log(
-				'Saved route state to sessionStorage',
-				key,
-				JSON.stringify(payload),
-			);
+			// console.log(
+			// 'Saved route state to sessionStorage',
+			// key,
+			// JSON.stringify(payload),
+			// );
 		} catch {}
 	}
 	return key;
@@ -50,29 +50,29 @@ export function readRouteState<T>(
 	key: string,
 	{ consume = true } = {},
 ): T | undefined {
-	console.log('Reading route state', key);
+	// console.log('Reading route state', key);
 	const ss = safeSession();
 	let payload = memoryStore.get(key) as RouteState<T> | undefined;
 	if (!payload && ss) {
-		console.log('No in-memory route state, checking sessionStorage');
+		// console.log('No in-memory route state, checking sessionStorage');
 		try {
 			const raw = ss.getItem(key);
-			console.log('Got raw route state from sessionStorage', key, raw);
+			// console.log('Got raw route state from sessionStorage', key, raw);
 			if (raw) payload = JSON.parse(raw) as RouteState<T>;
 		} catch {}
 	}
 	if (!payload) return undefined;
 
-	console.log('Found route state payload', payload);
+	// console.log('Found route state payload', payload);
 	if (payload.expiresAt && payload.expiresAt < now()) {
 		// expired
-		console.log('Route state expired', key);
+		// console.log('Route state expired', key);
 		memoryStore.delete(key);
 		ss?.removeItem(key);
 		return undefined;
 	}
 	if (consume) {
-		console.log('Consuming route state', key);
+		// console.log('Consuming route state', key);
 		memoryStore.delete(key);
 		ss?.removeItem(key);
 	}

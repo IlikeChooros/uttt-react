@@ -20,6 +20,8 @@ import AutoGraphIcon from '@mui/icons-material/AutoGraph';
 // motion
 import { motion, Variants } from 'motion/react';
 
+const AnimatedBox = motion.create(Box);
+
 export default function GameModeSelector() {
 	const containerVariants = {
 		hidden: { opacity: 0 },
@@ -47,6 +49,8 @@ export default function GameModeSelector() {
 				flexDirection: { xs: 'column', md: 'row' },
 				gap: { xs: 3, md: 1 },
 				mb: 4,
+				justifyItems: 'stretch',
+				width: '100%',
 			}}
 		>
 			<CardPanel
@@ -113,14 +117,14 @@ const CardPanel: React.FC<CardPanelProps> = function ({
 	variants,
 }: CardPanelProps) {
 	return (
-		<Box
-			component={motion.div}
+		<AnimatedBox
 			variants={variants}
 			whileHover={{ y: -2 }}
 			whileTap={{ scale: 0.98 }}
 		>
 			<Card
 				sx={{
+					height: '100%',
 					display: 'flex',
 					flexDirection: 'column',
 					justifyContent: 'space-between',
@@ -185,6 +189,6 @@ const CardPanel: React.FC<CardPanelProps> = function ({
 					</Button>
 				</CardActions>
 			</Card>
-		</Box>
+		</AnimatedBox>
 	);
 };

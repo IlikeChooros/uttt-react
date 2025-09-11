@@ -1,6 +1,11 @@
 import { makeRouteKey, saveRouteState } from '@/routeState';
+import { GameState } from './board';
 
-// Create a link to a path, saving the data in route state, and appending the sid query param.
+export function analysisRoute(gameState: GameState): string {
+	return getRoutePath('/analysis', { gameState });
+}
+
+// Create a url to a given path, saving the data in route state, and appending the sid query param.
 // The data can be read on the destination page using readRouteState with the same key.
 // The key is generated as "prefix-sid", where prefix is provided, and sid is a random string.
 // The data expires after ttlMs (default 5 minutes).

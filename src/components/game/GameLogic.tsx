@@ -17,7 +17,6 @@ import {
 	checkTerminalState,
 	fromNotation,
 } from '@/board';
-import { makeRouteKey, readRouteState } from '@/routeState';
 import { ActionDispatch, useEffect, useReducer } from 'react';
 
 export type GameActionType =
@@ -135,40 +134,7 @@ function handleUndoMove({ game, ...other }: GameLogicState): GameLogicState {
 	};
 }
 
-function loadSidState(
-	sid: string,
-): null | { gameState: GameState; settings: BoardSettings } {
-	const key = makeRouteKey('analysis', sid);
-	const payload = readRouteState<{
-		gameState: GameState;
-		settings: BoardSettings;
-	}>(key, { consume: false });
-
-	if (payload) {
-		return payload;
-	}
-	return null;
-}
-
 function loadQuery(defaultState: GameLogicState, params: URLSearchParams) {
-	// If there is 'sid' param, load from the storage, only then
-	// read the rest of the params
-	const sid = params.get('sid');
-	if (sid !== null) {
-		console.log('Loading state from sid:', sid);
-		const payload = loadSidState(sid);
-		if (payload !== null) {
-			console.log('Loaded state from sid:', payload);
-			return {
-				...defaultState,
-				game: payload.gameState,
-				settings: payload.settings,
-			};
-		}
-	}
-
-	console.log('No sid param, loading from other params');
-
 	// Otherwise, load from the params
 	let gameState = defaultState.game;
 	const pos = params.get('position');
@@ -217,6 +183,13 @@ function gameLogicReducer(
 	action: GameAction,
 ): GameLogicState {
 	switch (action.type) {
+		case 'load-query':
+			if (!action.queryParams) {
+				return prevstate;
+			}
+			// Probably to fix, use 'defaultState' instead of 'prevstate'
+			return loadQuery(prevstate, action.queryParams);
+
 		case 'makemove':
 			if (action.move !== undefined) {
 				return {
@@ -336,16 +309,14 @@ function gameLogicReducer(
 interface GameLogicInitParams {
 	settingsInit: SettingsInitializer;
 	gameStateInit: GameStateInitializer;
-	loadQueryParams?: boolean; // if true, will load game state from URL query params
 }
 
 // Initializer function for game logic reducer
 function gameLogicInit({
 	settingsInit,
 	gameStateInit,
-	loadQueryParams,
 }: GameLogicInitParams): GameLogicState {
-	const defaultState: GameLogicState = {
+	return {
 		game: gameStateInit(),
 		settings: settingsInit(),
 		limits: getInitialEngineLimits(),
@@ -354,24 +325,6 @@ function gameLogicInit({
 		prevAction: null,
 		available: undefined,
 	};
-
-	if (loadQueryParams) {
-		if (typeof window === 'undefined') {
-			return defaultState;
-		}
-
-		console.log(
-			'Loading game state from URL query params',
-			window.location.search,
-		);
-
-		return loadQuery(
-			defaultState,
-			new URLSearchParams(window.location.search),
-		);
-	}
-
-	return defaultState;
 }
 
 interface UseGameLogicParams {
@@ -393,7 +346,6 @@ export function useGameLogic({
 		{
 			settingsInit: settingsInit || getInitialBoardSettings,
 			gameStateInit: gameStateInit || getInitialGameState,
-			loadQueryParams: useQuery,
 		},
 		gameLogicInit,
 	);

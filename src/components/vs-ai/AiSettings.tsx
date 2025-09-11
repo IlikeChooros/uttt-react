@@ -16,7 +16,7 @@ import Button from '@mui/material/Button';
 // import SettingsIcon from '@mui/icons-material/Settings';
 import PersonIcon from '@mui/icons-material/Person';
 import PsychologyIcon from '@mui/icons-material/Psychology';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import SettingsIcon from '@mui/icons-material/Settings';
 
 // my components
 import { BoardSettings } from '@/board';
@@ -43,7 +43,6 @@ interface AiSettingsProps {
 	motion?: motion.HTMLMotionProps<'div'>;
 	difficultyLevels: DifficultyLevelsType;
 	difficulty: DifficultyType;
-	title: string;
 	settings: BoardSettings;
 	limits: EngineLimits;
 	onSettingsChange: (v: BoardSettings) => void;
@@ -61,7 +60,6 @@ export default function AiSettings({
 	motion,
 	difficultyLevels,
 	difficulty,
-	title,
 	settings,
 	limits,
 	onSettingsChange,
@@ -79,17 +77,11 @@ export default function AiSettings({
 			<div
 				style={{
 					display: 'grid',
-					gridTemplateColumns: '1fr auto 1fr',
+					gridTemplateColumns: 'auto',
 					alignItems: 'center',
 					gap: 1,
 				}}
 			>
-				<div aria-hidden="true" />
-
-				<Typography textAlign={'center'} variant="h4" fontSize={'2rem'}>
-					{title}
-				</Typography>
-
 				<Tooltip
 					title={
 						showAdvancedSettings
@@ -113,7 +105,7 @@ export default function AiSettings({
 								: 'Show advanced settings'
 						}
 					>
-						<ExpandMoreIcon fontSize="small" />
+						<SettingsIcon fontSize="small" />
 					</IconButton>
 				</Tooltip>
 			</div>

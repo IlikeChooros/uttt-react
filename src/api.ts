@@ -324,7 +324,6 @@ export class EngineAPI {
 
 	static createEventSource(): EventSource {
 		// Make sure we're using the correct protocol (http:// for http, https:// for https)
-		console.log('Creating EventSource to', ENGINE_API_RT_ANALYSIS);
 		const eventSource = new EventSource(ENGINE_API_RT_ANALYSIS, {
 			withCredentials: true,
 		});

@@ -131,7 +131,6 @@ export default function Analysis() {
 			return;
 		}
 
-		console.log('Analysis error stack changed', analysisState.errorStack);
 		const action = {
 			onClose: () => dispatchAnalysis({ type: 'remove-error' }),
 		};

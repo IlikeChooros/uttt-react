@@ -382,7 +382,6 @@ export function useGameLogic({
 		if (firstLoad) {
 			// On first load, if there are query params, load from them
 			if (searchParams.toString().length > 0) {
-				console.log('Loading game state from query params');
 				dispatch({
 					type: 'load-query',
 					queryParams: searchParams,
@@ -391,8 +390,6 @@ export function useGameLogic({
 			setFirstLoad(false);
 			return;
 		}
-
-		console.log('Updating URL search params to reflect game state');
 
 		// If there are already other params in the URL, preserve them
 		const params = new URLSearchParams(searchParams);
@@ -424,12 +421,10 @@ export function useGameLogic({
 
 	// Fetch limits
 	useEffect(() => {
-		console.log('fetchLimits changed', fetchLimits);
 		if (fetchLimits === false) {
 			return;
 		}
 
-		console.log('Fetching engine limits');
 		dispatch({ type: 'start-loading-limits' });
 		getEngineLimits()
 			.then((limits) => {

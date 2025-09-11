@@ -329,7 +329,6 @@ export function useAnalysis({
 	// Reconnect function to be used externally
 	React.useEffect(() => {
 		if (state.action === 'request-connection') {
-			console.log('Requesting SSE connection');
 			// switch between undefined and true to trigger useEffect
 			setConnectToSse((prev) => (prev === undefined ? true : undefined));
 		}
@@ -341,7 +340,6 @@ export function useAnalysis({
 			return;
 		}
 
-		console.log('Connecting to SSE for analysis');
 		let eventSource: EventSource | null = null;
 		try {
 			// Open the event source connection
@@ -440,7 +438,6 @@ export function useAnalysis({
 		eventSourceRef.current = eventSource;
 
 		return () => {
-			console.log('Closing SSE connection for analysis');
 			if (eventSource && eventSource.readyState !== EventSource.CLOSED) {
 				eventSource.close();
 			}

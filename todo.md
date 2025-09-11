@@ -18,15 +18,15 @@
 ## Features
 - [x] Add websocket support for real-time analysis
 - [x] Add support for lack of websocket connection - fallback to simple HTTP requests for analysis
-- [ ] Add 'notation' string to load the game state
+- [x] Add 'notation' string to load the game state
 - [x] Add more top moves (multipv) to the analysis
 - [x] Make the navbar responsive, especially on mobile:
   - Add a drawer for the menu
-- [ ] Animate main pages:
-  - [ ] Home page
+- [x] Animate main pages:
+  - [x] Home page
   - [x] Pass and play
   - [x] VS AI
-  - [ ] Analysis page
+  - [x] Analysis page
     - The menus should appear like in the VS-AI page along with the board
     - If the engine responds in shorter time than ~400ms, then artificially slow down the move making to match the 400ms duration.
 

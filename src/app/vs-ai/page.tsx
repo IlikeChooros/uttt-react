@@ -41,6 +41,9 @@ import { Button, Skeleton, Typography } from '@mui/material';
 import VersusAiStatus from '@/components/vs-ai/VersusAiStatus';
 import VersusAiResult from '@/components/vs-ai/VersusAiResult';
 import { GameBoardSkeleton } from '@/components/ui/skeletons';
+import LandingPageLayout from '@/components/ui/LandingPageLayout';
+import useErrorStack from '@/components/utils/useErrorStack';
+import ErrorSnackbar from '@/components/ui/ErrorSnackbar';
 
 const difficultyLevels: DifficultyLevelsType = [
 	{
@@ -138,6 +141,9 @@ export default function VersusAiGame() {
 	const [selectedDifficulty, setSelectedDifficulty] =
 		useState<DifficultyType>('Easy');
 
+	const { errorStack, pushError, popError, clearErrors, setErrors } =
+		useErrorStack();
+
 	// AI move logic
 	useEffect(() => {
 		async function makeAiMove() {
@@ -173,11 +179,21 @@ export default function VersusAiGame() {
 				setVersusState((prev) => ({ ...prev, thinking: false }));
 			} catch (error) {
 				console.error('AI move failed:', error);
+				pushError({
+					msg: 'AI move failed. Please try again.',
+					type: 'ai-move',
+				});
 				setVersusState((prev) => ({ ...prev, thinking: false }));
+				dispatchGameLogic({
+					type: 'unavailable',
+				});
 			}
 		}
 
-		if (versusState.gameMode === 'playing') {
+		if (
+			versusState.gameMode === 'playing' &&
+			errorStack.errors.length === 0
+		) {
 			makeAiMove();
 		}
 	}, [
@@ -190,6 +206,8 @@ export default function VersusAiGame() {
 		versusState.thinking,
 		versusState.engineTurn,
 		versusState.gameMode,
+		pushError,
+		errorStack.errors,
 	]);
 
 	// Update game mode based on game state
@@ -271,6 +289,10 @@ export default function VersusAiGame() {
 		startVersusAi(pendingEngineTurn === 'O');
 	};
 
+	const handleErrorAction = () => {
+		dispatchGameLogic({ type: 'request-limits' }); // try refetching limits on error close
+	};
+
 	const isHumanTurn =
 		!versusState.on ||
 		versusState.engineTurn !== gameLogic.game.currentPlayer;
@@ -283,47 +305,10 @@ export default function VersusAiGame() {
 		!gameLogic.game.isDraw;
 
 	return (
-		<Box
-			sx={{
-				minHeight: '100dvh',
-				display: 'flex',
-				flexDirection: 'column',
-				alignItems: 'center',
-				justifyContent: 'flex-start',
-				py: { xs: 6, md: 8 },
-				gap: 6,
-				px: 1,
-			}}
+		<LandingPageLayout
+			title="Play vs AI"
+			description="Challenge an AI opponent with adjustable difficulty levels. Capture small boards to control the macro board. Then analyze moves and improve your strategy."
 		>
-			<Box sx={{ textAlign: 'center', maxWidth: 760 }}>
-				<Typography
-					variant="h3"
-					component="h1"
-					gutterBottom
-					sx={{
-						fontWeight: 600,
-						fontSize: { xs: '2.25rem', md: '2.8rem' },
-						lineHeight: 1.15,
-						mb: 2,
-					}}
-				>
-					Play vs AI
-				</Typography>
-				<Typography
-					variant="h6"
-					color="text.secondary"
-					sx={{
-						fontWeight: 300,
-						mb: 3,
-						mx: 'auto',
-						maxWidth: 640,
-					}}
-				>
-					Play against our AI opponent. Choose your difficulty, decide
-					who goes first, and test your strategic skills. Can you
-					outsmart the AI and claim victory?
-				</Typography>
-			</Box>
 			<Box sx={{ mb: 4, width: '100%' }}>
 				<Box
 					sx={{
@@ -334,6 +319,15 @@ export default function VersusAiGame() {
 					}}
 				>
 					<Box sx={{ maxWidth: '900px', width: '100%' }}>
+						<ErrorSnackbar
+							errors={errorStack.errors}
+							action={{
+								name: 'Reconnect',
+								onClose: () => popError(),
+								onClick: () => handleErrorAction(),
+							}}
+						/>
+
 						<AnimatePresence mode="wait">
 							{/* AI availability status, in pre-loading state */}
 							{gameLogic.available === undefined && (
@@ -358,7 +352,7 @@ export default function VersusAiGame() {
 							{versusState.gameMode === 'setup' &&
 								gameLogic.available === true && (
 									<AiSettings
-										minHeight={'230px'}
+										minHeight={'220px'}
 										key="ai-settings"
 										difficulty={selectedDifficulty}
 										difficultyLevels={difficultyLevels}
@@ -382,56 +376,46 @@ export default function VersusAiGame() {
 									/>
 								)}
 
-							{versusState.gameMode === 'playing' && (
-								<SettingsPaper
-									key="ai-playing"
-									{...baseAnimation}
-								>
-									<Box
-										sx={{
-											minHeight: '190px',
-											height: '100%',
-											display: 'flex',
-											justifyContent: 'space-between',
-											alignItems: 'center',
-											flexDirection: 'column',
-										}}
+							{versusState.gameMode === 'playing' &&
+								gameLogic.available === true && (
+									<SettingsPaper
+										key="ai-playing"
+										{...baseAnimation}
 									>
-										<Typography
-											variant="h5"
-											textAlign={'center'}
-											fontWeight={400}
-											gutterBottom
-										>
-											Game in progress
-										</Typography>
-
-										<VersusAiStatus
-											difficulty={selectedDifficulty}
-											versusState={versusState}
-											gameState={gameLogic.game}
-											settings={gameLogic.settings}
-										/>
-
 										<Box
 											sx={{
-												mt: 2,
+												height: '100%',
 												display: 'flex',
-												justifyContent: 'center',
+												justifyContent: 'space-between',
+												alignItems: 'center',
+												flexDirection: 'column',
 											}}
 										>
-											<Button
-												startIcon={<CloseIcon />}
-												variant="contained"
-												color="error"
-												onClick={resetGame}
+											<VersusAiStatus
+												difficulty={selectedDifficulty}
+												versusState={versusState}
+												gameState={gameLogic.game}
+												settings={gameLogic.settings}
+											/>
+
+											<Box
+												sx={{
+													display: 'flex',
+													justifyContent: 'center',
+												}}
 											>
-												Exit
-											</Button>
+												<Button
+													startIcon={<CloseIcon />}
+													variant="contained"
+													color="tertiary"
+													onClick={resetGame}
+												>
+													Exit
+												</Button>
+											</Box>
 										</Box>
-									</Box>
-								</SettingsPaper>
-							)}
+									</SettingsPaper>
+								)}
 
 							{versusState.gameMode === 'finished' && (
 								<SettingsPaper
@@ -485,6 +469,6 @@ export default function VersusAiGame() {
 				</Box>
 			</Box>
 			<Copyright />
-		</Box>
+		</LandingPageLayout>
 	);
 }

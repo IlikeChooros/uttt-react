@@ -8,6 +8,7 @@ import Stack from '@mui/material/Stack';
 import { DifficultyType } from '@/components/vs-ai/AiSettings';
 import { PlayerChip, AiPlayerChip } from '@/components/ui/PlayerChip';
 import AiDiffSettings from '@/components/vs-ai/AiDiffSettings';
+import GameStatus from '../game/GameStatus';
 
 interface VersusState {
 	ready: boolean;
@@ -34,10 +35,14 @@ export default function VersusAiStatus({
 		<Box>
 			{/* Player indicators */}
 			<Box sx={{ textAlign: 'center', mb: 2 }}>
-				<AiDiffSettings difficulty={difficulty} settings={settings} />
+				<AiDiffSettings
+					size="h6"
+					difficulty={difficulty}
+					settings={settings}
+				/>
 			</Box>
 
-			<Stack direction="row" spacing={2} justifyContent="center">
+			<Stack direction="row" spacing={2} justifyContent="center" mb={2}>
 				{versusState.engineTurn === 'X' ? (
 					<AiPlayerChip
 						player="X"
@@ -67,6 +72,12 @@ export default function VersusAiStatus({
 					/>
 				)}
 			</Stack>
+
+			<GameStatus
+				gameState={gameState}
+				engineTurn={versusState.engineTurn}
+				againstAi
+			/>
 		</Box>
 	);
 }

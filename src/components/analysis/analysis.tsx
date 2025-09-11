@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { use } from 'react';
 
 // mine components
 import {
@@ -26,6 +26,8 @@ interface ActionState {
 	connectionId?: AnalysisState['connectionId'];
 	serverBusy?: AnalysisState['serverBusy'];
 	freshAnalysis?: AnalysisState['freshAnalysis'];
+	rtState?: AnalysisState['rtState'];
+	rtFailed?: AnalysisState['rtFailed'];
 }
 
 export interface AnalysisAction {
@@ -211,6 +213,9 @@ export function useAnalysis({
 	fallbackToHttp = true,
 	slowDownMs = 700,
 }: AnalysisOptions): Analysis {
+	const [connectToSse, setConnectToSse] = React.useState<boolean | undefined>(
+		useRtAnalysis,
+	);
 	const [state, dispatch] = React.useReducer(
 		analysisReducer,
 		undefined,
@@ -220,20 +225,25 @@ export function useAnalysis({
 		waitTime: slowDownMs,
 		startTime: 0,
 	});
+	const eventSourceRef = React.useRef<EventSource | null>(null);
 
 	React.useEffect(() => {
 		// If we aren't analyzing the position AND there is an request
 		if (
 			state.request &&
 			useRtAnalysis &&
-			!state.rtFailed &&
+			state.rtState === 'connected' &&
 			state.connectionId
 		) {
 			dispatch({ type: 'start-thinking' });
 			EngineAPI.analyzeSSE({
 				...state.request,
 				connId: state.connectionId,
-			}).catch((error: Error) => {
+			}).catch((error) => {
+				Object.keys(error).forEach((key) => {
+					console.error(`Error detail: ${key}: ${error[key]}`);
+				});
+
 				// Server is too busy
 				if (error.message.includes('NetworkError')) {
 					return; // don't show error if network error, could be offline
@@ -311,16 +321,27 @@ export function useAnalysis({
 		fallbackToHttp,
 		state.thinking,
 		state.request,
+		state.rtState,
 		state.rtFailed,
 		state.connectionId,
 	]);
 
+	// Reconnect function to be used externally
+	React.useEffect(() => {
+		if (state.action === 'request-connection') {
+			console.log('Requesting SSE connection');
+			// switch between undefined and true to trigger useEffect
+			setConnectToSse((prev) => (prev === undefined ? true : undefined));
+		}
+	}, [useRtAnalysis, state.action, connectToSse]);
+
 	// Setup/teardown of event source connection
 	React.useEffect(() => {
-		if (!useRtAnalysis) {
+		if (connectToSse === false) {
 			return;
 		}
 
+		console.log('Connecting to SSE for analysis');
 		let eventSource: EventSource | null = null;
 		try {
 			// Open the event source connection
@@ -388,13 +409,13 @@ export function useAnalysis({
 				dispatch({ type: 'set-rt-state', rtState: 'connected' });
 			};
 
-			eventSource.onerror = (event) => {
+			eventSource.onerror = () => {
 				eventSource?.close();
 				dispatch({ type: 'close' });
 				dispatch({
 					type: 'append-error',
 					error: {
-						msg: event.type,
+						msg: 'Lost connection to analysis engine',
 						type: 'rt-analysis-lost-connection',
 					},
 				});
@@ -407,16 +428,26 @@ export function useAnalysis({
 			});
 		} catch (error) {
 			console.error('Failed to create EventSource:', error);
+			dispatch({
+				type: 'append-error',
+				error: {
+					msg: (error as Error).message,
+					type: 'rt-analysis-connect',
+				},
+				state: { rtFailed: true, rtState: 'failed' },
+			});
 		}
+		eventSourceRef.current = eventSource;
 
 		return () => {
-			eventSource?.close();
-			dispatch({
-				type: 'cleanup',
-				default: getInitialAnalysisState(),
-			});
+			console.log('Closing SSE connection for analysis');
+			if (eventSource && eventSource.readyState !== EventSource.CLOSED) {
+				eventSource.close();
+			}
+			eventSourceRef.current = null;
+			dispatch({ type: 'set-rt-state', rtState: 'closed' });
 		};
-	}, [useRtAnalysis]);
+	}, [connectToSse]);
 
 	return [state, dispatch];
 }

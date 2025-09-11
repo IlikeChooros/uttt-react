@@ -31,6 +31,13 @@ declare module '@mui/material/styles' {
 		outline?: { main: string };
 	}
 }
+
+declare module '@mui/material/Button' {
+	interface ButtonPropsColorOverrides {
+		tertiary: true;
+	}
+}
+
 import { Roboto } from 'next/font/google';
 
 const roboto = Roboto({
@@ -106,7 +113,7 @@ const theme = extendTheme({
 					700: '#8C1D18',
 					800: '#601410',
 					900: '#410002',
-					main: '#B3261E',
+					main: '#DC362E',
 					light: '#F9DEDC',
 					dark: '#8C1D18',
 					contrastText: '#FFFFFF',

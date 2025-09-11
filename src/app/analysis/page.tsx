@@ -28,7 +28,7 @@ import ErrorSnackbar, {
 } from '@/components/ui/ErrorSnackbar';
 import { useSearchParams } from 'next/navigation';
 import { makeRouteKey, readRouteState } from '@/routeState';
-import { BoardSettings, GameState } from '@/board';
+import { GameState } from '@/board';
 
 interface ErrorStack {
 	errors: AnalysisError[];
@@ -131,6 +131,7 @@ export default function Analysis() {
 			return;
 		}
 
+		console.log('Analysis error stack changed', analysisState.errorStack);
 		const action = {
 			onClose: () => dispatchAnalysis({ type: 'remove-error' }),
 		};
@@ -162,15 +163,20 @@ export default function Analysis() {
 				});
 				break;
 			case 'rt-analysis-lost-connection':
+				gameLogicDispatch({ type: 'unavailable' });
 				setErrorStack({
 					errors: analysisState.errorStack,
 					action: {
 						...action,
+						onClick: () => {
+							dispatchAnalysis({ type: 'request-connection' });
+							gameLogicDispatch({ type: 'request-limits' });
+						},
 						name: 'Reconnect',
 					},
 				});
 		}
-	}, [loaded, analysisState.errorStack, dispatchAnalysis]);
+	}, [loaded, analysisState.errorStack, dispatchAnalysis, gameLogicDispatch]);
 
 	// Send analysis requests when game state changes
 	useEffect(() => {
@@ -236,6 +242,7 @@ export default function Analysis() {
 	return (
 		<Box
 			sx={{
+				py: { xs: 1, sm: 2 },
 				display: 'flex',
 				flexDirection: 'column',
 				justifyContent: 'center',
@@ -350,6 +357,15 @@ export default function Analysis() {
 									gameLogicDispatch({
 										type: 'change-gamestate',
 										newGameState: position,
+									});
+									dispatchAnalysis({
+										type: 'force-analyze',
+										state: {
+											request: toAnalysisRequest(
+												gameLogic.settings,
+												position,
+											),
+										},
 									});
 								}}
 							/>

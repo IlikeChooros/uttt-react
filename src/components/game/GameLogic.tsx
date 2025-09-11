@@ -17,13 +17,16 @@ import {
 	checkTerminalState,
 	fromNotation,
 } from '@/board';
-import { ActionDispatch, useEffect, useReducer } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { ActionDispatch, useEffect, useReducer, useState } from 'react';
 
 export type GameActionType =
 	| 'load-query'
 	| 'makemove'
 	| 'undomove'
 	| 'reset'
+	| 'start-loading-limits'
+	| 'request-limits'
 	| 'set-limits'
 	| 'change-settings'
 	| 'toggle-settings'
@@ -42,6 +45,7 @@ export interface GameAction {
 	newSettings?: BoardSettings;
 	newGameState?: GameState;
 	queryParams?: URLSearchParams; // if provided, will load game state from these params
+	enabled?: boolean; // only if 'change-gamestate' is the type
 }
 
 export interface GameLogicState {
@@ -219,6 +223,21 @@ function gameLogicReducer(
 				prevAction: prevstate.action,
 			};
 
+		case 'request-limits':
+			return {
+				...prevstate,
+				action: 'request-limits',
+				prevAction: prevstate.action,
+				loadingLimits: true,
+				available: undefined,
+			};
+
+		case 'start-loading-limits':
+			return {
+				...prevstate,
+				loadingLimits: true,
+			};
+
 		case 'set-limits':
 			const limits = action.limits || prevstate.limits;
 			const loadingLimits =
@@ -295,10 +314,6 @@ function gameLogicReducer(
 				action: 'unavailable',
 				prevAction: prevstate.action,
 				loadingLimits: false,
-				game: {
-					...prevstate.game,
-					enabled: false,
-				},
 				available: false,
 			};
 	}
@@ -341,6 +356,9 @@ export function useGameLogic({
 	local = false,
 	useQuery = false,
 }: UseGameLogicParams = {}): [GameLogicState, ActionDispatch<[GameAction]>] {
+	const searchParams = useSearchParams();
+	const [firstLoad, setFirstLoad] = useState(true);
+	const [fetchLimits, setFetchLimits] = useState<boolean | undefined>(!local);
 	const [state, dispatch] = useReducer(
 		gameLogicReducer,
 		{
@@ -361,9 +379,24 @@ export function useGameLogic({
 			return;
 		}
 
+		if (firstLoad) {
+			// On first load, if there are query params, load from them
+			if (searchParams.toString().length > 0) {
+				console.log('Loading game state from query params');
+				dispatch({
+					type: 'load-query',
+					queryParams: searchParams,
+				});
+			}
+			setFirstLoad(false);
+			return;
+		}
+
+		console.log('Updating URL search params to reflect game state');
+
 		// If there are already other params in the URL, preserve them
-		const params = new URLSearchParams(window.location.search);
-		if (window.location.search.length > 0) {
+		const params = new URLSearchParams(searchParams);
+		if (searchParams.toString().length > 0) {
 			params.forEach((value, key) => {
 				params.set(key, value);
 			});
@@ -380,15 +413,24 @@ export function useGameLogic({
 		const url = new URL(window.location.href);
 		url.search = params.toString();
 		window.history.replaceState({}, '', url.toString());
-	}, [state.game, state.settings, useQuery]);
+	}, [state.game, state.settings, useQuery, firstLoad, searchParams]);
+
+	useEffect(() => {
+		if (state.action === 'request-limits') {
+			// Toggle fetchLimits to trigger useEffect below
+			setFetchLimits((prev) => (prev === undefined ? true : undefined));
+		}
+	}, [state.action]);
 
 	// Fetch limits
 	useEffect(() => {
-		if (local) {
+		console.log('fetchLimits changed', fetchLimits);
+		if (fetchLimits === false) {
 			return;
 		}
 
-		dispatch({ type: 'set-limits', loadingLimits: true });
+		console.log('Fetching engine limits');
+		dispatch({ type: 'start-loading-limits' });
 		getEngineLimits()
 			.then((limits) => {
 				dispatch({ type: 'set-limits', limits: limits });
@@ -396,7 +438,7 @@ export function useGameLogic({
 			.catch(() => {
 				dispatch({ type: 'unavailable' });
 			});
-	}, [local]);
+	}, [fetchLimits]);
 
 	return [state, dispatch];
 }

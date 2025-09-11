@@ -10,6 +10,9 @@ import Container from '@mui/material/Container';
 export default function RootLayout(props: { children: React.ReactNode }) {
 	return (
 		<html lang="en" suppressHydrationWarning>
+			<head>
+				<meta name="apple-mobile-web-app-title" content="UTTT" />
+			</head>
 			<body>
 				<InitColorSchemeScript attribute="class" />
 				<AppRouterCacheProvider options={{ enableCssLayer: true }}>

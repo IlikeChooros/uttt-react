@@ -19,6 +19,7 @@ import { SettingsPaper } from '@/components/ui/SettingsPaper';
 import { PlayerChip } from '@/components/ui/PlayerChip';
 import RefButton from '@/components/ui/RefButton';
 import { analysisRoute } from '@/routing';
+import LandingPageLayout from '@/components/ui/LandingPageLayout';
 
 export default function Local() {
 	const [gameLogic, gameLogicDispatch] = useGameLogic({ local: true });
@@ -27,50 +28,18 @@ export default function Local() {
 	const handleAnalyze = () => router.push(analysisRoute(gameLogic.game));
 
 	return (
-		<Box
-			sx={{
-				minHeight: '100dvh',
-				display: 'flex',
-				flexDirection: 'column',
-				alignItems: 'center',
-				justifyContent: 'flex-start',
-				py: { xs: 6, md: 8 },
-				gap: 6,
-				px: 1,
-			}}
+		<LandingPageLayout
+			title="Local Pass & Play"
+			description="Share one device and alternate moves. Capture small boards to control the macro board. Use Undo for take-backs or Restart to explore new lines. Then analyze moves and improve your strategy."
+			gap={2}
 		>
-			<Box sx={{ textAlign: 'center', maxWidth: 760 }}>
-				<Typography
-					variant="h3"
-					component="h1"
-					gutterBottom
-					sx={{
-						fontWeight: 600,
-						fontSize: { xs: '2.25rem', md: '2.8rem' },
-						lineHeight: 1.15,
-						mb: 2,
-					}}
-				>
-					Local Pass & Play
-				</Typography>
-				<Typography
-					variant="h6"
-					color="text.secondary"
-					sx={{ fontWeight: 300, mb: 3, mx: 'auto', maxWidth: 640 }}
-				>
-					Share one device and alternate moves. Capture small boards
-					to control the macro board. Use Undo for take-backs or
-					Restart to explore new lines.
-				</Typography>
-			</Box>
-
 			<SettingsPaper
 				{...baseAnimation}
 				sx={{
 					width: '100%',
 					maxWidth: 820,
 					textAlign: 'center',
-					mx: 'auto',
+					mt: { xs: 2, md: 4 },
 				}}
 			>
 				<Stack
@@ -103,7 +72,7 @@ export default function Local() {
 				<GameStatus gameState={gameLogic.game} />
 
 				<Stack
-					direction={{ xs: 'column', sm: 'row' }}
+					direction={'row'}
 					spacing={2}
 					justifyContent="center"
 					alignItems="center"
@@ -153,7 +122,6 @@ export default function Local() {
 				style={{
 					display: 'flex',
 					justifyContent: 'center',
-					marginBottom: 4,
 					width: '100%',
 				}}
 			>
@@ -181,6 +149,6 @@ export default function Local() {
 			</Box>
 
 			<Copyright />
-		</Box>
+		</LandingPageLayout>
 	);
 }

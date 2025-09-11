@@ -6,27 +6,85 @@ import React, { useCallback } from 'react';
 import Box from '@mui/material/Box';
 import { Typography } from '@mui/material';
 
-import { GameState } from '@/board';
+import { GameState, Player } from '@/board';
 
 interface GameStatusProps {
 	gameState: GameState;
+	againstAi?: boolean;
+	engineTurn?: Player;
 }
 
-export default function GameStatus({ gameState }: GameStatusProps) {
+export default function GameStatus({
+	gameState,
+	againstAi = false,
+	engineTurn = null,
+}: GameStatusProps) {
 	const getStatusMessage = useCallback(() => {
+		let currentPlayer = '';
+		const enginePlaying =
+			againstAi && engineTurn === gameState.currentPlayer;
+
+		if (enginePlaying) {
+			currentPlayer = 'Engine';
+		} else {
+			currentPlayer = `Player ${gameState.currentPlayer}`;
+		}
+
 		if (gameState.winner) {
-			return `Player ${gameState.winner} wins the game!`;
+			return `${currentPlayer} wins the game!`;
 		}
 		if (gameState.isDraw) {
 			return 'The game is a draw!';
 		}
 
-		let message = `Current player: ${gameState.currentPlayer}`;
+		if (enginePlaying) {
+			return 'Engine is thinking...';
+		}
+
+		let message = '';
+		if (againstAi) {
+			message = `Your turn! You`;
+		} else {
+			message = `Current player: ${gameState.currentPlayer}`;
+		}
 
 		if (gameState.activeBoard !== null) {
-			message += ` (must play in highlighted board)`;
+			function boardPosition(idx: number, ...positions: string[]) {
+				switch (idx) {
+					case 0:
+						return positions[0];
+					case 1:
+						return positions[1];
+					case 2:
+						return positions[2];
+					default:
+						return '';
+				}
+			}
+
+			let msg = '';
+			// middle square
+			if (gameState.activeBoard === 4) {
+				msg += 'middle';
+			} else {
+				msg += boardPosition(
+					Math.floor(gameState.activeBoard / 3),
+					'top',
+					'middle',
+					'bottom',
+				);
+				msg += ' ';
+				msg += boardPosition(
+					gameState.activeBoard % 3,
+					'left',
+					'center',
+					'right',
+				);
+			}
+
+			message += ` must play in ${msg} square`;
 		} else {
-			message += ` (can play in any available board)`;
+			message += ` can play in any available board`;
 		}
 
 		return message;
@@ -35,6 +93,8 @@ export default function GameStatus({ gameState }: GameStatusProps) {
 		gameState.activeBoard,
 		gameState.isDraw,
 		gameState.currentPlayer,
+		againstAi,
+		engineTurn,
 	]);
 
 	return (

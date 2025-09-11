@@ -9,7 +9,6 @@ import Typography from '@mui/material/Typography';
 import { useTheme, alpha } from '@mui/material/styles';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import ToggleButton from '@mui/material/ToggleButton';
-import Tooltip from '@mui/material/Tooltip';
 import Button from '@mui/material/Button';
 
 // icons
@@ -25,6 +24,7 @@ import EngineSettings from '../settings/EngineSettings';
 import { IconButton } from '@mui/material';
 import { SettingsPaper } from '@/components/ui/SettingsPaper';
 import { AnimatePresence } from 'motion/react';
+import React from 'react';
 
 const AnimatedBox = motion.motion.create(Box);
 export type DifficultyType = 'Easy' | 'Medium' | 'Hard' | 'custom';
@@ -74,44 +74,8 @@ export default function AiSettings({
 
 	return (
 		<SettingsPaper sx={[{ minHeight }]} minHeight={minHeight} {...motion}>
-			<div
-				style={{
-					display: 'grid',
-					gridTemplateColumns: 'auto',
-					alignItems: 'center',
-					gap: 1,
-				}}
-			>
-				<Tooltip
-					title={
-						showAdvancedSettings
-							? 'Hide advanced'
-							: 'Show advanced settings'
-					}
-				>
-					<IconButton
-						size="large"
-						onClick={() => setShowAdvancedSettings((p) => !p)}
-						sx={{
-							transform: showAdvancedSettings
-								? 'rotate(180deg)'
-								: 'rotate(0deg)',
-							transition: 'transform 0.25s',
-							justifySelf: 'end',
-						}}
-						aria-label={
-							showAdvancedSettings
-								? 'Hide advanced settings'
-								: 'Show advanced settings'
-						}
-					>
-						<SettingsIcon fontSize="small" />
-					</IconButton>
-				</Tooltip>
-			</div>
-
 			{/* Difficulty selection */}
-			<Box sx={{ mb: 2 }}>
+			<Box sx={{ mb: 2, textAlign: 'center' }}>
 				<Typography
 					variant="caption"
 					sx={{
@@ -120,7 +84,8 @@ export default function AiSettings({
 						fontWeight: 600,
 						color: 'text.secondary',
 						display: 'block',
-						mb: 0.5,
+						fontSize: { xs: '0.8rem', sm: '0.9rem' },
+						mb: 1.5,
 					}}
 				>
 					Difficulty
@@ -140,7 +105,7 @@ export default function AiSettings({
 						onSettingsChange({ ...settings, ...level.limits });
 					}}
 					sx={{
-						bgcolor: alpha(theme.palette.primary.main, 0.04),
+						bgcolor: alpha(theme.palette.secondary.main, 0.04),
 						borderRadius: 2,
 						px: 0.5,
 						'& .MuiToggleButtonGroup-grouped': {
@@ -148,17 +113,23 @@ export default function AiSettings({
 							border: 'none',
 							m: 0.5,
 							borderRadius: 1.5,
-							textTransform: 'none',
 							fontWeight: 500,
 						},
-						'& .Mui-selected': {
-							bgcolor: theme.palette.primary.main + '20',
-						},
+						// '& .Mui-selected': {
+						// 	bgcolor: theme.palette.primary.main + '20',
+						// },
 					}}
 				>
-					{difficultyLevels.map((level) => (
-						<ToggleButton key={level.label} value={level.label}>
-							{level.label}
+					{difficultyLevels.map(({ label }) => (
+						<ToggleButton key={`Toggle-${label}`} value={label}>
+							<Typography
+								variant="body1"
+								sx={{
+									textTransform: 'none',
+								}}
+							>
+								{label}
+							</Typography>
 						</ToggleButton>
 					))}
 				</ToggleButtonGroup>
@@ -169,12 +140,14 @@ export default function AiSettings({
 				<Typography
 					variant="caption"
 					sx={{
+						textAlign: { xs: 'center', sm: 'left' },
 						textTransform: 'uppercase',
 						letterSpacing: 0.8,
 						fontWeight: 600,
 						color: 'text.secondary',
 						display: 'block',
-						mb: 0.5,
+						mb: 1,
+						fontSize: '0.8rem',
 					}}
 				>
 					First Move
@@ -182,14 +155,15 @@ export default function AiSettings({
 
 				<Box
 					sx={{
-						display: 'flex',
-						flexDirection: { xs: 'column', sm: 'row' },
-						gap: 1,
+						display: { xs: 'flex', sm: 'grid' },
+						gridTemplateColumns: '1fr auto',
+						gap: 2,
+						flexDirection: 'column',
 					}}
 				>
 					<ToggleButtonGroup
 						exclusive
-						color="primary"
+						fullWidth
 						size="small"
 						value={engineTurn === 'O' ? 'you' : 'ai'}
 						onChange={(_, val) => {
@@ -202,10 +176,25 @@ export default function AiSettings({
 							}
 						}}
 						sx={{
-							fontWeight: 400,
+							justifySelf: 'start',
+							maxWidth: { xs: 'unset', sm: 300 },
+							// bgcolor: alpha(theme.palette.primary.main, 0.04),
+							bgcolor: alpha(theme.palette.primary.main, 0.04),
+							borderRadius: 2,
+							'& .MuiToggleButtonGroup-grouped': {
+								flex: 1,
+								border: 'none',
+								m: 0.5,
+								borderRadius: 1.5,
+								textTransform: 'none',
+								fontWeight: 500,
+							},
+							'& .Mui-selected': {
+								bgcolor: theme.palette.secondary.main + '20',
+							},
 						}}
 					>
-						<ToggleButton value="you" color="secondary">
+						<ToggleButton value="you" color="primary">
 							<PersonIcon fontSize="small" sx={{ ml: 2 }} />
 							<Typography
 								variant="body1"
@@ -215,29 +204,75 @@ export default function AiSettings({
 							</Typography>
 						</ToggleButton>
 						<ToggleButton value="ai" color="secondary">
-							<PsychologyIcon fontSize="small" sx={{ ml: 2 }} />
+							<PsychologyIcon
+								fontSize="small"
+								color="secondary"
+								sx={{ ml: 2 }}
+							/>
 							<Typography
 								variant="body1"
-								sx={{ mr: 2, textTransform: 'none' }}
+								sx={{
+									mr: 2,
+									textTransform: 'none',
+									color: 'secondary.main',
+								}}
 							>
 								&nbsp;AI (X)
 							</Typography>
 						</ToggleButton>
 					</ToggleButtonGroup>
 
-					<div style={{ flexGrow: 1 }} />
-
-					<Button
-						variant="contained"
-						sx={{
-							borderRadius: 2,
-							textTransform: 'none',
-							fontWeight: 600,
+					<div
+						style={{
+							display: 'flex',
+							justifyContent: 'end',
+							alignItems: 'center',
+							gap: 8,
 						}}
-						onClick={handleStart}
 					>
-						Start Game
-					</Button>
+						<Button
+							size="large"
+							fullWidth
+							variant="contained"
+							sx={{
+								borderRadius: 2,
+								textTransform: 'none',
+								fontWeight: 600,
+							}}
+							onClick={handleStart}
+						>
+							Start Game
+						</Button>
+						<IconButton
+							size="large"
+							color="primary"
+							onClick={() => setShowAdvancedSettings((p) => !p)}
+							sx={{
+								bgcolor: alpha(
+									theme.palette.primary.main,
+									0.15,
+								),
+								'&:hover': {
+									bgcolor: alpha(
+										theme.palette.primary.main,
+										0.25,
+									),
+								},
+								transform: showAdvancedSettings
+									? 'rotate(180deg)'
+									: 'rotate(0deg)',
+								transition: 'transform 0.25s',
+								justifySelf: 'end',
+							}}
+							aria-label={
+								showAdvancedSettings
+									? 'Hide advanced settings'
+									: 'Show advanced settings'
+							}
+						>
+							<SettingsIcon fontSize="small" />
+						</IconButton>
+					</div>
 				</Box>
 			</Box>
 

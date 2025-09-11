@@ -3,7 +3,6 @@
 ## 6 IX 2025 - 8 IX 2025
 - [x] Move the SSE architecture [Chores](#chores)
   - [x] Write sensible backend 
-- [ ] Add icon for the app [Misc](#misc)
 - [x] Implement error handling for the every engine API [Chores](#chores)
   - [x] Vs-Ai page
   - [x] Analysis page 
@@ -17,3 +16,5 @@
 ## 11 IX 2025
 - [x] Fix the re-route bug [Bugfixes](#bugfixes)
 - [x] Add custom 404 page 
+- [x] Add icon for the app [Misc](#misc)
+- [x] Fantastic lost-connection support and re-connection features

@@ -44,12 +44,12 @@ export default function VersusAiResult({
 	return (
 		<Box
 			textAlign={'center'}
-			minHeight={'190px'}
+			minHeight={'180px'}
 			display={'flex'}
 			flexDirection={'column'}
 			justifyContent={'space-between'}
 		>
-			<Typography variant="h6">Game Over</Typography>
+			<Typography variant="h5">Game Over</Typography>
 
 			<AiDiffSettings difficulty={difficulty} settings={settings} />
 

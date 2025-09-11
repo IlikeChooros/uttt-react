@@ -10,6 +10,6 @@
 
 ## 9 IX 2025 - 10 IX 2025
 - [x] Animate main page [Features](#features)
-- [ ] Add 'notation' string to load the game state [Features](#features)
+- [x] Add 'notation' string to load the game state [Features](#features)
 - [x] Add submit analysis error handling
-- [ ] Add proper aborting of requests, when changing the position while analysis is ongoing
+- [x] Add proper aborting of requests, when changing the position while analysis is ongoing

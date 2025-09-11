@@ -67,15 +67,12 @@ function analysisReducer(
 				freshAnalysis: false,
 				lastRequest: prev.request,
 				request: null,
-				requestCount: prev.requestCount + 1,
 				action: 'start-thinking',
 			};
 		case 'stop-thinking':
-			const rc = Math.max(0, prev.requestCount - 1);
 			return {
 				...prev,
-				thinking: rc > 0,
-				requestCount: rc,
+				thinking: false,
 			};
 		case 'set-response':
 			// expects: 'bestMove', 'topMoves', 'currentEvaluation'
@@ -264,7 +261,8 @@ export function useAnalysis({
 			const req = state.request;
 			dispatch({ type: 'start-thinking' });
 			EngineAPI.analyze(req)
-				.then((bestMoves) => {
+				.then((resp) => {
+					const bestMoves = EngineAPI.parseAnalysisResponse(resp);
 					const disp = () => {
 						dispatch({
 							type: 'set-response',
@@ -275,9 +273,9 @@ export function useAnalysis({
 								topMoves: bestMoves,
 								request: null, // infinite analysis
 								serverBusy: false,
+								thinking: !resp.final,
 							},
 						});
-						dispatch({ type: 'stop-thinking' });
 					};
 
 					// Apply 'slow down' if needed
@@ -344,23 +342,29 @@ export function useAnalysis({
 			eventSource.addEventListener('analysis', (event) => {
 				const analysis: AnalysisResponse = JSON.parse(event.data);
 				const lines = EngineAPI.parseAnalysisResponse(analysis);
-				dispatch({
-					type: 'set-response',
-					state: {
-						currentEvaluation: lines[0].evaluation,
-						absEvaluation: lines[0].abseval,
-						bestMove: lines[0],
-						topMoves: lines,
-						request: null,
-						serverBusy: false,
-					},
-				});
+
+				const disp = () =>
+					dispatch({
+						type: 'set-response',
+						state: {
+							currentEvaluation:
+								lines.length > 0 ? lines[0].evaluation : '',
+							absEvaluation:
+								lines.length > 0 ? lines[0].abseval : '',
+							bestMove: lines.length > 0 ? lines[0] : null,
+							topMoves: lines.length > 0 ? lines : [],
+							request: null,
+							serverBusy: false,
+							thinking: !analysis.final,
+						},
+					});
 
 				if (analysisSlowdown.current.startTime === 0) {
 					analysisSlowdown.current.startTime = Date.now();
 				}
 
 				if (!analysis.final) {
+					disp();
 					return;
 				}
 
@@ -372,11 +376,11 @@ export function useAnalysis({
 				if (elapsed < waitTime) {
 					setTimeout(() => {
 						if (analysisSlowdown.current.startTime === 0) {
-							dispatch({ type: 'stop-thinking' });
+							disp();
 						}
 					}, waitTime - elapsed);
 				} else {
-					dispatch({ type: 'stop-thinking' });
+					disp();
 				}
 			});
 

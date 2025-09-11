@@ -4,7 +4,10 @@ import React, { useCallback } from 'react';
 import Box, { BoxProps } from '@mui/material/Box';
 import { GameState } from '@/board';
 import { AnalysisState } from '@/api';
-import SmallBoardComponent from '@/components/game/SmallBoard';
+import {
+	SmallBoardProps,
+	MemoizedSmallBoard,
+} from '@/components/game/SmallBoard';
 
 interface GameBoardProps {
 	disabled?: boolean;
@@ -42,6 +45,58 @@ export default function GameBoard({
 		[gameState],
 	);
 
+	const smallBoardProps: Array<SmallBoardProps> = React.useMemo(
+		() =>
+			Array.from({ length: 9 }, (_, index) => {
+				const lastMove = gameState.history.length
+					? gameState.history[gameState.history.length - 1].move
+					: undefined;
+
+				// Relevant board, in an analysis sense,
+				// is one that has the best move, one of the top moves
+				// or was the last move played
+				const isRelevantBoard =
+					analysisState?.bestMove?.boardIndex === index ||
+					analysisState?.topMoves?.some(
+						(move) => move.boardIndex === index,
+					) ||
+					lastMove?.boardIndex === index;
+
+				// Make the irrelevant boards not update their props
+				// unless something about them changes
+				const bestMove = isRelevantBoard
+					? analysisState?.bestMove
+					: undefined;
+				const topMoves = isRelevantBoard
+					? analysisState?.topMoves
+					: undefined;
+				const freshAnalysis =
+					analysisState?.freshAnalysis && isRelevantBoard;
+				const showAnalysis = showBestMoves && isRelevantBoard;
+				return {
+					lastMoveHighlight,
+					lastMove: isRelevantBoard ? lastMove : undefined,
+					boardIndex: index,
+					smallBoard: gameState.boards[index],
+					isActive: !disabled && isBoardActive(index),
+					showAnalysis,
+					bestMove,
+					topMoves,
+					onCellClick: handleCellClick,
+					freshAnalysis,
+				};
+			}),
+		[
+			analysisState,
+			disabled,
+			gameState,
+			handleCellClick,
+			isBoardActive,
+			lastMoveHighlight,
+			showBestMoves,
+		],
+	);
+
 	return (
 		<Box
 			sx={{
@@ -68,25 +123,10 @@ export default function GameBoard({
 					transition: 'opacity 0.3s ease-in-out',
 				}}
 			>
-				{Array.from({ length: 9 }, (_, boardIndex) => (
-					<SmallBoardComponent
-						lastMoveHighlight={lastMoveHighlight}
-						lastMove={
-							gameState.history.length > 0
-								? gameState.history[
-										gameState.history.length - 1
-									].move
-								: undefined
-						}
-						key={boardIndex}
-						boardIndex={boardIndex}
-						smallBoard={gameState.boards[boardIndex]}
-						isActive={!disabled && isBoardActive(boardIndex)}
-						showAnalysis={showBestMoves}
-						bestMove={analysisState?.bestMove}
-						topMoves={analysisState?.topMoves}
-						onCellClick={handleCellClick}
-						freshAnalysis={analysisState?.freshAnalysis}
+				{smallBoardProps.map((props) => (
+					<MemoizedSmallBoard
+						key={`SmallBoard${props.boardIndex}`}
+						{...props}
 					/>
 				))}
 			</Box>

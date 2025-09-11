@@ -9,7 +9,6 @@ import Typography from '@mui/material/Typography';
 import { useTheme, alpha } from '@mui/material/styles';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import ToggleButton from '@mui/material/ToggleButton';
-import Collapse from '@mui/material/Collapse';
 import Tooltip from '@mui/material/Tooltip';
 import Button from '@mui/material/Button';
 
@@ -77,38 +76,47 @@ export default function AiSettings({
 
 	return (
 		<SettingsPaper sx={[{ minHeight }]} minHeight={minHeight} {...motion}>
-			<Typography textAlign={'center'} variant="h4" fontSize={'2rem'}>
-				{title}
-			</Typography>
-
-			<Tooltip
-				title={
-					showAdvancedSettings
-						? 'Hide advanced'
-						: 'Show advanced settings'
-				}
+			<div
+				style={{
+					display: 'grid',
+					gridTemplateColumns: '1fr auto 1fr',
+					alignItems: 'center',
+					gap: 1,
+				}}
 			>
-				<IconButton
-					size="large"
-					onClick={() => setShowAdvancedSettings((p) => !p)}
-					sx={{
-						transform: showAdvancedSettings
-							? 'rotate(180deg)'
-							: 'rotate(0deg)',
-						transition: 'transform 0.25s',
-						position: 'absolute',
-						top: '12px',
-						right: '12px',
-					}}
-					aria-label={
+				<div aria-hidden="true" />
+
+				<Typography textAlign={'center'} variant="h4" fontSize={'2rem'}>
+					{title}
+				</Typography>
+
+				<Tooltip
+					title={
 						showAdvancedSettings
-							? 'Hide advanced settings'
+							? 'Hide advanced'
 							: 'Show advanced settings'
 					}
 				>
-					<ExpandMoreIcon fontSize="small" />
-				</IconButton>
-			</Tooltip>
+					<IconButton
+						size="large"
+						onClick={() => setShowAdvancedSettings((p) => !p)}
+						sx={{
+							transform: showAdvancedSettings
+								? 'rotate(180deg)'
+								: 'rotate(0deg)',
+							transition: 'transform 0.25s',
+							justifySelf: 'end',
+						}}
+						aria-label={
+							showAdvancedSettings
+								? 'Hide advanced settings'
+								: 'Show advanced settings'
+						}
+					>
+						<ExpandMoreIcon fontSize="small" />
+					</IconButton>
+				</Tooltip>
+			</div>
 
 			{/* Difficulty selection */}
 			<Box sx={{ mb: 2 }}>

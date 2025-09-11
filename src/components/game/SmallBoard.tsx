@@ -8,11 +8,11 @@ import Box from '@mui/material/Box';
 import { alpha, useTheme } from '@mui/material/styles';
 
 // my components
-import Cell from '@/components/game/Cell';
+import { MemoizedCell } from '@/components/game/Cell';
 import { Move, SmallBoardState } from '@/board';
 import { EngineMove } from '@/api';
 
-interface SmallBoardProps {
+export interface SmallBoardProps {
 	lastMoveHighlight?: boolean;
 	lastMove?: Move;
 	boardIndex: number;
@@ -24,6 +24,57 @@ interface SmallBoardProps {
 	freshAnalysis?: boolean;
 	onCellClick: (boardIndex: number, cellIndex: number) => void;
 }
+
+export const MemoizedSmallBoard = React.memo(
+	SmallBoard,
+	(prevProps, nextProps) => {
+		let smallBoardEqual = true;
+		for (let i = 0; i < 9; i++) {
+			if (
+				prevProps.smallBoard.board[i] !== nextProps.smallBoard.board[i]
+			) {
+				smallBoardEqual = false;
+				break;
+			}
+		}
+
+		let topMovesEqual = true;
+		if (prevProps.topMoves && nextProps.topMoves) {
+			if (prevProps.topMoves.length !== nextProps.topMoves.length) {
+				topMovesEqual = false;
+			} else {
+				for (let i = 0; i < prevProps.topMoves.length; i++) {
+					if (
+						prevProps.topMoves[i].boardIndex !==
+							nextProps.topMoves[i].boardIndex ||
+						prevProps.topMoves[i].cellIndex !==
+							nextProps.topMoves[i].cellIndex
+					) {
+						topMovesEqual = false;
+						break;
+					}
+				}
+			}
+		} else if (prevProps.topMoves || nextProps.topMoves) {
+			topMovesEqual = false;
+		}
+
+		const ok =
+			smallBoardEqual &&
+			topMovesEqual &&
+			prevProps.smallBoard.winner === nextProps.smallBoard.winner &&
+			prevProps.smallBoard.isDraw === nextProps.smallBoard.isDraw &&
+			prevProps.isActive === nextProps.isActive &&
+			prevProps.showAnalysis === nextProps.showAnalysis &&
+			prevProps.bestMove === nextProps.bestMove &&
+			prevProps.lastMove?.boardIndex === nextProps.lastMove?.boardIndex &&
+			prevProps.lastMove?.cellIndex === nextProps.lastMove?.cellIndex &&
+			prevProps.lastMoveHighlight === nextProps.lastMoveHighlight &&
+			prevProps.freshAnalysis === nextProps.freshAnalysis;
+
+		return ok;
+	},
+);
 
 export default function SmallBoard({
 	boardIndex,
@@ -38,6 +89,50 @@ export default function SmallBoard({
 	onCellClick,
 }: SmallBoardProps) {
 	const theme = useTheme();
+
+	const cellProps = React.useMemo(() => {
+		return Array.from({ length: 9 }, (_, cellIndex) => {
+			const value = smallBoard.board[cellIndex];
+			const canClick =
+				isActive && !value && !smallBoard.winner && !smallBoard.isDraw;
+			const isBestMove =
+				bestMove?.boardIndex === boardIndex &&
+				bestMove?.cellIndex === cellIndex;
+			const isGoodMove = topMoves?.some(
+				(move) =>
+					move.boardIndex === boardIndex &&
+					move.cellIndex === cellIndex,
+			);
+			const isHighlighted =
+				lastMoveHighlight &&
+				lastMove !== undefined &&
+				lastMove.boardIndex === boardIndex &&
+				lastMove.cellIndex === cellIndex;
+
+			return {
+				value,
+				canClick,
+				isBestMove: isBestMove && showAnalysis,
+				isGoodMove: isGoodMove && showAnalysis,
+				isHighlighted,
+				onClick: () => onCellClick(boardIndex, cellIndex),
+				isStale: !freshAnalysis,
+			};
+		});
+	}, [
+		boardIndex,
+		smallBoard.winner,
+		smallBoard.isDraw,
+		freshAnalysis,
+		isActive,
+		lastMove,
+		lastMoveHighlight,
+		onCellClick,
+		showAnalysis,
+		smallBoard.board,
+		bestMove,
+		topMoves,
+	]);
 
 	return (
 		<Paper
@@ -124,40 +219,12 @@ export default function SmallBoard({
 					},
 				}}
 			>
-				{Array.from({ length: 9 }, (_, cellIndex) => {
-					const value = smallBoard.board[cellIndex];
-					const canClick =
-						isActive &&
-						!value &&
-						!smallBoard.winner &&
-						!smallBoard.isDraw;
-					const isBestMove =
-						bestMove?.boardIndex === boardIndex &&
-						bestMove?.cellIndex === cellIndex;
-					const isGoodMove = topMoves?.some(
-						(move) =>
-							move.boardIndex === boardIndex &&
-							move.cellIndex === cellIndex,
-					);
-					const isHighlighted =
-						lastMoveHighlight &&
-						lastMove !== undefined &&
-						lastMove.boardIndex === boardIndex &&
-						lastMove.cellIndex === cellIndex;
-
-					return (
-						<Cell
-							isHighlighted={isHighlighted}
-							key={cellIndex}
-							value={value}
-							canClick={canClick}
-							isBestMove={isBestMove && showAnalysis}
-							isGoodMove={isGoodMove && showAnalysis}
-							onClick={() => onCellClick(boardIndex, cellIndex)}
-							isStale={!freshAnalysis}
-						/>
-					);
-				})}
+				{cellProps.map((props, idx) => (
+					<MemoizedCell
+						key={`Cell-${boardIndex}-${idx}`}
+						{...props}
+					/>
+				))}
 			</Box>
 		</Paper>
 	);

@@ -51,7 +51,7 @@ export interface BoardSettings {
 	multiPv: number;
 }
 
-export const getInitialBoardState = (): GameState => {
+export const getInitialGameState = (): GameState => {
 	const boards: SmallBoardState[] = [];
 	for (let i = 0; i < 9; i++) {
 		boards.push({
@@ -100,7 +100,7 @@ export function checkTerminalState(
 	const overallWinner = checkWinner(boards.map((v) => v.winner));
 	const overallDraw =
 		!overallWinner && boards.every((b) => b.winner || b.isDraw);
-	return [overallWinner !== null || overallDraw, overallWinner];
+	return [overallDraw, overallWinner];
 }
 
 // returns new small board state, with updated 'winner' and 'isDraw' fields
@@ -223,7 +223,20 @@ export function fromNotation(notation: string): GameState {
 			}
 		}
 
+		if (cellIndex != 9) {
+			throw new Error(
+				'Invalid notation, not enough cells in board ' + i.toString(),
+			);
+		}
+
 		boards.push(updateSmallBoardState(board));
+	}
+
+	if (parts[2] !== '-' && isNaN(parseInt(parts[2], 10))) {
+		throw new Error(
+			'Invalid notation, expected active board index or "-", got ' +
+				parts[2],
+		);
 	}
 
 	return {

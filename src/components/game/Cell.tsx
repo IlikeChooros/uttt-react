@@ -23,6 +23,17 @@ type Variant =
 	| 'stale-good'
 	| 'stale-best';
 
+export const MemoizedCell = React.memo(Cell, (prevProps, nextProps) => {
+	return (
+		prevProps.value === nextProps.value &&
+		prevProps.canClick === nextProps.canClick &&
+		prevProps.isHighlighted === nextProps.isHighlighted &&
+		prevProps.isBestMove === nextProps.isBestMove &&
+		prevProps.isGoodMove === nextProps.isGoodMove &&
+		prevProps.isStale === nextProps.isStale
+	);
+});
+
 export default function Cell({
 	value,
 	canClick,
@@ -53,8 +64,8 @@ export default function Cell({
 				},
 				highlighted: {
 					borderWidth: 2,
-					borderColor: alpha(theme.palette.secondary.main, 0.5),
-					bg: alpha(theme.palette.secondary.main, 0.2),
+					borderColor: alpha(theme.palette.secondary.main, 0.7),
+					bg: 'action.selected',
 					hoverBg: alpha(theme.palette.secondary.main, 0.25),
 					hoverBorder: theme.palette.secondary.main,
 				},

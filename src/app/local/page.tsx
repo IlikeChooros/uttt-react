@@ -1,6 +1,8 @@
 'use client';
 import React from 'react';
 
+import { useRouter } from 'next/navigation';
+
 // motion
 import * as motion from 'motion/react';
 import { baseAnimation, boardAnimation } from '@/components/ui/animations';
@@ -13,6 +15,7 @@ import Typography from '@mui/material/Typography';
 // icons
 import RestartIcon from '@mui/icons-material/RestartAlt';
 import UndoIcon from '@mui/icons-material/Undo';
+import AnalysisIcon from '@mui/icons-material/AutoGraph';
 
 // mine components
 import { useGameLogic } from '@/components/game/GameLogic';
@@ -22,9 +25,23 @@ import GameRules from '@/components/ui/GameRules';
 import Copyright from '@/components/Copyright';
 import { SettingsPaper } from '@/components/ui/SettingsPaper';
 import { PlayerChip } from '@/components/ui/PlayerChip';
+import RefButton from '@/components/ui/RefButton';
+import { getRoutePath } from '@/routing';
 
 export default function Local() {
-	const [gameLogic, gameLogicDispatch] = useGameLogic({ local: true });
+	const [gameLogic, gameLogicDispatch] = useGameLogic({
+		local: true,
+	});
+	const router = useRouter();
+
+	const handleAnalyze = () => {
+		router.push(
+			getRoutePath('/analysis', {
+				gameState: gameLogic.game,
+				settings: gameLogic.settings,
+			}),
+		);
+	};
 
 	return (
 		<Box
@@ -83,17 +100,57 @@ export default function Local() {
 						<GameStatus gameState={gameLogic.game} />
 
 						<Box
-							sx={{
-								display: 'flex',
-								justifyContent: 'center',
-								gap: 2,
-							}}
+							display={'grid'}
+							gridTemplateColumns={'1fr auto 1fr'}
+							alignItems={'center'}
+							gap={1}
 						>
+							<div aria-hidden="true"></div>
 							{gameLogic.game.winner === null &&
 							!gameLogic.game.isDraw ? (
 								<>
+									<div
+										style={{
+											display: 'flex',
+											gap: 8,
+											justifyItems: 'center',
+										}}
+									>
+										<Button
+											variant="outlined"
+											onClick={() =>
+												gameLogicDispatch({
+													type: 'reset',
+												})
+											}
+											size="large"
+											startIcon={<RestartIcon />}
+											sx={{ bgcolor: 'primary', px: 2 }}
+										>
+											Restart
+										</Button>
+
+										<Button
+											variant="outlined"
+											onClick={() =>
+												gameLogicDispatch({
+													type: 'undomove',
+												})
+											}
+											size="large"
+											startIcon={<UndoIcon />}
+											color="primary"
+											sx={{ px: 2 }}
+										>
+											Undo
+										</Button>
+									</div>
+									<div aria-hidden="true"></div>
+								</>
+							) : (
+								<>
 									<Button
-										variant="outlined"
+										variant="contained"
 										onClick={() =>
 											gameLogicDispatch({ type: 'reset' })
 										}
@@ -101,36 +158,22 @@ export default function Local() {
 										startIcon={<RestartIcon />}
 										sx={{ bgcolor: 'primary', px: 2 }}
 									>
-										Restart
+										Play Again
 									</Button>
-
-									<Button
-										variant="outlined"
-										onClick={() =>
-											gameLogicDispatch({
-												type: 'undomove',
-											})
-										}
-										size="large"
-										startIcon={<UndoIcon />}
-										color="primary"
-										sx={{ px: 2 }}
+									<RefButton
+										onClick={handleAnalyze}
+										iconButtonProps={{
+											sx: {
+												bgcolor: 'primary.light',
+												p: 1,
+												justifySelf: 'end',
+											},
+										}}
+										asIcon
 									>
-										Undo
-									</Button>
+										<AnalysisIcon />
+									</RefButton>
 								</>
-							) : (
-								<Button
-									variant="contained"
-									onClick={() =>
-										gameLogicDispatch({ type: 'reset' })
-									}
-									size="large"
-									startIcon={<RestartIcon />}
-									sx={{ bgcolor: 'primary', px: 2 }}
-								>
-									Play Again
-								</Button>
 							)}
 						</Box>
 					</SettingsPaper>

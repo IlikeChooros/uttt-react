@@ -31,7 +31,7 @@ import Home from '@mui/icons-material/Home';
 import Psychology from '@mui/icons-material/Psychology';
 import LightModeIcon from '@mui/icons-material/WbSunny';
 import DarkModeIcon from '@mui/icons-material/Brightness3';
-import AutoGraphIcon from '@mui/icons-material/AutoGraph';
+import AnalysisIcon from '@mui/icons-material/AutoGraph';
 
 type NavData = Array<{ href: string; name: string; icon: React.ReactElement }>;
 
@@ -58,7 +58,7 @@ const navData: NavData = [
 	{
 		href: '/analysis',
 		name: 'Analysis',
-		icon: <AutoGraphIcon />,
+		icon: <AnalysisIcon />,
 	},
 ];
 

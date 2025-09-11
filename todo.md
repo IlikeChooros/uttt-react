@@ -37,5 +37,10 @@
 - [x] Fix ddos attack when backend is down (on vs AI mode)
 - [x] Fix analysis bug, when hiding the available websocket closes, and falls back to http requests
 
+
+```
+GET /api/rt-analysis net::ERR_CONNECTION_RESET 200 (OK)
+```
+
 ## Misc
 - [ ] Add icon for the app 

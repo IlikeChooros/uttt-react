@@ -16,7 +16,6 @@ declare module '@mui/material/styles' {
 		loading: { main: string };
 		surface: { main: string };
 		outline: { main: string };
-		backgroundImg: string;
 	}
 	interface PaletteOptions {
 		tertiary?: PaletteOptions['primary'];
@@ -30,7 +29,6 @@ declare module '@mui/material/styles' {
 		loading?: { main: string };
 		surface?: { main: string };
 		outline?: { main: string };
-		backgroundImg?: string;
 	}
 }
 import { Roboto } from 'next/font/google';
@@ -48,8 +46,6 @@ const theme = extendTheme({
 	colorSchemes: {
 		light: {
 			palette: {
-				backgroundImg:
-					'linear-gradient(to right, #434343 0%, black 100%);',
 				// Material Design 3 baseline (example set). Adjust if you generate a custom scheme.
 				primary: {
 					50: '#F6EDFF', // tone 95
@@ -133,7 +129,7 @@ const theme = extendTheme({
 					paper: '#FFFBFE',
 				},
 				surface: {
-					main: '#6650a408', // primary main with 4% opacity
+					main: '#6650a409', // primary main with 4% opacity
 				},
 				outline: {
 					main: '#79747E',
@@ -145,7 +141,7 @@ const theme = extendTheme({
 				},
 				action: {
 					active: '#6750A4',
-					hover: 'rgba(103, 80, 164, 0.08)',
+					hover: 'rgba(102, 80, 164, 0.22)',
 					selected: 'rgba(103, 80, 164, 0.16)',
 					disabled: 'rgba(28,27,31,0.38)',
 					disabledBackground: 'rgba(28,27,31,0.12)',
@@ -155,8 +151,6 @@ const theme = extendTheme({
 		dark: {
 			palette: {
 				// Dark mode gradient
-				backgroundImg:
-					'linear-gradient(to right, #434343 0%, black 100%);',
 				primary: {
 					50: '#F6EDFF', // tone 95
 					100: '#EADDFF', // tone 90

@@ -10,13 +10,14 @@ import {
 import {
 	BoardSettings,
 	GameState,
-	getInitialBoardState,
+	getInitialGameState,
 	getInitialBoardSettings,
 	Move,
 	updateSmallBoardState,
 	checkTerminalState,
 	fromNotation,
 } from '@/board';
+import { makeRouteKey, readRouteState } from '@/routeState';
 import { ActionDispatch, useEffect, useReducer } from 'react';
 
 export type GameActionType =
@@ -28,6 +29,7 @@ export type GameActionType =
 	| 'change-settings'
 	| 'toggle-settings'
 	| 'change-gamestate'
+	| 'load-whole-state'
 	| 'unavailable';
 export type SettingsInitializer = () => BoardSettings;
 export type GameStateInitializer = () => GameState;
@@ -133,7 +135,41 @@ function handleUndoMove({ game, ...other }: GameLogicState): GameLogicState {
 	};
 }
 
+function loadSidState(
+	sid: string,
+): null | { gameState: GameState; settings: BoardSettings } {
+	const key = makeRouteKey('analysis', sid);
+	const payload = readRouteState<{
+		gameState: GameState;
+		settings: BoardSettings;
+	}>(key, { consume: false });
+
+	if (payload) {
+		return payload;
+	}
+	return null;
+}
+
 function loadQuery(defaultState: GameLogicState, params: URLSearchParams) {
+	// If there is 'sid' param, load from the storage, only then
+	// read the rest of the params
+	const sid = params.get('sid');
+	if (sid !== null) {
+		console.log('Loading state from sid:', sid);
+		const payload = loadSidState(sid);
+		if (payload !== null) {
+			console.log('Loaded state from sid:', payload);
+			return {
+				...defaultState,
+				game: payload.gameState,
+				settings: payload.settings,
+			};
+		}
+	}
+
+	console.log('No sid param, loading from other params');
+
+	// Otherwise, load from the params
 	let gameState = defaultState.game;
 	const pos = params.get('position');
 	if (pos !== null) {
@@ -151,10 +187,10 @@ function loadQuery(defaultState: GameLogicState, params: URLSearchParams) {
 			return defaultValue;
 		}
 		const v = parseInt(param, 10);
-		if (isNaN(v)) {
+		if (isNaN(v) || v <= 0) {
 			return defaultValue;
 		}
-		return v;
+		return Math.min(v, defaultValue);
 	}
 
 	let settings = defaultState.settings;
@@ -203,7 +239,7 @@ function gameLogicReducer(
 				...gameLogicInit({
 					settingsInit:
 						action.settingsInit || getInitialBoardSettings,
-					gameStateInit: getInitialBoardState,
+					gameStateInit: getInitialGameState,
 				}),
 				available: prevstate.available,
 				action: 'reset',
@@ -238,6 +274,15 @@ function gameLogicReducer(
 				action: 'set-limits',
 				prevAction: prevstate.action,
 				available: true,
+			};
+
+		case 'load-whole-state':
+			return {
+				...prevstate,
+				settings: action.newSettings || prevstate.settings,
+				game: action.newGameState || prevstate.game,
+				action: 'load-whole-state',
+				prevAction: prevstate.action,
 			};
 
 		case 'change-settings':
@@ -315,6 +360,11 @@ function gameLogicInit({
 			return defaultState;
 		}
 
+		console.log(
+			'Loading game state from URL query params',
+			window.location.search,
+		);
+
 		return loadQuery(
 			defaultState,
 			new URLSearchParams(window.location.search),
@@ -342,7 +392,7 @@ export function useGameLogic({
 		gameLogicReducer,
 		{
 			settingsInit: settingsInit || getInitialBoardSettings,
-			gameStateInit: gameStateInit || getInitialBoardState,
+			gameStateInit: gameStateInit || getInitialGameState,
 			loadQueryParams: useQuery,
 		},
 		gameLogicInit,
@@ -355,11 +405,27 @@ export function useGameLogic({
 		}
 
 		// Update URL search params to reflect game state
-		const url = new URL(window.location.href);
-		const params = analysisToQuery(
+		if (typeof window === 'undefined') {
+			return;
+		}
+
+		// If there are already other params in the URL, preserve them
+		const params = new URLSearchParams(window.location.search);
+		if (window.location.search.length > 0) {
+			params.forEach((value, key) => {
+				params.set(key, value);
+			});
+		}
+
+		const currentAnalysisData = analysisToQuery(
 			toAnalysisRequest(state.settings, state.game),
 		);
 
+		currentAnalysisData.forEach((value, key) => {
+			params.set(key, value);
+		});
+
+		const url = new URL(window.location.href);
 		url.search = params.toString();
 		window.history.replaceState({}, '', url.toString());
 	}, [state.game, state.settings, useQuery]);

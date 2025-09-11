@@ -1,15 +1,23 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 
 import { BoardSettings, GameState, Player } from '@/board';
-import { DifficultyType } from '@/components/vs-ai/AiSettings';
 
 // mui
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
-import AiDiffSettings from './AiDiffSettings';
+
+// mui icons
+import AnalysisIcon from '@mui/icons-material/AutoGraph';
+
+// mine
+import { DifficultyType } from '@/components/vs-ai/AiSettings';
+import AiDiffSettings from '@/components/vs-ai/AiDiffSettings';
+import RefButton from '@/components/ui/RefButton';
+import { getRoutePath } from '@/routing';
 
 interface VersusAiResultProps {
 	onNewGame: () => void;
@@ -26,6 +34,13 @@ export default function VersusAiResult({
 	settings,
 	difficulty,
 }: VersusAiResultProps) {
+	const copyBtnRef = React.useRef<HTMLButtonElement | null>(null);
+	const router = useRouter();
+
+	const handleAnalyze = () => {
+		router.push(getRoutePath('/analysis', { gameState, settings }));
+	};
+
 	return (
 		<Box
 			textAlign={'center'}
@@ -50,10 +65,31 @@ export default function VersusAiResult({
 				</Typography>
 			</Box>
 
-			<Box display={'flex'} justifyContent={'center'} flexWrap={'wrap'}>
+			<Box
+				display={'grid'}
+				gridTemplateColumns={'1fr auto 1fr'}
+				alignItems={'center'}
+				gap={1}
+			>
+				<div aria-hidden="true"></div>
 				<Button variant="contained" onClick={onNewGame}>
 					New Game
 				</Button>
+
+				<RefButton
+					ref={copyBtnRef}
+					onClick={handleAnalyze}
+					iconButtonProps={{
+						sx: {
+							bgcolor: 'primary.light',
+							p: 1,
+							justifySelf: 'end',
+						},
+					}}
+					asIcon
+				>
+					<AnalysisIcon />
+				</RefButton>
 			</Box>
 		</Box>
 	);

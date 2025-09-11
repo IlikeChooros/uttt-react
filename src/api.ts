@@ -300,7 +300,7 @@ export class EngineAPI {
 	// although it depends on the engine settings
 	static async analyze(
 		request: AnalysisRequest = { position: '' },
-	): Promise<EngineMove[]> {
+	): Promise<AnalysisResponse> {
 		try {
 			const response = await fetch(ENGINE_API_ANALYSIS, {
 				method: 'POST',
@@ -315,7 +315,7 @@ export class EngineAPI {
 			}
 
 			return response.json().then((json) => {
-				return this.parseAnalysisResponse(json);
+				return json;
 			});
 		} catch (error) {
 			throw error;

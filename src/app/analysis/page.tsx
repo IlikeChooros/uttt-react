@@ -1,5 +1,6 @@
 'use client';
 import React, { useEffect } from 'react';
+import { type BoardSettings, type GameState } from '@/board';
 
 // mui
 import Box from '@mui/material/Box';
@@ -26,6 +27,7 @@ import { SettingsPaper } from '@/components/ui/SettingsPaper';
 import ErrorSnackbar, {
 	ErrorSnackbarAction,
 } from '@/components/ui/ErrorSnackbar';
+import { readRouteState, makeRouteKey } from '@/routeState';
 
 interface ErrorStack {
 	errors: AnalysisError[];
@@ -85,6 +87,26 @@ export default function Analysis() {
 		action: null,
 	});
 
+	// Load route state (full game state) if sid is present
+	// useEffect(() => {
+	// 	if (typeof window === 'undefined') return;
+	// 	const params = new URLSearchParams(window.location.search);
+	// 	const sid = params.get('sid');
+	// 	if (!sid) return;
+	// 	const key = makeRouteKey('analysis', sid);
+	// 	const payload = readRouteState<{
+	// 		gameState: GameState;
+	// 		settings: BoardSettings;
+	// 	}>(key);
+
+	// 	if (!payload) return;
+
+	// 	gameLogicDispatch({
+	// 		type: 'load-whole-state',
+	// 		newGameState: payload.gameState,
+	// 	});
+	// }, [gameLogicDispatch]);
+
 	// Listen for errors
 	useEffect(() => {
 		if (analysisState.errorStack.length === 0) {
@@ -135,6 +157,18 @@ export default function Analysis() {
 
 	// Send analysis requests when game state changes
 	useEffect(() => {
+		if (gameLogic.prevAction === 'load-whole-state') {
+			dispatchAnalysis({
+				type: 'force-analyze',
+				state: {
+					request: toAnalysisRequest(
+						gameLogic.settings,
+						gameLogic.game,
+					),
+				},
+			});
+		}
+
 		if (gameLogic.game.winner || gameLogic.game.isDraw) {
 			return;
 		}
@@ -275,6 +309,7 @@ export default function Analysis() {
 									settings={gameLogic.settings}
 									onSettingsChange={() => {}}
 									onOpenSettings={() => {}}
+									setNewPosition={() => {}}
 								/>
 							</AnimatedSkeleton>
 						) : (
@@ -302,6 +337,12 @@ export default function Analysis() {
 										type: 'toggle-settings',
 									})
 								}
+								setNewPosition={(position) => {
+									gameLogicDispatch({
+										type: 'change-gamestate',
+										newGameState: position,
+									});
+								}}
 							/>
 						)}
 					</motion.AnimatePresence>

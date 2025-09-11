@@ -19,7 +19,7 @@ import {
 import {
 	GameState,
 	Player,
-	getInitialBoardState,
+	getInitialGameState,
 	getInitialBoardSettings,
 } from '@/board';
 
@@ -91,7 +91,10 @@ function initialVersusState(): VersusState {
 }
 
 function initialVsAiBoardState(): GameState {
-	return { ...getInitialBoardState(), enabled: false };
+	return {
+		...getInitialGameState(),
+		enabled: false,
+	};
 }
 
 const Unavailable = () => (
@@ -149,8 +152,10 @@ export default function VersusAiGame() {
 			const minThinkTime = 450; // ms
 
 			try {
-				const moves = await EngineAPI.analyze(
-					toAnalysisRequest(gameLogic.settings, gameLogic.game),
+				const moves = EngineAPI.parseAnalysisResponse(
+					await EngineAPI.analyze(
+						toAnalysisRequest(gameLogic.settings, gameLogic.game),
+					),
 				);
 
 				// Ensure the "thinking" state is visible for at least `minThinkTime` ms
@@ -239,7 +244,7 @@ export default function VersusAiGame() {
 	const startVersusAi = (humanPlaysFirst: boolean) => {
 		dispatchGameLogic({
 			type: 'change-gamestate',
-			newGameState: getInitialBoardState(),
+			newGameState: getInitialGameState(),
 		}); // imporant! Board MUST be enabled
 		setVersusState({
 			ready: true,
@@ -255,7 +260,7 @@ export default function VersusAiGame() {
 	const resetGame = () => {
 		dispatchGameLogic({
 			type: 'change-gamestate',
-			newGameState: getInitialBoardState(),
+			newGameState: getInitialGameState(),
 		});
 		setAnalysisState(getInitialAnalysisState());
 		setVersusState(initialVersusState());

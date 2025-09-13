@@ -8,7 +8,7 @@
 // - Add 'traverse' functionality to gameLogic (to go to specific move in history)
 // - MoveChip component to show individual moves (with highlighting for current move)
 import React from 'react';
-import { List, type RowComponentProps } from 'react-window';
+import { List, ListImperativeAPI, type RowComponentProps } from 'react-window';
 
 // mui
 import Box from '@mui/material/Box';
@@ -17,10 +17,7 @@ import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import ListItem from '@mui/material/ListItem';
 
-import GoToEndIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
-import GoToStartIcon from '@mui/icons-material/KeyboardDoubleArrowLeft';
-import NextIcon from '@mui/icons-material/KeyboardArrowRight';
-import PreviousIcon from '@mui/icons-material/KeyboardArrowLeft';
+import { useMoveIconProps } from '@/components/analysis/icons';
 
 // components
 import { GameState, moveNotation, Player } from '@/board';
@@ -44,8 +41,27 @@ const MemoPanel = React.memo(MovePanel, (prevProps, nextProps) => {
 
 export default MemoPanel;
 
+function toRowIndex(moveIndex: number, firstTurn?: Player): number {
+	if (firstTurn === 'O') {
+		return Math.max(0, ~~(moveIndex / 2));
+	}
+	return Math.max(0, ~~((moveIndex - 1) / 2));
+}
+
 function MovePanel({ gameState, onMoveClick, avaible = true }: MovePanelProps) {
-	const currentMoveIndex = gameState.historyIndex;
+	const listRef = React.useRef<ListImperativeAPI>(null);
+
+	React.useEffect(() => {
+		if (listRef.current) {
+			listRef.current.scrollToRow({
+				index: toRowIndex(
+					gameState.historyIndex,
+					gameState.history[0]?.playerToMove,
+				),
+			});
+		}
+	}, [gameState.historyIndex, gameState.history]);
+
 	const itemData: ItemData = React.useMemo(
 		() => ({
 			history: gameState.history,
@@ -62,47 +78,11 @@ function MovePanel({ gameState, onMoveClick, avaible = true }: MovePanelProps) {
 		return Math.max(1, ~~(len / 2) + (len % 2));
 	}, [gameState.history]);
 
-	const iconsProps = React.useMemo(() => {
-		const common = { size: 'large' as const, color: 'primary' as const };
-		return [
-			{
-				...common,
-				'aria-label': 'Go to first move',
-				disabled: gameState.history.length === 0,
-				onClick: () => onMoveClick(0),
-				icon: <GoToStartIcon />,
-			},
-			{
-				...common,
-				'aria-label': 'Go to previous move',
-				disabled: currentMoveIndex <= 0,
-				onClick: () => onMoveClick(Math.max(0, currentMoveIndex - 1)),
-				icon: <PreviousIcon />,
-			},
-			{
-				...common,
-				'aria-label': 'Go to next move',
-				disabled: currentMoveIndex >= gameState.history.length - 1,
-				onClick: () =>
-					onMoveClick(
-						Math.min(
-							gameState.history.length - 1,
-							currentMoveIndex + 1,
-						),
-					),
-				icon: <NextIcon />,
-			},
-			{
-				...common,
-				'aria-label': 'Go to last move',
-				disabled:
-					gameState.history.length === 0 ||
-					currentMoveIndex === gameState.history.length - 1,
-				onClick: () => onMoveClick(gameState.history.length - 1),
-				icon: <GoToEndIcon />,
-			},
-		];
-	}, [gameState.history.length, currentMoveIndex, onMoveClick]);
+	const iconsProps = useMoveIconProps({
+		historyLength: gameState.history.length,
+		currentIndex: gameState.historyIndex,
+		onMoveClick,
+	});
 
 	return avaible ? (
 		<SettingsPaper
@@ -142,8 +122,9 @@ function MovePanel({ gameState, onMoveClick, avaible = true }: MovePanelProps) {
 					</IconButton>
 				))}
 			</Stack>
-			<Box>
+			<Box height={'100%'}>
 				<List
+					listRef={listRef}
 					overscanCount={3}
 					rowComponent={Row}
 					rowCount={rowCount}

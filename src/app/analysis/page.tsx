@@ -30,6 +30,7 @@ import { useSearchParams } from 'next/navigation';
 import { makeRouteKey, readRouteState } from '@/routeState';
 import { GameState } from '@/board';
 import MovePanel from '@/components/analysis/MovePanel';
+import MoveBottomNavigation from '@/components/analysis/MoveBottomNavigation';
 
 interface ErrorStack {
 	errors: { msg: string }[];
@@ -494,6 +495,26 @@ export default function Analysis() {
 					}}
 				/>
 			</Box>
+
+			<MoveBottomNavigation
+				gameState={gameLogic.game}
+				onMoveClick={(index) => {
+					const newState = traverseHistory(gameLogic, index);
+					gameLogicDispatch({
+						type: 'change-gamestate',
+						newGameState: newState.game,
+					});
+					dispatchAnalysis({
+						type: 'force-analyze',
+						state: {
+							request: toAnalysisRequest(
+								newState.settings,
+								newState.game,
+							),
+						},
+					});
+				}}
+			/>
 			<Copyright />
 		</Box>
 	);

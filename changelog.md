@@ -23,4 +23,7 @@
 - [x] PGN-like notation for the game
   - [x] Export of the games in analysis, vs-ai and local
 - [x] Move traversal (simple) of the game in analysis
-- [ ] Mobile support for move history
+- [ ] Mobile support for move history (MoveBottomNavigation)
+- [ ] Memoized 'SettingsPanel' and 'MoveBottomNavigation' components
+- [ ] Fix issue with selected board and ticking cursor (Discord)
+- [x] Make Move list autoscroll to current move

@@ -11,7 +11,7 @@ import * as motion from 'motion/react';
 import { baseAnimation, errorAnimation } from '@/components/ui/animations';
 
 import { AnalysisError, toAnalysisRequest } from '@/api';
-import { useGameLogic } from '@/components/game/GameLogic';
+import { traverseHistory, useGameLogic } from '@/components/game/GameLogic';
 
 // my components
 import GameBoard from '@/components/game/GameBoard';
@@ -29,9 +29,10 @@ import ErrorSnackbar, {
 import { useSearchParams } from 'next/navigation';
 import { makeRouteKey, readRouteState } from '@/routeState';
 import { GameState } from '@/board';
+import MovePanel from '@/components/analysis/MovePanel';
 
 interface ErrorStack {
-	errors: AnalysisError[];
+	errors: { msg: string }[];
 	action: ErrorSnackbarAction | null;
 }
 
@@ -205,7 +206,7 @@ export default function Analysis() {
 		} else if (
 			gameLogic.action === 'makemove' ||
 			(gameLogic.action === 'undomove' &&
-				gameLogic.game.history.length > 0)
+				gameLogic.game.history.length > 1)
 		) {
 			dispatchAnalysis({
 				type: 'force-analyze',
@@ -239,24 +240,25 @@ export default function Analysis() {
 		gameLogic.available === false;
 
 	return (
-		<Box
-			sx={{
-				py: { xs: 1, sm: 2 },
-				display: 'flex',
-				flexDirection: 'column',
-				justifyContent: 'center',
-				alignItems: 'center',
-			}}
-		>
-			<Box sx={{ mb: 2, width: '100%' }}>
+		<Box>
+			<Box
+				sx={{
+					py: { xs: 1, sm: 2 },
+					display: 'grid',
+					gridTemplateColumns: '1fr auto',
+					width: '100%',
+					gap: 0,
+				}}
+			>
 				<Box
 					sx={{
-						mb: 2,
+						my: 2,
+						width: '100%',
 						px: {
 							sm: 1,
-							md: 4,
+							md: 2,
 						},
-						width: '100%',
+						maxWidth: 'lg',
 					}}
 				>
 					{/* Snackbar for error messaging */}
@@ -316,6 +318,7 @@ export default function Analysis() {
 								sx={{ borderRadius: 2 }}
 							>
 								<SettingsPanel
+									onError={() => {}}
 									onUndo={() => {}}
 									onReset={() => {}}
 									gameState={gameLogic.game}
@@ -337,6 +340,28 @@ export default function Analysis() {
 								onReset={() =>
 									gameLogicDispatch({ type: 'reset' })
 								}
+								onError={() => {
+									setErrorStack((prev) => ({
+										errors: [
+											...prev.errors,
+											{
+												msg: 'Error while importing game',
+											},
+										],
+										action: {
+											name: 'Dismiss',
+											onClose: () => {
+												setErrorStack((prev) => ({
+													...prev,
+													errors: prev.errors.slice(
+														1,
+													),
+													action: null,
+												}));
+											},
+										},
+									}));
+								}}
 								gameState={gameLogic.game}
 								loading={gameLogic.loadingLimits}
 								limits={gameLogic.limits}
@@ -447,6 +472,27 @@ export default function Analysis() {
 						</Box>
 					</Box>
 				</Box>
+
+				<MovePanel
+					avaible={gameLogic.available === true}
+					gameState={gameLogic.game}
+					onMoveClick={(index) => {
+						const newState = traverseHistory(gameLogic, index);
+						gameLogicDispatch({
+							type: 'change-gamestate',
+							newGameState: newState.game,
+						});
+						dispatchAnalysis({
+							type: 'force-analyze',
+							state: {
+								request: toAnalysisRequest(
+									newState.settings,
+									newState.game,
+								),
+							},
+						});
+					}}
+				/>
 			</Box>
 			<Copyright />
 		</Box>

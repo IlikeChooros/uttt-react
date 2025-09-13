@@ -14,7 +14,7 @@ import { EngineMove } from '@/api';
 
 export interface SmallBoardProps {
 	lastMoveHighlight?: boolean;
-	lastMove?: Move;
+	lastMove?: Move | null;
 	boardIndex: number;
 	smallBoard: SmallBoardState;
 	isActive: boolean;
@@ -105,7 +105,7 @@ export default function SmallBoard({
 			);
 			const isHighlighted =
 				lastMoveHighlight &&
-				lastMove !== undefined &&
+				lastMove &&
 				lastMove.boardIndex === boardIndex &&
 				lastMove.cellIndex === cellIndex;
 

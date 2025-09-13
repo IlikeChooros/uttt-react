@@ -14,7 +14,7 @@ declare module '@mui/material/styles' {
 			evalText: string;
 		};
 		loading: { main: string };
-		surface: { main: string };
+		surface: { main: string; subtle: string; action: string };
 		outline: { main: string };
 	}
 	interface PaletteOptions {
@@ -27,7 +27,7 @@ declare module '@mui/material/styles' {
 			evalText: string;
 		};
 		loading?: { main: string };
-		surface?: { main: string };
+		surface?: { main: string; subtle: string; action: string };
 		outline?: { main: string };
 	}
 }
@@ -136,7 +136,9 @@ const theme = extendTheme({
 					paper: '#FFFBFE',
 				},
 				surface: {
-					main: '#6650a409', // primary main with 4% opacity
+					main: '#fcf7ff', // primary main with 9% opacity  FAF5FB
+					action: '#F6EDFF', // primary light with 10% opacity F6EDFF
+					subtle: '#f9f3ffff', // primary light with 10% opacity F6EDFF
 				},
 				outline: {
 					main: '#79747E',
@@ -240,7 +242,9 @@ const theme = extendTheme({
 					paper: '#1C1B1F',
 				},
 				surface: {
-					main: '#6650a413', // primary light with 8% opacity
+					main: '#211E28',
+					action: 'rgba(38, 35, 48, 1)',
+					subtle: '#282532ff',
 				},
 				outline: {
 					main: '#938F99',

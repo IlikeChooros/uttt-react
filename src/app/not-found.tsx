@@ -19,11 +19,12 @@ export default function NotFound() {
 	return (
 		<Box
 			sx={{
+				width: '100%',
 				minHeight: '100dvh',
 				display: 'flex',
 				flexDirection: 'column',
 				alignItems: 'center',
-				justifyContent: 'flex-start',
+				justifyContent: 'center',
 				py: { xs: 6, md: 8 },
 				gap: 4,
 			}}
@@ -107,7 +108,7 @@ export default function NotFound() {
 			</Box>
 
 			{/* Reuse existing selector for consistency */}
-			<Box sx={{ width: '100%' }}>
+			<Box sx={{ width: '100%', maxWidth: 'lg' }}>
 				<GameModeSelector />
 			</Box>
 

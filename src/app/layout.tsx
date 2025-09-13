@@ -21,8 +21,11 @@ export default function RootLayout(props: { children: React.ReactNode }) {
 						<CssBaseline />
 						<NavHeader />
 						<Container
-							maxWidth="lg"
-							sx={{ mt: 2, backgroundImage: 'backgroundImg' }}
+							maxWidth="xl"
+							sx={{
+								justifyContent: 'center',
+								mt: 2,
+							}}
 						>
 							{props.children}
 						</Container>

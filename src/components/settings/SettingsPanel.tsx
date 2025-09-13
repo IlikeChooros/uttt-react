@@ -20,6 +20,8 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import UndoIcon from '@mui/icons-material/Undo';
 import Restore from '@mui/icons-material/RestartAlt';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import ExportIcon from '@mui/icons-material/Output';
+import CheckIcon from '@mui/icons-material/Check';
 
 // my comps
 import { BoardSettings, fromNotation, GameState, toNotation } from '@/board';
@@ -27,6 +29,13 @@ import { EngineLimits } from '@/api';
 import EngineSettings from './EngineSettings';
 import { SettingsPaper } from '../ui/SettingsPaper';
 import MsgPopover from '@/components/ui/MsgPopover';
+import {
+	exportedGameString,
+	ExportField,
+	exportGameState,
+	importGameState,
+	parseExportedGame,
+} from '@/game';
 
 const AnimatedBox = motion.create(Box);
 
@@ -39,8 +48,11 @@ interface SettingsPanelProps {
 	onOpenSettings: () => void;
 	onReset: () => void;
 	onUndo: () => void;
+	onError: () => void;
 	loading: boolean;
 }
+
+const includeFields: ExportField[] = [['Event', 'Analysis']];
 
 export default function SettingsPanel({
 	onOpenSettings,
@@ -52,6 +64,7 @@ export default function SettingsPanel({
 	loading,
 	gameState,
 	setNewPosition,
+	onError,
 }: SettingsPanelProps) {
 	const [positionOpen, setPositionOpen] = React.useState(false);
 	const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -65,6 +78,7 @@ export default function SettingsPanel({
 		open: false,
 		anchorEl: null,
 	});
+	const [importedGame, setImportedGame] = React.useState<string>('');
 
 	const invalidPosition = useMemo((): boolean => {
 		if (loadedPosition.length === 0) {
@@ -78,6 +92,20 @@ export default function SettingsPanel({
 			return true;
 		}
 	}, [loadedPosition]);
+
+	const invalidImport = useMemo((): boolean => {
+		if (!importedGame) {
+			return false;
+		}
+		// try to parse the position
+		try {
+			const parsed = parseExportedGame(importedGame);
+			importGameState(parsed);
+			return false;
+		} catch {
+			return true;
+		}
+	}, [importedGame]);
 
 	const buttonData = useMemo(
 		() => [
@@ -107,6 +135,24 @@ export default function SettingsPanel({
 				},
 			},
 			{
+				label: 'Export game',
+				icon: <ExportIcon />,
+				onClick: (event: React.MouseEvent<HTMLElement>) => {
+					const exported = exportedGameString(
+						exportGameState(gameState, {
+							includeResult: true,
+							includeFields: includeFields,
+						}),
+					);
+					navigator.clipboard.writeText(exported);
+					setPopoverProps({
+						anchorEl: event.currentTarget,
+						open: true,
+						msg: 'Game exported!',
+					});
+				},
+			},
+			{
 				label: 'Reset',
 				icon: <Restore />,
 				onClick: onReset,
@@ -117,9 +163,7 @@ export default function SettingsPanel({
 				onClick: onUndo,
 			},
 			{
-				label: settings.showAnalysis
-					? 'Hide Settings'
-					: 'Show Settings',
+				label: settings.showAnalysis ? 'Hide' : 'Settings',
 				icon: <SettingsIcon />,
 				onClick: () => {
 					if (!loading) {
@@ -132,6 +176,16 @@ export default function SettingsPanel({
 	);
 
 	const positionNotation = useMemo(() => toNotation(gameState), [gameState]);
+	const gameExport = useMemo(
+		() =>
+			exportedGameString(
+				exportGameState(gameState, {
+					includeResult: true,
+					includeFields: includeFields,
+				}),
+			),
+		[gameState],
+	);
 
 	const handleClose = () => {
 		setPositionOpen(false);
@@ -146,11 +200,32 @@ export default function SettingsPanel({
 				open: true,
 				msg: 'Position loaded',
 			}));
+			setLoadedPosition('');
+			setImportedGame('');
+			setPositionOpen(false);
 		} catch {}
 	};
 
+	const loadImport = () => {
+		try {
+			const parsed = parseExportedGame(importedGame);
+			const imported = importGameState(parsed);
+			setNewPosition(imported);
+			setPopoverProps((prev) => ({
+				...prev,
+				open: true,
+				msg: 'Game imported',
+			}));
+			setLoadedPosition('');
+			setImportedGame('');
+			setPositionOpen(false);
+		} catch {
+			onError?.();
+		}
+	};
+
 	return (
-		<SettingsPaper sx={{ minHeight: 0 }}>
+		<SettingsPaper sx={{ minHeight: 0, bgcolor: 'surface.subtle' }}>
 			<Box
 				sx={{
 					display: 'flex',
@@ -178,21 +253,37 @@ export default function SettingsPanel({
 					<ClickAwayListener onClickAway={() => handleClose()}>
 						<Paper
 							elevation={3}
-							sx={{ p: 2, borderRadius: 2, minWidth: 260 }}
+							sx={{
+								p: 2,
+								borderRadius: 2,
+								minWidth: 260,
+								width: 'fit-content',
+							}}
 						>
 							<form
 								onSubmit={(e) => {
 									e.preventDefault();
-									if (!invalidPosition) {
+									const data = new FormData(e.currentTarget);
+									const position = data.get(
+										'position',
+									) as string;
+									const game = data.get(
+										'import-game',
+									) as string;
+
+									if (position && !invalidPosition) {
+										setLoadedPosition(position);
 										applyPosition();
-										handleClose();
+									} else if (game && !invalidImport) {
+										loadImport();
 									}
 								}}
 							>
 								<TextField
 									autoFocus
-									variant="standard"
-									label="Position"
+									variant="outlined"
+									label="Set position"
+									name="position"
 									fullWidth
 									placeholder={positionNotation}
 									value={loadedPosition}
@@ -202,6 +293,49 @@ export default function SettingsPanel({
 									error={invalidPosition}
 									aria-hidden={!positionOpen}
 								/>
+
+								<TextField
+									name="import-game"
+									variant="outlined"
+									fullWidth
+									multiline
+									minRows={3}
+									maxRows={10}
+									sx={{ mt: 2 }}
+									value={importedGame}
+									onChange={(e) =>
+										setImportedGame(e.target.value)
+									}
+									placeholder={gameExport}
+									error={invalidImport}
+									label="Import game"
+								/>
+
+								<Box
+									sx={{
+										display: 'flex',
+										justifyContent: 'flex-end',
+									}}
+								>
+									<Button
+										sx={{ mt: 2 }}
+										type="submit"
+										variant="contained"
+										color="primary"
+										startIcon={<CheckIcon />}
+									>
+										Import
+									</Button>
+
+									<Button
+										sx={{ mt: 2, ml: 1 }}
+										variant="outlined"
+										color="secondary"
+										onClick={() => handleClose()}
+									>
+										Cancel
+									</Button>
+								</Box>
 							</form>
 						</Paper>
 					</ClickAwayListener>

@@ -1,4 +1,10 @@
-import { toNotation, Move, BoardSettings, GameState } from '@/board';
+import {
+	toNotation,
+	Move,
+	BoardSettings,
+	GameState,
+	indexMapper,
+} from '@/board';
 
 type BuildType = 'development' | 'production' | 'test';
 
@@ -236,18 +242,6 @@ export async function getEngineLimits(): Promise<EngineLimits> {
 }
 
 export class EngineAPI {
-	static IndexMapper: Map<string, number> = new Map([
-		['a3', 0],
-		['b3', 1],
-		['c3', 2],
-		['a2', 3],
-		['b2', 4],
-		['c2', 5],
-		['a1', 6],
-		['b1', 7],
-		['c1', 8],
-	]);
-
 	static isAnalysisResponse(json: object): json is AnalysisResponse {
 		return IsInstance<AnalysisResponse>(
 			json,
@@ -270,14 +264,14 @@ export class EngineAPI {
 			const line = json.lines[i];
 			if (line.pv.length != 0) {
 				// Convert all moves
-				boardIndex = this.IndexMapper.get(
+				boardIndex = indexMapper.get(
 					line.pv[0].substring(0, 2).toLowerCase(),
 				);
 				if (boardIndex == undefined) {
 					boardIndex = 0;
 				}
 
-				cellIndex = this.IndexMapper.get(line.pv[0].substring(2, 4));
+				cellIndex = indexMapper.get(line.pv[0].substring(2, 4));
 				if (cellIndex == undefined) {
 					cellIndex = 0;
 				}

@@ -8,7 +8,7 @@ import Box, { type BoxProps } from '@mui/material/Box';
 interface CellProps extends Omit<BoxProps, 'onClick'> {
 	value: Player;
 	canClick: boolean;
-	isHighlighted?: boolean;
+	isHighlighted?: boolean | null;
 	isBestMove?: boolean;
 	isGoodMove?: boolean;
 	isStale?: boolean;

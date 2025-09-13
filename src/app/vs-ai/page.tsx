@@ -141,8 +141,7 @@ export default function VersusAiGame() {
 	const [selectedDifficulty, setSelectedDifficulty] =
 		useState<DifficultyType>('Easy');
 
-	const { errorStack, pushError, popError, clearErrors, setErrors } =
-		useErrorStack();
+	const { errorStack, pushError, popError } = useErrorStack();
 
 	// AI move logic
 	useEffect(() => {

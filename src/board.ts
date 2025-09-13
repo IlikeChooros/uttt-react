@@ -1,3 +1,5 @@
+export const INITIAL_POSITION = '9/9/9/9/9/9/9/9/9 x -';
+
 export type Player = 'X' | 'O' | null;
 export type SmallBoard = Player[];
 export type BoardIndicator = number | null;
@@ -7,6 +9,45 @@ export interface Move {
 	cellIndex: number;
 }
 
+export const indexMapper: Map<string, number> = new Map([
+	['a3', 0],
+	['b3', 1],
+	['c3', 2],
+	['a2', 3],
+	['b2', 4],
+	['c2', 5],
+	['a1', 6],
+	['b1', 7],
+	['c1', 8],
+]);
+
+export function moveNotation(move: Move | null | undefined): string {
+	if (move === undefined) return '';
+	if (move === null) return '...';
+
+	const nums = ['1', '2', '3'];
+	const chars = ['a', 'b', 'c'];
+
+	return `${chars[move.boardIndex % 3].toUpperCase()}${nums[Math.floor(move.boardIndex / 3)]}${chars[move.cellIndex % 3]}${nums[Math.floor(move.cellIndex / 3)]}`;
+}
+
+export function parseMoveNotation(notation: string): Move | null {
+	if (notation === '...') {
+		return null;
+	}
+
+	const chars = ['a', 'b', 'c'];
+	const match = notation.match(/^([A-C])([1-3])([a-c])([1-3])$/);
+	if (!match) return null;
+
+	const [, col1, row1, col2, row2] = match;
+	return {
+		boardIndex:
+			chars.indexOf(col1.toLowerCase()) + (parseInt(row1) - 1) * 3,
+		cellIndex: chars.indexOf(col2.toLowerCase()) + (parseInt(row2) - 1) * 3,
+	};
+}
+
 export interface SmallBoardState {
 	board: SmallBoard;
 	winner: Player;
@@ -14,9 +55,10 @@ export interface SmallBoardState {
 }
 
 export interface HistoryState {
-	move: Move;
+	move: Move | null;
 	playerToMove: Player;
 	activeBoard: BoardIndicator;
+	position?: string; // only available on the [0] index
 }
 
 export interface GameState {
@@ -26,6 +68,7 @@ export interface GameState {
 	isDraw: boolean;
 	activeBoard: BoardIndicator; // Which small board the next player must play in
 	history: HistoryState[];
+	historyIndex: number;
 	enabled: boolean;
 }
 
@@ -51,6 +94,17 @@ export interface BoardSettings {
 	multiPv: number;
 }
 
+export function initialGameHistory(state: GameState): HistoryState[] {
+	return [
+		{
+			move: null,
+			activeBoard: state.activeBoard,
+			playerToMove: state.currentPlayer,
+			position: toNotation(state),
+		},
+	];
+}
+
 export const getInitialGameState = (): GameState => {
 	const boards: SmallBoardState[] = [];
 	for (let i = 0; i < 9; i++) {
@@ -61,7 +115,7 @@ export const getInitialGameState = (): GameState => {
 		});
 	}
 
-	return {
+	const game: GameState = {
 		boards,
 		currentPlayer: 'X',
 		winner: null,
@@ -69,7 +123,10 @@ export const getInitialGameState = (): GameState => {
 		activeBoard: null, // First move can be anywhere
 		history: [],
 		enabled: true,
+		historyIndex: 0,
 	};
+	game.history = initialGameHistory(game);
+	return game;
 };
 
 // Checks if there is a winner in tic tac toe sense on provided board
@@ -238,14 +295,24 @@ export function fromNotation(notation: string): GameState {
 				parts[2],
 		);
 	}
+	const currentPlayer = parts[1] === 'x' ? 'X' : 'O';
+	const activeBoard = parts[2] === '-' ? null : parseInt(parts[2], 10);
 
-	return {
+	const game: GameState = {
 		boards,
-		currentPlayer: parts[1] === 'x' ? 'X' : 'O',
+		currentPlayer,
 		winner: null,
 		isDraw: false,
-		activeBoard: parts[2] === '-' ? null : parseInt(parts[2], 10),
+		activeBoard,
 		history: [],
 		enabled: true,
+		historyIndex: 0,
 	};
+
+	game.history = initialGameHistory(game);
+	const [isDraw, winner] = checkTerminalState(boards);
+	game.isDraw = isDraw;
+	game.winner = winner;
+
+	return game;
 }

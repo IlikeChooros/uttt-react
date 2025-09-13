@@ -14,9 +14,10 @@ import {
 	getInitialBoardSettings,
 	Move,
 	updateSmallBoardState,
-	checkTerminalState,
 	fromNotation,
 } from '@/board';
+import { handleMakeMove } from '@/game';
+
 import { useSearchParams } from 'next/navigation';
 import { ActionDispatch, useEffect, useReducer, useState } from 'react';
 
@@ -24,6 +25,7 @@ export type GameActionType =
 	| 'load-query'
 	| 'makemove'
 	| 'undomove'
+	| 'traverse-history'
 	| 'reset'
 	| 'start-loading-limits'
 	| 'request-limits'
@@ -46,6 +48,7 @@ export interface GameAction {
 	newGameState?: GameState;
 	queryParams?: URLSearchParams; // if provided, will load game state from these params
 	enabled?: boolean; // only if 'change-gamestate' is the type
+	historyIndex?: number; // only if 'traverse-history' is the type
 }
 
 export interface GameLogicState {
@@ -58,64 +61,12 @@ export interface GameLogicState {
 	available?: boolean; // whether the engine is available (backend responds)
 }
 
-// Main function to handle moves, returns new state
-function handleMakeMove(
-	{ game, settings, ...other }: GameLogicState,
-	{ boardIndex, cellIndex }: Move,
+function handleUndoMove(
+	{ game, ...other }: GameLogicState,
+	undoHistory: boolean = true,
 ): GameLogicState {
-	// Check if move is valid
-	if (
-		game.winner ||
-		game.isDraw ||
-		game.boards[boardIndex].board[cellIndex] !== null ||
-		game.boards[boardIndex].winner ||
-		game.boards[boardIndex].isDraw ||
-		(game.activeBoard !== null && game.activeBoard !== boardIndex)
-	) {
-		return { game, settings, ...other };
-	}
-
-	// Make the move
-	const newBoards = [...game.boards];
-	const newBoard = [...newBoards[boardIndex].board];
-	newBoard[cellIndex] = game.currentPlayer;
-
-	// Update the small board state
-	newBoards[boardIndex] = updateSmallBoardState(newBoard);
-
-	// Determine next active board
-	const nextActiveBoard =
-		newBoards[cellIndex].winner || newBoards[cellIndex].isDraw
-			? null // Can play anywhere if target board is complete
-			: cellIndex;
-
-	// Check for overall winner
-	const [overallDraw, overallWinner] = checkTerminalState(newBoards);
-
-	const newHistory = game.history.concat({
-		move: { boardIndex, cellIndex },
-		activeBoard: game.activeBoard,
-		playerToMove: game.currentPlayer,
-	});
-
-	return {
-		game: {
-			boards: newBoards,
-			currentPlayer: game.currentPlayer === 'X' ? 'O' : 'X',
-			winner: overallWinner,
-			isDraw: overallDraw,
-			activeBoard: nextActiveBoard,
-			history: newHistory,
-			enabled: true,
-		},
-		settings,
-		...other,
-	};
-}
-
-function handleUndoMove({ game, ...other }: GameLogicState): GameLogicState {
-	const prevState = game.history.at(-1);
-	if (prevState === undefined) {
+	const prevState = game.history[game.historyIndex];
+	if (prevState === undefined || prevState.move === null) {
 		return { game, ...other };
 	}
 
@@ -123,6 +74,7 @@ function handleUndoMove({ game, ...other }: GameLogicState): GameLogicState {
 	const newBoard = [...newBoards[prevState.move.boardIndex].board];
 	newBoard[prevState.move.cellIndex] = null;
 	newBoards[prevState.move.boardIndex] = updateSmallBoardState(newBoard);
+	const newHistory = undoHistory ? game.history.slice(0, -1) : game.history;
 
 	return {
 		game: {
@@ -132,7 +84,8 @@ function handleUndoMove({ game, ...other }: GameLogicState): GameLogicState {
 			boards: newBoards,
 			activeBoard: prevState.activeBoard,
 			currentPlayer: prevState.playerToMove,
-			history: game.history.slice(0, -1),
+			history: newHistory,
+			historyIndex: Math.max(0, game.historyIndex - 1),
 		},
 		...other,
 	};
@@ -182,6 +135,53 @@ function loadQuery(defaultState: GameLogicState, params: URLSearchParams) {
 	};
 }
 
+export function traverseHistory(
+	prevstate: GameLogicState,
+	historyIndex: number,
+): GameLogicState {
+	if (historyIndex < 0 || historyIndex >= prevstate.game.history.length) {
+		return prevstate;
+	}
+
+	// Reconstruct the boards up to the target history index
+	if (prevstate.game.historyIndex === historyIndex) {
+		return prevstate;
+	}
+
+	if (prevstate.game.historyIndex < historyIndex) {
+		// make moves forward
+		let newGameState = { ...prevstate.game };
+		for (let i = prevstate.game.historyIndex + 1; i <= historyIndex; i++) {
+			const move = prevstate.game.history[i].move;
+			if (move) {
+				newGameState = handleMakeMove(newGameState, move, true);
+			}
+		}
+
+		return {
+			...prevstate,
+			game: {
+				...newGameState,
+				historyIndex,
+			},
+		};
+	} else {
+		// undo moves backward
+		let newState = { ...prevstate };
+		for (let i = prevstate.game.historyIndex; i > historyIndex; i--) {
+			newState = handleUndoMove(newState, false);
+		}
+
+		return {
+			...newState,
+			game: {
+				...newState.game,
+				historyIndex,
+			},
+		};
+	}
+}
+
 function gameLogicReducer(
 	prevstate: GameLogicState,
 	action: GameAction,
@@ -194,10 +194,21 @@ function gameLogicReducer(
 			// Probably to fix, use 'defaultState' instead of 'prevstate'
 			return loadQuery(prevstate, action.queryParams);
 
+		case 'traverse-history':
+			if (
+				action.historyIndex === undefined ||
+				action.historyIndex === prevstate.game.historyIndex
+			) {
+				return prevstate;
+			}
+
+			return traverseHistory(prevstate, action.historyIndex);
+
 		case 'makemove':
 			if (action.move !== undefined) {
 				return {
-					...handleMakeMove(prevstate, action.move),
+					...prevstate,
+					game: handleMakeMove(prevstate.game, action.move),
 					action: 'makemove',
 					prevAction: prevstate.action,
 				};

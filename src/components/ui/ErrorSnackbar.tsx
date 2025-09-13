@@ -68,7 +68,9 @@ export default function ErrorSnackbar({ errors, action }: ErrorSnackbarProps) {
 			message={message}
 			action={
 				<>
-					<Button onClick={handleClick}>{action?.name}</Button>
+					{action?.name && (
+						<Button onClick={handleClick}>{action.name}</Button>
+					)}
 
 					<IconButton
 						aria-label="close"

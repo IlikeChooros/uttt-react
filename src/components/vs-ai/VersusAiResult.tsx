@@ -10,14 +10,13 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 
-// mui icons
-import AnalysisIcon from '@mui/icons-material/AutoGraph';
-
 // mine
 import { DifficultyType } from '@/components/vs-ai/AiSettings';
 import AiDiffSettings from '@/components/vs-ai/AiDiffSettings';
-import RefButton from '@/components/ui/RefButton';
 import { analysisRoute } from '@/routing';
+import { AnalysisButton } from '../analysis/AnalysisButton';
+import ExportGameButton from '../ui/ExportGameButton';
+import MsgPopover from '../ui/MsgPopover';
 
 interface VersusAiResultProps {
 	onNewGame: () => void;
@@ -34,8 +33,9 @@ export default function VersusAiResult({
 	settings,
 	difficulty,
 }: VersusAiResultProps) {
-	const copyBtnRef = React.useRef<HTMLButtonElement | null>(null);
 	const router = useRouter();
+	const exportBtnRef = React.useRef<HTMLButtonElement>(null);
+	const [msgOpen, setMsgOpen] = React.useState(false);
 
 	const handleAnalyze = () => {
 		router.push(analysisRoute(gameState));
@@ -49,6 +49,14 @@ export default function VersusAiResult({
 			flexDirection={'column'}
 			justifyContent={'space-between'}
 		>
+			<MsgPopover
+				open={msgOpen}
+				onClose={() => setMsgOpen(false)}
+				anchorEl={exportBtnRef.current}
+				msg="Game exported to clipboard!"
+				closeAfter={700}
+			/>
+
 			<Typography variant="h5">Game Over</Typography>
 
 			<AiDiffSettings difficulty={difficulty} settings={settings} />
@@ -76,20 +84,15 @@ export default function VersusAiResult({
 					New Game
 				</Button>
 
-				<RefButton
-					ref={copyBtnRef}
-					onClick={handleAnalyze}
-					iconButtonProps={{
-						sx: {
-							bgcolor: 'primary.light',
-							p: 1,
-							justifySelf: 'end',
-						},
-					}}
-					asIcon
-				>
-					<AnalysisIcon />
-				</RefButton>
+				<div style={{ justifySelf: 'end', display: 'flex', gap: 8 }}>
+					<AnalysisButton onClick={handleAnalyze} />
+					<ExportGameButton
+						ref={exportBtnRef}
+						gameState={gameState}
+						asIcon
+						onCopy={() => setMsgOpen(true)}
+					/>
+				</div>
 			</Box>
 		</Box>
 	);

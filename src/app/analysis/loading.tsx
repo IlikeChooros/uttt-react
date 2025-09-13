@@ -9,6 +9,8 @@ export default function AnalysisLoading() {
 	return (
 		<Box
 			sx={{
+				maxWidth: 'xl',
+				width: '100%',
 				minHeight: '70dvh',
 				display: 'flex',
 				flexDirection: 'column',

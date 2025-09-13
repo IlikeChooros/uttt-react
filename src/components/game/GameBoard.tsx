@@ -49,7 +49,7 @@ export default function GameBoard({
 		() =>
 			Array.from({ length: 9 }, (_, index) => {
 				const lastMove = gameState.history.length
-					? gameState.history[gameState.history.length - 1].move
+					? gameState.history[gameState.historyIndex].move
 					: undefined;
 
 				// Relevant board, in an analysis sense,

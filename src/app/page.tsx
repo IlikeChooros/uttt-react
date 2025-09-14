@@ -1,12 +1,14 @@
 import * as React from 'react';
-import Link from 'next/link';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import Stack from '@mui/material/Stack';
-import Button from '@mui/material/Button';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import PsychologyIcon from '@mui/icons-material/Psychology';
-import GroupsIcon from '@mui/icons-material/Groups';
+
+// import Link from 'next/link';
+// import Stack from '@mui/material/Stack';
+// import Button from '@mui/material/Button';
+// import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+// import PsychologyIcon from '@mui/icons-material/Psychology';
+// import GroupsIcon from '@mui/icons-material/Groups';
+
 import Copyright from '@/components/Copyright';
 import GameModeSelector from '@/components/ui/GameModeSelector';
 
@@ -50,7 +52,7 @@ export default function Home() {
 					small boards to dominate the macro board. Think ahead,
 					redirect your opponent, and outmaneuver layer by layer.
 				</Typography>
-				<Stack
+				{/* <Stack
 					direction={{ xxs: 'column', sm: 'row' }}
 					spacing={2}
 					sx={{ justifyContent: 'center', mb: 1 }}
@@ -86,9 +88,9 @@ export default function Home() {
 						Open Analyzer
 					</Button>
 				</Stack>
-				<Typography variant="body2" color="text.secondary">
+				 <Typography variant="body2" color="text.secondary">
 					Or pick a mode below to jump right in:
-				</Typography>
+				</Typography> */}
 			</Box>
 
 			{/* Mode Selector reused for consistency */}

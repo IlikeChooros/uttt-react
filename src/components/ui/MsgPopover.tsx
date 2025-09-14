@@ -22,7 +22,7 @@ const MsgPopover = (props: {
 		open,
 		anchorEl,
 		onClose,
-		closeAfter = 1000,
+		closeAfter = 700,
 		transitionDuration = { enter: 300, exit: 150 },
 	} = props;
 
@@ -40,6 +40,17 @@ const MsgPopover = (props: {
 			placement="top"
 			aria-hidden={!open}
 			transition
+			modifiers={[
+				{ name: 'offset', options: { offset: [0, 8] } }, // Optional: keep in viewport padding
+				{
+					name: 'preventOverflow',
+					options: { padding: 8 },
+				},
+				{
+					name: 'flip',
+					options: { fallbackPlacements: ['top', 'bottom'] },
+				},
+			]}
 		>
 			{({ TransitionProps }) => (
 				<Fade {...TransitionProps} timeout={transitionDuration || 350}>

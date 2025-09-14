@@ -92,7 +92,7 @@ function ErrorSnackbar({ errors, action, hasBottomNav }: ErrorSnackbarProps) {
 			message={message}
 			sx={
 				hasBottomNav
-					? { bottom: { xxs: MoveBottomNavigationHeight + 8, md: 0 } }
+					? { bottom: { xxs: MoveBottomNavigationHeight + 8, md: 8 } }
 					: undefined
 			}
 			action={

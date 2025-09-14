@@ -28,7 +28,6 @@ import Box from '@mui/material/Box';
 import CloseIcon from '@mui/icons-material/Close';
 
 // my components
-import Copyright from '@/components/Copyright';
 import GameBoard from '@/components/game/GameBoard';
 import { useGameLogic } from '@/components/game/GameLogic';
 import AiSettings, {
@@ -43,7 +42,10 @@ import VersusAiResult from '@/components/vs-ai/VersusAiResult';
 import { GameBoardSkeleton } from '@/components/ui/skeletons';
 import LandingPageLayout from '@/components/ui/LandingPageLayout';
 import useErrorStack from '@/components/utils/useErrorStack';
-import ErrorSnackbar from '@/components/ui/ErrorSnackbar';
+import ErrorSnackbar, {
+	ErrorSnackbarType,
+} from '@/components/ui/ErrorSnackbar';
+import GameRules from '@/components/ui/GameRules';
 
 const difficultyLevels: DifficultyLevelsType = [
 	{
@@ -141,7 +143,10 @@ export default function VersusAiGame() {
 	const [selectedDifficulty, setSelectedDifficulty] =
 		useState<DifficultyType>('Easy');
 
-	const { errorStack, pushError, popError } = useErrorStack();
+	const { errorStack, pushError, popError } = useErrorStack<
+		unknown,
+		ErrorSnackbarType
+	>();
 
 	// AI move logic
 	useEffect(() => {
@@ -180,6 +185,7 @@ export default function VersusAiGame() {
 				console.error('AI move failed:', error);
 				pushError({
 					msg: 'AI move failed. Please try again.',
+					brief: 'AI move failed.',
 					type: 'ai-move',
 				});
 				setVersusState((prev) => ({ ...prev, thinking: false }));
@@ -308,7 +314,7 @@ export default function VersusAiGame() {
 			title="Play vs AI"
 			description="Challenge an AI opponent with adjustable difficulty levels. Capture small boards to control the macro board. Then analyze moves and improve your strategy."
 		>
-			<Box sx={{ mb: 4, width: '100%' }}>
+			<Box sx={{ width: '100%' }}>
 				<Box
 					sx={{
 						display: 'flex',
@@ -465,9 +471,19 @@ export default function VersusAiGame() {
 							/>
 						</motion.motion.div>
 					)}
+
+					<Box
+						sx={{
+							width: '100%',
+							maxWidth: 840,
+							mx: 'auto',
+							px: { xxs: 1, sm: 2 },
+						}}
+					>
+						<GameRules />
+					</Box>
 				</Box>
 			</Box>
-			<Copyright />
 		</LandingPageLayout>
 	);
 }

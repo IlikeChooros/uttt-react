@@ -1,5 +1,6 @@
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import Copyright from '../Copyright';
 
 interface LandingPageLayoutProps {
 	children: React.ReactNode;
@@ -22,7 +23,7 @@ export default function LandingPageLayout({
 				flexDirection: 'column',
 				alignItems: 'center',
 				justifyContent: 'flex-start',
-				py: { xs: 1, sm: 2, md: 3, lg: 3, xl: 5 },
+				pt: { xxs: 1, sm: 2, md: 3, lg: 3, xl: 5 },
 				gap: gap,
 				px: 1,
 			}}
@@ -35,13 +36,13 @@ export default function LandingPageLayout({
 					sx={{
 						fontWeight: 600,
 						fontSize: {
-							xs: '2rem',
+							xxs: '2rem',
 							sm: '2.3rem',
 							md: '2.5rem',
 							lg: '2.8rem',
 						},
 						lineHeight: 1.15,
-						mb: { xs: 1, sm: 1.5, md: 2 },
+						mb: { xxs: 1, sm: 1.5, md: 2 },
 					}}
 				>
 					{title}
@@ -54,7 +55,7 @@ export default function LandingPageLayout({
 						mx: 'auto',
 						maxWidth: 720,
 						fontSize: {
-							xs: '1rem',
+							xxs: '1rem',
 							sm: '1.15rem',
 							md: '1.3rem',
 						},
@@ -64,6 +65,7 @@ export default function LandingPageLayout({
 				</Typography>
 			</Box>
 			{children}
+			<Copyright />
 		</Box>
 	);
 }

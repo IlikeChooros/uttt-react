@@ -38,7 +38,7 @@ export function GameBoardSkeleton({ maxSize }: { maxSize: number | string }) {
 					display: 'grid',
 					gridTemplateColumns: '1fr 1fr 1fr',
 					gap: {
-						xs: 1,
+						xxs: 1,
 						sm: 1.5,
 						md: 2,
 						lg: 2.5,
@@ -53,9 +53,9 @@ export function GameBoardSkeleton({ maxSize }: { maxSize: number | string }) {
 						key={index}
 						variant="rectangular"
 						sx={{
-							p: { xs: 0.75, md: 1.25 },
+							p: { xxs: 0.75, md: 1.25 },
 							borderRadius: {
-								xs: 1.25,
+								xxs: 1.25,
 								sm: 2,
 							},
 							height: '100%',

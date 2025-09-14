@@ -4,6 +4,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
+import { GameBoardSkeleton } from '@/components/ui/skeletons';
 
 export default function AnalysisLoading() {
 	return (
@@ -16,7 +17,7 @@ export default function AnalysisLoading() {
 				flexDirection: 'column',
 				alignItems: 'center',
 				justifyContent: 'flex-start',
-				py: { xs: 4, md: 6 },
+				py: { xxs: 4, md: 6 },
 				px: 2,
 				gap: 4,
 			}}
@@ -27,7 +28,7 @@ export default function AnalysisLoading() {
 					sx={{
 						fontWeight: 500,
 						mb: 2,
-						fontSize: { xs: '2rem', md: '2.4rem' },
+						fontSize: { xxs: '2rem', md: '2.4rem' },
 					}}
 				>
 					Analyzer Loading…
@@ -44,22 +45,15 @@ export default function AnalysisLoading() {
 			>
 				<Skeleton
 					variant="rounded"
-					width={320}
-					height={36}
-					sx={{ borderRadius: 2 }}
+					sx={{
+						borderRadius: 2,
+						width: {
+							xs: '100%',
+						},
+						height: 64,
+					}}
 				/>
-				<Skeleton
-					variant="rounded"
-					width={340}
-					height={340}
-					sx={{ borderRadius: 3 }}
-				/>
-				<Skeleton
-					variant="text"
-					width={260}
-					height={28}
-					sx={{ fontSize: 24 }}
-				/>
+				<GameBoardSkeleton maxSize={'720px'} />
 			</Stack>
 		</Box>
 	);

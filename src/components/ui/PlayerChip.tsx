@@ -26,7 +26,11 @@ export function PlayerChip({
 }: PlayerChipProps) {
 	return (
 		<Chip
-			sx={{ p: 2, borderRadius: 2 }}
+			sx={{
+				px: { xxs: 1, sm: 2 },
+				py: 2,
+				borderRadius: 2,
+			}}
 			icon={icon}
 			label={`${label} (${player})`}
 			color={color}

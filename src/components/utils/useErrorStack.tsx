@@ -7,26 +7,27 @@ interface ErrorType {
 	type?: string;
 }
 
-interface ErrorStackAction<T> {
+interface ErrorStackAction<T, E> {
 	type: 'push' | 'pop' | 'clear' | 'set' | 'set-payload';
-	error?: ErrorType;
-	errors?: ErrorType[];
+	error?: ErrorType & E;
+	errors?: (ErrorType & E)[];
 	payload?: T;
 }
 
-interface ErrorStackState {
-	errors: ErrorType[];
+interface ErrorStackState<E> {
+	errors: (ErrorType & E)[];
 }
 
-function reducer<T>(
-	state: T & ErrorStackState,
-	action: ErrorStackAction<T>,
-): T & ErrorStackState {
+function reducer<T, E = ErrorType>(
+	state: T & ErrorStackState<E>,
+	action: ErrorStackAction<T, E>,
+): T & ErrorStackState<E> {
 	switch (action.type) {
 		case 'push':
+			if (!action.error) return state;
 			return {
 				...state,
-				errors: [...state.errors, action.error || { msg: '' }],
+				errors: [...state.errors, action.error],
 			};
 		case 'pop':
 			return { ...state, errors: state.errors.slice(0, -1) };
@@ -41,15 +42,15 @@ function reducer<T>(
 	}
 }
 
-export default function useErrorStack<T>({
+export default function useErrorStack<T, E = ErrorType>({
 	initialState,
 }: { initialState?: T } = {}) {
 	const [errorStack, dispatch] = React.useReducer<
-		T & ErrorStackState,
-		[ErrorStackAction<T>]
-	>(reducer, { ...initialState, errors: [] } as T & ErrorStackState);
+		T & ErrorStackState<E>,
+		[ErrorStackAction<T, E>]
+	>(reducer, { ...initialState, errors: [] } as T & ErrorStackState<E>);
 
-	const pushError = (error: ErrorType) => {
+	const pushError = (error: ErrorType & E) => {
 		dispatch({ type: 'push', error });
 	};
 
@@ -61,7 +62,7 @@ export default function useErrorStack<T>({
 		dispatch({ type: 'clear' });
 	};
 
-	const setErrors = (errors: ErrorType[], data?: T) => {
+	const setErrors = (errors: (ErrorType & E)[], data?: T) => {
 		dispatch({ type: 'set', errors, payload: data });
 	};
 

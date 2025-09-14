@@ -1,6 +1,7 @@
 import * as React from 'react';
 import Typography from '@mui/material/Typography';
-import { Link } from '@mui/material';
+import Box from '@mui/material/Box';
+import Link from '@mui/material/Link';
 
 import GithubIcon from '@mui/icons-material/GitHub';
 
@@ -14,6 +15,7 @@ export default function Copyright() {
 				alignItems: 'center',
 				flexDirection: 'row',
 				gap: 8,
+				marginBottom: 32,
 			}}
 		>
 			<div>
@@ -28,19 +30,19 @@ export default function Copyright() {
 					reserved.{' '}
 				</Typography>
 			</div>
-			<div
-				style={{
+			<Box
+				sx={{
 					display: 'flex',
 					alignItems: 'center',
 					justifyContent: 'center',
-					gap: 4,
+					gap: { xxs: 0.5, xs: 1 },
 				}}
 			>
 				<GithubIcon />
 				<Link color="inherit" href="https://github.com/IlikeChooros">
 					GitHub
 				</Link>
-			</div>
+			</Box>
 		</div>
 	);
 }

@@ -5,12 +5,14 @@ import React, { useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 
 // motion
 import * as motion from 'motion/react';
 import { baseAnimation, errorAnimation } from '@/components/ui/animations';
 
-import { AnalysisError, toAnalysisRequest } from '@/api';
+import { toAnalysisRequest } from '@/api';
 import { traverseHistory, useGameLogic } from '@/components/game/GameLogic';
 
 // my components
@@ -25,15 +27,18 @@ import { GameBoardSkeleton } from '@/components/ui/skeletons';
 import { SettingsPaper } from '@/components/ui/SettingsPaper';
 import ErrorSnackbar, {
 	ErrorSnackbarAction,
+	ErrorSnackbarType,
 } from '@/components/ui/ErrorSnackbar';
 import { useSearchParams } from 'next/navigation';
 import { makeRouteKey, readRouteState } from '@/routeState';
 import { GameState } from '@/board';
 import MovePanel from '@/components/analysis/MovePanel';
-import MoveBottomNavigation from '@/components/analysis/MoveBottomNavigation';
+import MoveBottomNavigation, {
+	MoveBottomNavigationHeight,
+} from '@/components/analysis/MoveBottomNavigation';
 
 interface ErrorStack {
-	errors: { msg: string }[];
+	errors: ErrorSnackbarType[];
 	action: ErrorSnackbarAction | null;
 }
 
@@ -91,6 +96,8 @@ export default function Analysis() {
 		errors: [],
 		action: null,
 	});
+	const theme = useTheme();
+	const isBelowMd = useMediaQuery(theme.breakpoints.down('md'));
 
 	// Load route state (full game state) if sid is present
 	React.useEffect(() => {
@@ -240,11 +247,92 @@ export default function Analysis() {
 		analysisState.serverBusy ||
 		gameLogic.available === false;
 
+	const handleHistoryTraverse = (index: number) => {
+		if (index === gameLogic.game.historyIndex) return;
+		const newState = traverseHistory(gameLogic, index);
+		gameLogicDispatch({
+			type: 'change-gamestate',
+			newGameState: newState.game,
+		});
+		dispatchAnalysis({
+			type: 'force-analyze',
+			state: {
+				request: toAnalysisRequest(newState.settings, newState.game),
+			},
+		});
+	};
+
+	// Conditionally render different components:
+	const evalBarWidths = { xs: '32px', sm: '36px', md: '40px', lg: '48px' };
+
+	let movePanel: React.ReactNode | undefined;
+	let bottomNav: React.ReactNode | undefined;
+	let evalBar: React.ReactNode | undefined;
+
+	if (showLoadingState) {
+		evalBar = (
+			<Skeleton
+				variant="rectangular"
+				height="auto"
+				sx={{
+					borderRadius: 2,
+					width: evalBarWidths,
+				}}
+			/>
+		);
+	} else {
+		evalBar = (
+			<EvalBar
+				fonts={{
+					sides: {
+						xs: '1.2rem',
+						sm: '1.4rem',
+						md: '1.5rem',
+						lg: '1.6rem',
+					},
+					eval: {
+						xs: '0.8rem',
+						sm: '1.0rem',
+						md: '1.1rem',
+						lg: '1.2rem',
+					},
+				}}
+				width={evalBarWidths}
+				height={'auto'}
+				currentPlayer={gameLogic.game.currentPlayer}
+				evaluation={analysisState.currentEvaluation}
+				abseval={analysisState.absEvaluation}
+				direction="vertical"
+				thinking={analysisState.thinking}
+			/>
+		);
+	}
+
+	if (isBelowMd) {
+		movePanel = undefined;
+		bottomNav = (
+			<MoveBottomNavigation
+				available={gameLogic.available === true}
+				gameState={gameLogic.game}
+				onMoveClick={handleHistoryTraverse}
+			/>
+		);
+	} else {
+		bottomNav = undefined;
+		movePanel = (
+			<MovePanel
+				available={gameLogic.available === true}
+				gameState={gameLogic.game}
+				onMoveClick={handleHistoryTraverse}
+			/>
+		);
+	}
+
 	return (
 		<Box>
 			<Box
 				sx={{
-					py: { xs: 1, sm: 2 },
+					py: { xxs: 1, sm: 2 },
 					display: 'grid',
 					gridTemplateColumns: '1fr auto',
 					width: '100%',
@@ -266,6 +354,7 @@ export default function Analysis() {
 					<ErrorSnackbar
 						errors={errorStack.errors}
 						action={errorStack.action}
+						hasBottomNav
 					/>
 
 					<motion.AnimatePresence mode="wait">
@@ -347,6 +436,7 @@ export default function Analysis() {
 											...prev.errors,
 											{
 												msg: 'Error while importing game',
+												brief: 'Import error',
 											},
 										],
 										action: {
@@ -402,55 +492,12 @@ export default function Analysis() {
 							display: 'flex',
 							flexDirection: 'row',
 							gap: {
-								xs: 1.5,
+								xxs: 1.5,
 								sm: 2,
 							},
 						}}
 					>
-						{showLoadingState ? (
-							<Skeleton
-								variant="rectangular"
-								height="auto"
-								sx={{
-									borderRadius: 2,
-									width: {
-										xs: '32px',
-										sm: '36px',
-										md: '40px',
-										lg: '48px',
-									},
-								}}
-							/>
-						) : (
-							<EvalBar
-								fonts={{
-									sides: {
-										xs: '1.2rem',
-										sm: '1.4rem',
-										md: '1.5rem',
-										lg: '1.6rem',
-									},
-									eval: {
-										xs: '0.8rem',
-										sm: '1.0rem',
-										md: '1.1rem',
-										lg: '1.2rem',
-									},
-								}}
-								width={{
-									xs: '32px',
-									sm: '36px',
-									md: '40px',
-									lg: '48px',
-								}}
-								height={'auto'}
-								currentPlayer={gameLogic.game.currentPlayer}
-								evaluation={analysisState.currentEvaluation}
-								abseval={analysisState.absEvaluation}
-								direction="vertical"
-								thinking={analysisState.thinking}
-							/>
-						)}
+						{evalBar}
 
 						<Box
 							sx={{
@@ -474,48 +521,19 @@ export default function Analysis() {
 					</Box>
 				</Box>
 
-				<MovePanel
-					avaible={gameLogic.available === true}
-					gameState={gameLogic.game}
-					onMoveClick={(index) => {
-						const newState = traverseHistory(gameLogic, index);
-						gameLogicDispatch({
-							type: 'change-gamestate',
-							newGameState: newState.game,
-						});
-						dispatchAnalysis({
-							type: 'force-analyze',
-							state: {
-								request: toAnalysisRequest(
-									newState.settings,
-									newState.game,
-								),
-							},
-						});
-					}}
-				/>
+				{movePanel}
 			</Box>
 
-			<MoveBottomNavigation
-				gameState={gameLogic.game}
-				onMoveClick={(index) => {
-					const newState = traverseHistory(gameLogic, index);
-					gameLogicDispatch({
-						type: 'change-gamestate',
-						newGameState: newState.game,
-					});
-					dispatchAnalysis({
-						type: 'force-analyze',
-						state: {
-							request: toAnalysisRequest(
-								newState.settings,
-								newState.game,
-							),
-						},
-					});
-				}}
-			/>
 			<Copyright />
+
+			<Box
+				sx={{
+					display: { xxs: 'block', md: 'none' },
+					marginBottom: `${MoveBottomNavigationHeight + 8}px`,
+				}}
+			>
+				{bottomNav}
+			</Box>
 		</Box>
 	);
 }

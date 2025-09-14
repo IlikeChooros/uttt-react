@@ -36,6 +36,7 @@ import {
 	importGameState,
 	parseExportedGame,
 } from '@/game';
+import Fade from '@mui/material/Fade';
 
 const AnimatedBox = motion.create(Box);
 
@@ -54,6 +55,12 @@ interface SettingsPanelProps {
 
 const includeFields: ExportField[] = [['Event', 'Analysis']];
 
+interface PopoverProps {
+	msg: string;
+	open: boolean;
+	anchorEl: HTMLElement | null;
+}
+
 export default function SettingsPanel({
 	onOpenSettings,
 	settings,
@@ -68,44 +75,12 @@ export default function SettingsPanel({
 }: SettingsPanelProps) {
 	const [positionOpen, setPositionOpen] = React.useState(false);
 	const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-	const [loadedPosition, setLoadedPosition] = React.useState('');
-	const [popoverProps, setPopoverProps] = React.useState<{
-		msg: string;
-		open: boolean;
-		anchorEl: HTMLElement | null;
-	}>({
+
+	const [popoverProps, setPopoverProps] = React.useState<PopoverProps>({
 		msg: '',
 		open: false,
 		anchorEl: null,
 	});
-	const [importedGame, setImportedGame] = React.useState<string>('');
-
-	const invalidPosition = useMemo((): boolean => {
-		if (loadedPosition.length === 0) {
-			return false;
-		}
-		// try to parse the position
-		try {
-			fromNotation(loadedPosition);
-			return false;
-		} catch {
-			return true;
-		}
-	}, [loadedPosition]);
-
-	const invalidImport = useMemo((): boolean => {
-		if (!importedGame) {
-			return false;
-		}
-		// try to parse the position
-		try {
-			const parsed = parseExportedGame(importedGame);
-			importGameState(parsed);
-			return false;
-		} catch {
-			return true;
-		}
-	}, [importedGame]);
 
 	const buttonData = useMemo(
 		() => [
@@ -175,6 +150,166 @@ export default function SettingsPanel({
 		[settings, onOpenSettings, loading, onReset, onUndo, gameState],
 	);
 
+	return (
+		<SettingsPaper sx={{ minHeight: 0, bgcolor: 'surface.subtle' }}>
+			<Box
+				sx={{
+					display: 'flex',
+					flexDirection: 'row',
+					justifyContent: { xxs: 'space-evenly', lg: 'flex-start' },
+					gap: { xxs: 0, sm: 3 },
+				}}
+			>
+				<MsgPopover
+					msg={popoverProps.msg}
+					open={popoverProps.open}
+					anchorEl={popoverProps.anchorEl}
+					onClose={() =>
+						setPopoverProps((prev) => ({ ...prev, open: false }))
+					}
+				/>
+
+				{/* Popper for setting position */}
+				<MemoFormPopper
+					positionOpen={positionOpen}
+					anchorEl={anchorEl}
+					gameState={gameState}
+					setPositionOpen={setPositionOpen}
+					setNewPosition={setNewPosition}
+					onError={onError}
+					setPopoverProps={setPopoverProps}
+				/>
+
+				{/* Use icon buttons if the screen is small */}
+				{buttonData.map((button) => (
+					<React.Fragment key={button.label}>
+						<IconButton
+							sx={{
+								display: {
+									xxs: 'flex',
+									lg: 'none',
+								},
+							}}
+							onClick={button.onClick}
+						>
+							{button.icon}
+						</IconButton>
+						<Button
+							sx={{
+								display: {
+									xxs: 'none',
+									lg: 'flex',
+								},
+							}}
+							color="primary"
+							variant="outlined"
+							startIcon={button.icon}
+							onClick={button.onClick}
+						>
+							{button.label}
+						</Button>
+					</React.Fragment>
+				))}
+			</Box>
+
+			<AnimatePresence>
+				{settings.showAnalysis && (
+					<AnimatedBox
+						sx={{ flex: 1 }}
+						initial={{ marginTop: 0, height: 0, opacity: 0 }}
+						animate={{
+							marginTop: '8px',
+							height: 'auto',
+							opacity: 1,
+						}}
+						exit={{ marginTop: 0, height: 0, opacity: 0 }}
+						transition={{ duration: 0.1 }}
+					>
+						<Box
+							sx={{
+								display: 'flex',
+								flexDirection: {
+									xxs: 'column',
+									sm: 'column',
+									md: 'row',
+								},
+								gap: 2,
+							}}
+						>
+							<EngineSettings
+								show
+								settings={settings}
+								limits={limits}
+								onSettingsChange={onSettingsChange}
+								multipv
+							/>
+						</Box>
+					</AnimatedBox>
+				)}
+			</AnimatePresence>
+		</SettingsPaper>
+	);
+}
+
+interface FormPopperProps {
+	positionOpen: boolean;
+	anchorEl: HTMLElement | null;
+	gameState: GameState;
+	setPositionOpen: (open: boolean) => void;
+	setNewPosition: (gameState: GameState) => void;
+	onError?: () => void;
+	setPopoverProps: React.Dispatch<React.SetStateAction<PopoverProps>>;
+}
+
+const MemoFormPopper = React.memo(FormPopper, (prev, next) => {
+	return (
+		prev.positionOpen === next.positionOpen &&
+		prev.anchorEl === next.anchorEl &&
+		prev.gameState === next.gameState
+	);
+});
+
+function FormPopper({
+	positionOpen,
+	anchorEl,
+	gameState,
+	setPositionOpen,
+	setNewPosition,
+	onError,
+	setPopoverProps,
+}: FormPopperProps) {
+	console.debug('Render FormPopper');
+
+	const [loadedPosition, setLoadedPosition] = React.useState('');
+	const [importedGame, setImportedGame] = React.useState<string>('');
+
+	const invalidPosition = useMemo((): boolean => {
+		if (loadedPosition.length === 0) {
+			return false;
+		}
+		// try to parse the position
+		try {
+			fromNotation(loadedPosition);
+			return false;
+		} catch {
+			return true;
+		}
+	}, [loadedPosition]);
+
+	const invalidImport = useMemo((): boolean => {
+		if (!importedGame) {
+			return false;
+		}
+		// try to parse the position
+		try {
+			const parsed = parseExportedGame(importedGame);
+			importGameState(parsed);
+			return false;
+		} catch {
+			return true;
+		}
+	}, [importedGame]);
+
 	const positionNotation = useMemo(() => toNotation(gameState), [gameState]);
 	const gameExport = useMemo(
 		() =>
@@ -225,41 +360,24 @@ export default function SettingsPanel({
 	};
 
 	return (
-		<SettingsPaper sx={{ minHeight: 0, bgcolor: 'surface.subtle' }}>
-			<Box
-				sx={{
-					display: 'flex',
-					flexDirection: 'row',
-					justifyContent: { xs: 'space-evenly', md: 'flex-start' },
-					gap: 3,
-				}}
-			>
-				<MsgPopover
-					msg={popoverProps.msg}
-					open={popoverProps.open}
-					anchorEl={popoverProps.anchorEl}
-					onClose={() =>
-						setPopoverProps((prev) => ({ ...prev, open: false }))
-					}
-				/>
-
-				{/* REPLACED manual absolutely-positioned div with Popper */}
-				<Popper
-					open={positionOpen}
-					anchorEl={anchorEl}
-					placement="bottom-start"
-					sx={{ zIndex: (theme) => theme.zIndex.modal }}
-				>
-					<ClickAwayListener onClickAway={() => handleClose()}>
-						<Paper
-							elevation={3}
-							sx={{
-								p: 2,
-								borderRadius: 2,
-								minWidth: 260,
-								width: 'fit-content',
-							}}
-						>
+		<Popper
+			open={positionOpen}
+			anchorEl={anchorEl}
+			placement="bottom-start"
+			sx={{ zIndex: (theme) => theme.zIndex.modal }}
+			transition
+		>
+			{({ TransitionProps }) => (
+				<Fade {...TransitionProps} timeout={{ enter: 300, exit: 100 }}>
+					<Paper
+						elevation={3}
+						sx={{
+							p: 2,
+							borderRadius: 2,
+							width: 'fit-content',
+						}}
+					>
+						<ClickAwayListener onClickAway={() => handleClose()}>
 							<form
 								onSubmit={(e) => {
 									e.preventDefault();
@@ -337,77 +455,10 @@ export default function SettingsPanel({
 									</Button>
 								</Box>
 							</form>
-						</Paper>
-					</ClickAwayListener>
-				</Popper>
-
-				{/* Use icon buttons if the screen is small */}
-				{buttonData.map((button) => (
-					<React.Fragment key={button.label}>
-						<IconButton
-							sx={{
-								display: {
-									xs: 'flex',
-									md: 'none',
-								},
-							}}
-							onClick={button.onClick}
-						>
-							{button.icon}
-						</IconButton>
-						<Button
-							sx={{
-								display: {
-									xs: 'none',
-									md: 'flex',
-								},
-							}}
-							color="primary"
-							variant="outlined"
-							startIcon={button.icon}
-							onClick={button.onClick}
-						>
-							{button.label}
-						</Button>
-					</React.Fragment>
-				))}
-			</Box>
-
-			<AnimatePresence>
-				{settings.showAnalysis && (
-					<AnimatedBox
-						sx={{ flex: 1 }}
-						initial={{ marginTop: 0, height: 0, opacity: 0 }}
-						animate={{
-							marginTop: '8px',
-							height: 'auto',
-							opacity: 1,
-						}}
-						exit={{ marginTop: 0, height: 0, opacity: 0 }}
-						transition={{ duration: 0.1 }}
-					>
-						<Box
-							sx={{
-								display: 'flex',
-								flexDirection: {
-									xs: 'column',
-									sm: 'column',
-									md: 'row',
-								},
-								gap: 2,
-							}}
-						>
-							<EngineSettings
-								show
-								settings={settings}
-								limits={limits}
-								onSettingsChange={onSettingsChange}
-								multipv
-							/>
-						</Box>
-					</AnimatedBox>
-				)}
-			</AnimatePresence>
-		</SettingsPaper>
+						</ClickAwayListener>
+					</Paper>
+				</Fade>
+			)}
+		</Popper>
 	);
 }

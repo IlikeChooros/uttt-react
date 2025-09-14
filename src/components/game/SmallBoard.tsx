@@ -138,9 +138,9 @@ export default function SmallBoard({
 		<Paper
 			elevation={isActive ? 4 : 1}
 			sx={{
-				p: { xs: 0.75, md: 1.25 },
+				p: { xxs: 0.75, md: 1.25 },
 				borderRadius: {
-					xs: 1.25,
+					xxs: 1.25,
 					sm: 2,
 				},
 				backgroundColor: isActive
@@ -183,7 +183,7 @@ export default function SmallBoard({
 						alignItems: 'center',
 						justifyContent: 'center',
 						borderRadius: {
-							xs: 1,
+							xxs: 1,
 							sm: 2,
 						},
 						zIndex: 1,
@@ -195,7 +195,7 @@ export default function SmallBoard({
 							fontWeight: 'bold',
 							textShadow: '0 2px 4px rgba(0,0,0,0.3)',
 							fontSize: {
-								xs: '1.2rem',
+								xxs: '1.2rem',
 								sm: '1.5rem',
 								md: '2rem',
 								lg: '2.5rem',
@@ -212,7 +212,7 @@ export default function SmallBoard({
 					display: 'grid',
 					gridTemplateColumns: 'repeat(3, 1fr)',
 					gap: {
-						xs: 0.25,
+						xxs: 0.25,
 						sm: 0.5,
 						md: 0.75,
 						lg: 1,

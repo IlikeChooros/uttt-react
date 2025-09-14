@@ -30,6 +30,14 @@ declare module '@mui/material/styles' {
 		surface?: { main: string; subtle: string; action: string };
 		outline?: { main: string };
 	}
+	interface BreakpointOverrides {
+		xxs: true; // adds the `mobile` breakpoint
+		xs: true;
+		sm: true;
+		md: true;
+		lg: true;
+		xl: true;
+	}
 }
 
 declare module '@mui/material/Button' {
@@ -47,6 +55,17 @@ const roboto = Roboto({
 });
 
 const theme = extendTheme({
+	breakpoints: {
+		values: {
+			xxs: 0, // custom mobile breakpoint
+			xs: 400,
+			sm: 600,
+			md: 900,
+			lg: 1200,
+			xl: 1536,
+		},
+	},
+
 	colorSchemeSelector: 'class',
 
 	// Enable both light & dark and generate CSS vars; 'class' lets you toggle via adding `class="mui-light"` or `mui-dark` on <html>.

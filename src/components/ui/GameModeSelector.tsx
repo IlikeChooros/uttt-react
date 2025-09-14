@@ -46,8 +46,8 @@ export default function GameModeSelector() {
 			variants={containerVariants}
 			sx={{
 				display: 'flex',
-				flexDirection: { xs: 'column', md: 'row' },
-				gap: { xs: 3, md: 1 },
+				flexDirection: { xxs: 'column', md: 'row' },
+				gap: { xxs: 3, md: 1 },
 				mb: 4,
 				justifyItems: 'stretch',
 				width: '100%',

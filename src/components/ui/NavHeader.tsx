@@ -103,7 +103,7 @@ export default function NavHeader() {
 					{/* Only visible if the screen is small enough */}
 					<Box
 						sx={{
-							display: { xs: 'flex', sm: 'none' },
+							display: { xxs: 'flex', sm: 'none' },
 							flexGrow: 1,
 						}}
 					>
@@ -118,7 +118,7 @@ export default function NavHeader() {
 					<Box
 						sx={{
 							display: 'flex',
-							flexGrow: { xs: 1, sm: 0 },
+							flexGrow: { xxs: 1, sm: 0 },
 							py: 2,
 						}}
 					>
@@ -153,7 +153,7 @@ export default function NavHeader() {
 					{/* If the window is too small, these components disappear */}
 					<Box
 						sx={{
-							display: { xs: 'none', sm: 'flex' },
+							display: { xxs: 'none', sm: 'flex' },
 							justifyContent: 'right',
 							flexGrow: 1,
 							gap: 1,

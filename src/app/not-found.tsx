@@ -25,7 +25,7 @@ export default function NotFound() {
 				flexDirection: 'column',
 				alignItems: 'center',
 				justifyContent: 'center',
-				py: { xs: 6, md: 8 },
+				py: { xxs: 6, md: 8 },
 				gap: 4,
 			}}
 		>
@@ -49,7 +49,7 @@ export default function NotFound() {
 					gutterBottom
 					sx={{
 						fontWeight: 600,
-						fontSize: { xs: '2.25rem', md: '3.25rem' },
+						fontSize: { xxs: '2.25rem', md: '3.25rem' },
 						lineHeight: 1.1,
 					}}
 				>
@@ -64,7 +64,7 @@ export default function NotFound() {
 					might be outdated, moved, or was never a valid move.
 				</Typography>
 				<Stack
-					direction={{ xs: 'column', sm: 'row' }}
+					direction={{ xxs: 'column', sm: 'row' }}
 					spacing={2}
 					sx={{ justifyContent: 'center', mb: 4 }}
 				>

@@ -26,7 +26,7 @@ import { Skeleton } from '@mui/material';
 
 interface MovePanelProps {
 	gameState: GameState;
-	avaible?: boolean;
+	available?: boolean;
 	onMoveClick: (index: number) => void;
 }
 
@@ -35,7 +35,7 @@ const MemoPanel = React.memo(MovePanel, (prevProps, nextProps) => {
 		prevProps.gameState.historyIndex === nextProps.gameState.historyIndex &&
 		prevProps.gameState.history.length ===
 			nextProps.gameState.history.length &&
-		prevProps.avaible === nextProps.avaible
+		prevProps.available === nextProps.available
 	);
 });
 
@@ -48,7 +48,13 @@ function toRowIndex(moveIndex: number, firstTurn?: Player): number {
 	return Math.max(0, ~~((moveIndex - 1) / 2));
 }
 
-function MovePanel({ gameState, onMoveClick, avaible = true }: MovePanelProps) {
+function MovePanel({
+	gameState,
+	onMoveClick,
+	available = true,
+}: MovePanelProps) {
+	console.debug('Render MovePanel');
+
 	const listRef = React.useRef<ListImperativeAPI>(null);
 
 	React.useEffect(() => {
@@ -84,67 +90,75 @@ function MovePanel({ gameState, onMoveClick, avaible = true }: MovePanelProps) {
 		onMoveClick,
 	});
 
-	return avaible ? (
-		<SettingsPaper
-			sx={{
-				mt: { xs: 1, sm: 2 },
-				width: '100%',
-				minWidth: 260,
-				height: '100%',
-				display: 'flex',
-				flexDirection: 'column',
-				p: 1,
-			}}
-		>
-			<Box sx={{ my: 2, textAlign: 'center' }}>
-				<Typography
-					variant="h6"
-					color="text.primary"
-					sx={{ fontWeight: 400 }}
-				>
-					History
-				</Typography>
-			</Box>
-			<Stack
-				spacing={1}
-				direction={'row'}
-				justifyContent={'center'}
+	let component: React.ReactNode | undefined = undefined;
+
+	if (!available) {
+		component = (
+			<Skeleton
+				variant="rectangular"
 				sx={{
-					mb: 1,
-					bgcolor: 'surface.action',
-					p: 0.5,
+					mt: { xxs: 1, sm: 2 },
+					width: '100%',
+					minWidth: 260,
+					height: '100%',
 					borderRadius: 2,
 				}}
+			/>
+		);
+	} else {
+		component = (
+			<SettingsPaper
+				sx={{
+					mt: { xxs: 1, sm: 2 },
+					width: '100%',
+					minWidth: 260,
+					height: '100%',
+					display: 'flex',
+					flexDirection: 'column',
+					p: 1,
+				}}
 			>
-				{iconsProps.map((props, index) => (
-					<IconButton key={index} {...props}>
-						{props.icon}
-					</IconButton>
-				))}
-			</Stack>
-			<Box height={'100%'}>
-				<List
-					listRef={listRef}
-					overscanCount={3}
-					rowComponent={Row}
-					rowCount={rowCount}
-					rowHeight={34}
-					rowProps={itemData}
-				/>
-			</Box>
-		</SettingsPaper>
-	) : (
-		<Skeleton
-			variant="rectangular"
-			sx={{
-				mt: { xs: 1, sm: 2 },
-				width: '100%',
-				minWidth: 260,
-				height: '100%',
-				borderRadius: 2,
-			}}
-		/>
-	);
+				<Box sx={{ my: 2, textAlign: 'center' }}>
+					<Typography
+						variant="h6"
+						color="text.primary"
+						sx={{ fontWeight: 400 }}
+					>
+						History
+					</Typography>
+				</Box>
+				<Stack
+					spacing={1}
+					direction={'row'}
+					justifyContent={'center'}
+					sx={{
+						mb: 1,
+						bgcolor: 'surface.action',
+						p: 0.5,
+						borderRadius: 2,
+					}}
+				>
+					{iconsProps.map((props, index) => (
+						<IconButton key={index} {...props}>
+							{props.icon}
+						</IconButton>
+					))}
+				</Stack>
+				<Box height={'100%'} p={1}>
+					<List
+						listRef={listRef}
+						overscanCount={3}
+						rowComponent={Row}
+						rowCount={rowCount}
+						rowHeight={34}
+						rowProps={itemData}
+					/>
+				</Box>
+			</SettingsPaper>
+		);
+	}
+
+	return component;
 }
 
 interface ItemData {

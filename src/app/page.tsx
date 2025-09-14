@@ -21,7 +21,7 @@ export default function Home() {
 				flexDirection: 'column',
 				alignItems: 'center',
 				justifyContent: 'center',
-				py: { xs: 6, md: 8 },
+				pt: { xxs: 6, md: 8 },
 				gap: 5,
 				px: 1,
 			}}
@@ -34,7 +34,7 @@ export default function Home() {
 					gutterBottom
 					sx={{
 						fontWeight: 600,
-						fontSize: { xs: '2.4rem', md: '3.35rem' },
+						fontSize: { xxs: '2.4rem', md: '3.35rem' },
 						lineHeight: 1.1,
 						mb: 2,
 					}}
@@ -51,7 +51,7 @@ export default function Home() {
 					redirect your opponent, and outmaneuver layer by layer.
 				</Typography>
 				<Stack
-					direction={{ xs: 'column', sm: 'row' }}
+					direction={{ xxs: 'column', sm: 'row' }}
 					spacing={2}
 					sx={{ justifyContent: 'center', mb: 1 }}
 				>

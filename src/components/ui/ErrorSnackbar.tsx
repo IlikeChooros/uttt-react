@@ -9,9 +9,12 @@ import Snackbar, { SnackbarCloseReason } from '@mui/material/Snackbar';
 
 // icons
 import CloseIcon from '@mui/icons-material/Close';
+import { useMediaQuery, useTheme } from '@mui/material';
+import { MoveBottomNavigationHeight } from '@/components/analysis/MoveBottomNavigation';
 
-interface SnackbarErrorType {
+export interface ErrorSnackbarType {
 	msg: string;
+	brief: string;
 }
 
 export interface ErrorSnackbarAction {
@@ -21,21 +24,42 @@ export interface ErrorSnackbarAction {
 }
 
 interface ErrorSnackbarProps {
-	errors: Array<SnackbarErrorType>;
+	errors: Array<ErrorSnackbarType>;
 	action: ErrorSnackbarAction | null;
+	hasBottomNav?: boolean;
 }
 
-export default function ErrorSnackbar({ errors, action }: ErrorSnackbarProps) {
+const MemoErrorSnackbar = React.memo(ErrorSnackbar, (prevProps, nextProps) => {
+	return (
+		prevProps.errors.length === nextProps.errors.length &&
+		prevProps.errors[0]?.msg === nextProps.errors[0]?.msg &&
+		prevProps.errors[0]?.brief === nextProps.errors[0]?.brief &&
+		prevProps.action === nextProps.action &&
+		prevProps.hasBottomNav === nextProps.hasBottomNav
+	);
+});
+
+export default MemoErrorSnackbar;
+
+function ErrorSnackbar({ errors, action, hasBottomNav }: ErrorSnackbarProps) {
+	console.debug('Render ErrorSnackbar');
+
 	const [open, setOpen] = React.useState<boolean>(false);
 	const [message, setMessage] = React.useState<string | undefined>(undefined);
+	const theme = useTheme();
+	const isXs = useMediaQuery(theme.breakpoints.down('sm'));
 
 	React.useEffect(() => {
 		// If there are errors and no message currently showing, show the first error
 		if (errors.length && !message) {
-			setMessage(errors[0].msg);
+			if (isXs) {
+				setMessage(errors[0].brief);
+			} else {
+				setMessage(errors[0].msg);
+			}
 			setOpen(true);
 		}
-	}, [errors, message]);
+	}, [errors, message, isXs]);
 
 	const handleClick = () => {
 		setOpen(false);
@@ -66,6 +90,11 @@ export default function ErrorSnackbar({ errors, action }: ErrorSnackbarProps) {
 			onClose={handleClose}
 			slotProps={{ transition: { onExited: handleExited } }}
 			message={message}
+			sx={
+				hasBottomNav
+					? { bottom: { xxs: MoveBottomNavigationHeight + 8, md: 0 } }
+					: undefined
+			}
 			action={
 				<>
 					{action?.name && (

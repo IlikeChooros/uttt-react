@@ -84,7 +84,7 @@ export default function AiSettings({
 						fontWeight: 600,
 						color: 'text.secondary',
 						display: 'block',
-						fontSize: { xs: '0.8rem', sm: '0.9rem' },
+						fontSize: { xxs: '0.8rem', sm: '0.9rem' },
 						mb: 1.5,
 					}}
 				>
@@ -140,7 +140,7 @@ export default function AiSettings({
 				<Typography
 					variant="caption"
 					sx={{
-						textAlign: { xs: 'center', sm: 'left' },
+						textAlign: { xxs: 'center', sm: 'left' },
 						textTransform: 'uppercase',
 						letterSpacing: 0.8,
 						fontWeight: 600,
@@ -155,7 +155,7 @@ export default function AiSettings({
 
 				<Box
 					sx={{
-						display: { xs: 'flex', sm: 'grid' },
+						display: { xxs: 'flex', sm: 'grid' },
 						gridTemplateColumns: '1fr auto',
 						gap: 2,
 						flexDirection: 'column',
@@ -177,7 +177,7 @@ export default function AiSettings({
 						}}
 						sx={{
 							justifySelf: 'start',
-							maxWidth: { xs: 'unset', sm: 300 },
+							maxWidth: { xxs: 'unset', sm: 300 },
 							// bgcolor: alpha(theme.palette.primary.main, 0.04),
 							bgcolor: alpha(theme.palette.primary.main, 0.04),
 							borderRadius: 2,
@@ -282,8 +282,8 @@ export default function AiSettings({
 					<AnimatedBox
 						sx={{
 							display: 'flex',
-							flexDirection: { xs: 'column', md: 'row' },
-							gap: { xs: 2, sm: 4 },
+							flexDirection: { xxs: 'column', md: 'row' },
+							gap: { xxs: 2, sm: 4 },
 							px: 0.5,
 							pt: 1,
 						}}

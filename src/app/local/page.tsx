@@ -22,7 +22,6 @@ import { useGameLogic } from '@/components/game/GameLogic';
 import GameBoard from '@/components/game/GameBoard';
 import GameStatus from '@/components/game/GameStatus';
 import GameRules from '@/components/ui/GameRules';
-import Copyright from '@/components/Copyright';
 import { SettingsPaper } from '@/components/ui/SettingsPaper';
 import { PlayerChip } from '@/components/ui/PlayerChip';
 import { analysisRoute } from '@/routing';
@@ -51,7 +50,7 @@ export default function Local() {
 					width: '100%',
 					maxWidth: 820,
 					textAlign: 'center',
-					mt: { xs: 2, md: 4 },
+					mt: { xxs: 2, md: 4 },
 				}}
 			>
 				{/* Popover for export message */}
@@ -115,10 +114,12 @@ export default function Local() {
 								onClick={() =>
 									gameLogicDispatch({ type: 'undomove' })
 								}
-								size="large"
 								startIcon={<UndoIcon />}
 								color="primary"
 								aria-label="Undo last move"
+								sx={{
+									padding: { xxs: '6px 8px', sm: '8px 12px' },
+								}}
 							>
 								Undo
 							</Button>
@@ -126,7 +127,7 @@ export default function Local() {
 						<Button
 							variant={isFinished ? 'contained' : 'outlined'}
 							onClick={() => gameLogicDispatch({ type: 'reset' })}
-							size="large"
+							size="medium"
 							startIcon={<RestartIcon />}
 							aria-label={
 								isFinished ? 'Play again' : 'Restart game'
@@ -179,13 +180,11 @@ export default function Local() {
 					width: '100%',
 					maxWidth: 840,
 					mx: 'auto',
-					px: { xs: 1, sm: 2 },
+					px: { xxs: 1, sm: 2 },
 				}}
 			>
 				<GameRules />
 			</Box>
-
-			<Copyright />
 		</LandingPageLayout>
 	);
 }

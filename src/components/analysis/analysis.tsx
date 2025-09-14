@@ -1,6 +1,6 @@
 'use client';
 
-import React, { use } from 'react';
+import React from 'react';
 
 // mine components
 import {
@@ -253,6 +253,7 @@ export function useAnalysis({
 					type: 'append-error',
 					error: {
 						msg: error.message,
+						brief: 'Server busy',
 						type: 'rt-analysis-submit',
 					},
 					state: {
@@ -308,6 +309,7 @@ export function useAnalysis({
 						type: 'append-error',
 						error: {
 							msg: error.message,
+							brief: 'Analysis error',
 							type: 'analysis-submit',
 						},
 						state: {
@@ -413,7 +415,8 @@ export function useAnalysis({
 				dispatch({
 					type: 'append-error',
 					error: {
-						msg: 'Lost connection to analysis engine',
+						msg: 'Lost connection to analysis server',
+						brief: 'Lost connection',
 						type: 'rt-analysis-lost-connection',
 					},
 				});
@@ -431,6 +434,7 @@ export function useAnalysis({
 				error: {
 					msg: (error as Error).message,
 					type: 'rt-analysis-connect',
+					brief: 'Connection error',
 				},
 				state: { rtFailed: true, rtState: 'failed' },
 			});

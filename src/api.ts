@@ -120,6 +120,7 @@ export type AnalysisErrorType =
 
 export interface AnalysisError {
 	msg: string;
+	brief: string;
 	type: AnalysisErrorType;
 }
 

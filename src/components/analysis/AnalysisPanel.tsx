@@ -28,13 +28,30 @@ interface AnalysisPanelProps {
 	makeMove?: (boardIndex: number, cellIndex: number) => void;
 }
 
-export default function AnalysisPanel({
+const MemoAnalysisPanel = React.memo(AnalysisPanel, (prevProps, nextProps) => {
+	return (
+		prevProps.analysisState.currentEvaluation ===
+			nextProps.analysisState.currentEvaluation &&
+		prevProps.analysisState.bestMove === nextProps.analysisState.bestMove &&
+		prevProps.analysisState.topMoves === nextProps.analysisState.topMoves &&
+		prevProps.thinking === nextProps.thinking &&
+		prevProps.settings.engineDepth === nextProps.settings.engineDepth &&
+		prevProps.settings.nThreads === nextProps.settings.nThreads &&
+		prevProps.settings.memorySizeMb === nextProps.settings.memorySizeMb
+	);
+});
+
+export default MemoAnalysisPanel;
+
+function AnalysisPanel({
 	settings,
 	analysisState,
 	thinking,
 	motion,
 	makeMove,
 }: AnalysisPanelProps) {
+	console.debug('Render AnalysisPanel');
+
 	const analysisStats = useMemo<
 		{ name: string; data: string; helpText?: string }[]
 	>(
@@ -67,7 +84,7 @@ export default function AnalysisPanel({
 				sx={{
 					display: 'flex',
 					flexDirection: 'column',
-					gap: 2,
+					// gap: 2,
 					mb: 2,
 				}}
 			>
@@ -101,7 +118,7 @@ export default function AnalysisPanel({
 						flexGrow: 1,
 						alignItems: 'center',
 						justifyContent: 'center',
-						mt: { xs: 1, sm: 0 },
+						mt: { xxs: 1, sm: 0 },
 					}}
 				>
 					{thinking ? (
@@ -127,7 +144,7 @@ export default function AnalysisPanel({
 			<Box
 				sx={{
 					display: 'flex',
-					flexDirection: { xs: 'column', sm: 'row' },
+					flexDirection: { xxs: 'column', sm: 'row' },
 					gap: 2,
 				}}
 			>

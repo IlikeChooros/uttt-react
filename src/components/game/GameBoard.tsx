@@ -109,7 +109,7 @@ export default function GameBoard({
 					display: 'grid',
 					gridTemplateColumns: '1fr 1fr 1fr',
 					gap: {
-						xs: 1,
+						xxs: 1,
 						sm: 1.5,
 						md: 2,
 						lg: 2.5,

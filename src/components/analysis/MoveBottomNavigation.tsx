@@ -72,6 +72,7 @@ function MoveBottomNavigation({
 		component = (
 			<Box
 				sx={{
+					px: { xxs: 0, xs: 1 },
 					display: 'grid',
 					gridTemplateColumns: 'auto 1fr auto',
 					alignItems: 'center',
@@ -113,6 +114,7 @@ function MoveBottomNavigation({
 				variant="rectangular"
 				width="100%"
 				height={MoveBottomNavigationHeight}
+				sx={{ bgcolor: 'action.disabled' }}
 			/>
 		);
 	}
@@ -267,7 +269,7 @@ function MoveComponent({
 				variant: 'body1',
 				sx: {
 					fontSize: {
-						xxs: '0.65rem',
+						xxs: '0.6rem',
 						xs: '0.8rem',
 						sm: '1rem',
 						md: '1.1rem',
@@ -311,7 +313,7 @@ function MoveComponent({
 					...typo.sx,
 					fontWeight: 'bold',
 					fontSize: {
-						xxs: '0.9rem',
+						xxs: '0.75rem',
 						xs: '1rem',
 						sm: '1.2rem',
 						md: '1.4rem',

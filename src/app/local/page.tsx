@@ -42,13 +42,12 @@ export default function Local() {
 		<LandingPageLayout
 			title="Local Pass & Play"
 			description="Share one device and alternate moves. Capture small boards to control the macro board. Use Undo for take-backs or Restart to explore new lines. Then analyze moves and improve your strategy."
-			gap={2}
 		>
 			<SettingsPaper
 				{...baseAnimation}
 				sx={{
 					width: '100%',
-					maxWidth: 820,
+					maxWidth: 900,
 					textAlign: 'center',
 					mt: { xxs: 2, md: 4 },
 				}}
@@ -155,6 +154,16 @@ export default function Local() {
 				</Box>
 			</SettingsPaper>
 
+			<Box
+				sx={{
+					width: '100%',
+					maxWidth: 900,
+					mb: 2,
+				}}
+			>
+				<GameRules />
+			</Box>
+
 			<motion.div
 				{...boardAnimation}
 				style={{
@@ -174,17 +183,6 @@ export default function Local() {
 					}
 				/>
 			</motion.div>
-
-			<Box
-				sx={{
-					width: '100%',
-					maxWidth: 840,
-					mx: 'auto',
-					px: { xxs: 1, sm: 2 },
-				}}
-			>
-				<GameRules />
-			</Box>
 		</LandingPageLayout>
 	);
 }

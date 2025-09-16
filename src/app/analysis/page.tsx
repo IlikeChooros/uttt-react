@@ -263,7 +263,13 @@ export default function Analysis() {
 	};
 
 	// Conditionally render different components:
-	const evalBarWidths = { xs: '32px', sm: '36px', md: '40px', lg: '48px' };
+	const evalBarWidths = {
+		xxs: '28px',
+		xs: '32px',
+		sm: '36px',
+		md: '40px',
+		lg: '48px',
+	};
 
 	let movePanel: React.ReactNode | undefined;
 	let bottomNav: React.ReactNode | undefined;
@@ -285,12 +291,14 @@ export default function Analysis() {
 			<EvalBar
 				fonts={{
 					sides: {
+						xxs: '1.2rem',
 						xs: '1.2rem',
 						sm: '1.4rem',
 						md: '1.5rem',
 						lg: '1.6rem',
 					},
 					eval: {
+						xxs: '0.75rem',
 						xs: '0.8rem',
 						sm: '1.0rem',
 						md: '1.1rem',

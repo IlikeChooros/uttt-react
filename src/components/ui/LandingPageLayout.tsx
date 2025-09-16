@@ -64,7 +64,17 @@ export default function LandingPageLayout({
 					{description}
 				</Typography>
 			</Box>
-			{children}
+			<div
+				style={{
+					width: '100%',
+					display: 'flex',
+					flexDirection: 'column',
+					justifyContent: 'center',
+					alignItems: 'center',
+				}}
+			>
+				{children}
+			</div>
 			<Copyright />
 		</Box>
 	);

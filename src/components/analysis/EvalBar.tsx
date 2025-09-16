@@ -52,8 +52,22 @@ const EvalPercentage = memo(function EvalPercent({
 	);
 });
 
+const MemoEvalBar = memo(EvalBar, (prevProps, nextProps) => {
+	return (
+		prevProps.abseval === nextProps.abseval &&
+		prevProps.evaluation === nextProps.evaluation &&
+		prevProps.currentPlayer === nextProps.currentPlayer &&
+		prevProps.thinking === nextProps.thinking &&
+		prevProps.height === nextProps.height &&
+		prevProps.width === nextProps.width &&
+		prevProps.direction === nextProps.direction
+	);
+});
+
+export default MemoEvalBar;
+
 // Pure react component with MUI styling
-export default function EvalBar({
+function EvalBar({
 	abseval,
 	evaluation,
 	currentPlayer,
@@ -63,13 +77,15 @@ export default function EvalBar({
 	fonts = { eval: '1.2rem', sides: '1.6rem' },
 	direction = 'horizontal',
 }: EvalBarProps) {
+	console.debug('Render EvalBar');
+
 	type EvalType = {
 		absevalNum: number;
 		evalNum: number;
 		mate: Player;
 	};
 
-	const { absevalNum, evalNum, mate } = useMemo<EvalType>(() => {
+	const { absevalNum, mate } = useMemo<EvalType>(() => {
 		if (
 			abseval === undefined ||
 			evaluation === undefined ||

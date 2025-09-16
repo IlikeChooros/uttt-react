@@ -13,8 +13,18 @@ declare module '@mui/material/styles' {
 			Xtext: string;
 			evalText: string;
 		};
+		text: {
+			primary: string;
+			secondary: string;
+			disabled: string;
+		};
 		loading: { main: string };
-		surface: { main: string; subtle: string; action: string };
+		surface: {
+			main: string;
+			subtle: string;
+			action: string;
+			disabled: string;
+		};
 		outline: { main: string };
 	}
 	interface PaletteOptions {
@@ -26,8 +36,18 @@ declare module '@mui/material/styles' {
 			Xtext: string;
 			evalText: string;
 		};
+		text?: {
+			primary?: string;
+			secondary?: string;
+			disabled?: string;
+		};
 		loading?: { main: string };
-		surface?: { main: string; subtle: string; action: string };
+		surface?: {
+			main: string;
+			subtle: string;
+			action: string;
+			disabled: string;
+		};
 		outline?: { main: string };
 	}
 	interface BreakpointOverrides {
@@ -158,6 +178,7 @@ const theme = extendTheme({
 					main: '#fcf7ff', // primary main with 9% opacity  FAF5FB
 					action: '#F6EDFF', // primary light with 10% opacity F6EDFF
 					subtle: '#f9f3ffff', // primary light with 10% opacity F6EDFF
+					disabled: '#fdf9ffff', // primary light with 20% opacity EADDFF
 				},
 				outline: {
 					main: '#79747E',
@@ -166,6 +187,7 @@ const theme = extendTheme({
 				text: {
 					primary: '#1C1B1F',
 					secondary: '#49454F',
+					disabled: '#938F99ff',
 				},
 				action: {
 					active: '#6750A4',
@@ -264,6 +286,7 @@ const theme = extendTheme({
 					main: '#211E28',
 					action: 'rgba(38, 35, 48, 1)',
 					subtle: '#282532ff',
+					disabled: '#232228ff', // secondary dark with 20% opacity 4A4458
 				},
 				outline: {
 					main: '#938F99',
@@ -272,6 +295,7 @@ const theme = extendTheme({
 				text: {
 					primary: '#E6E1E5',
 					secondary: '#CAC4D0',
+					disabled: '#716e75ff',
 				},
 				action: {
 					active: '#D0BCFF',

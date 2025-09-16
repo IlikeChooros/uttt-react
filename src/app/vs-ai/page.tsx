@@ -314,176 +314,170 @@ export default function VersusAiGame() {
 			title="Play vs AI"
 			description="Challenge an AI opponent with adjustable difficulty levels. Capture small boards to control the macro board. Then analyze moves and improve your strategy."
 		>
-			<Box sx={{ width: '100%' }}>
-				<Box
-					sx={{
-						display: 'flex',
-						flexDirection: 'column',
-						justifyContent: 'center',
-						alignItems: 'center',
+			{/* <Box
+				sx={{
+					display: 'flex',
+					flexDirection: 'column',
+					justifyContent: 'center',
+					alignItems: 'center',
+				}}
+			> */}
+			<Box sx={{ maxWidth: '900px', width: '100%' }}>
+				<ErrorSnackbar
+					errors={errorStack.errors}
+					action={{
+						name: 'Reconnect',
+						onClose: () => popError(),
+						onClick: () => handleErrorAction(),
 					}}
-				>
-					<Box sx={{ maxWidth: '900px', width: '100%' }}>
-						<ErrorSnackbar
-							errors={errorStack.errors}
-							action={{
-								name: 'Reconnect',
-								onClose: () => popError(),
-								onClick: () => handleErrorAction(),
-							}}
-						/>
+				/>
 
-						<AnimatePresence mode="wait">
-							{/* AI availability status, in pre-loading state */}
-							{gameLogic.available === undefined && (
-								<motion.motion.div
-									key="ai-loading-skeleton"
-									{...errorAnimation}
-								>
-									<Skeleton
-										variant="rectangular"
-										width={'100%'}
-										sx={{ borderRadius: 2 }}
-									>
-										<Unavailable />
-									</Skeleton>
-								</motion.motion.div>
-							)}
-
-							{/* AI unavailable */}
-							{gameLogic.available === false && <Unavailable />}
-
-							{/* AI available; setup / playing / finished modes */}
-							{versusState.gameMode === 'setup' &&
-								gameLogic.available === true && (
-									<AiSettings
-										minHeight={'220px'}
-										key="ai-settings"
-										difficulty={selectedDifficulty}
-										difficultyLevels={difficultyLevels}
-										onDifficultyChange={(diff) =>
-											setSelectedDifficulty(diff)
-										}
-										motion={baseAnimation}
-										limits={gameLogic.limits}
-										settings={gameLogic.settings}
-										onSettingsChange={(s) =>
-											dispatchGameLogic({
-												type: 'change-settings',
-												newSettings: s,
-											})
-										}
-										engineTurn={pendingEngineTurn}
-										onEngineTurnChange={(et) =>
-											setPendingEngineTurn(et)
-										}
-										handleStart={handleStartConfiguredGame}
-									/>
-								)}
-
-							{versusState.gameMode === 'playing' &&
-								gameLogic.available === true && (
-									<SettingsPaper
-										key="ai-playing"
-										{...baseAnimation}
-									>
-										<Box
-											sx={{
-												height: '100%',
-												display: 'flex',
-												justifyContent: 'space-between',
-												alignItems: 'center',
-												flexDirection: 'column',
-											}}
-										>
-											<VersusAiStatus
-												difficulty={selectedDifficulty}
-												versusState={versusState}
-												gameState={gameLogic.game}
-												settings={gameLogic.settings}
-											/>
-
-											<Box
-												sx={{
-													display: 'flex',
-													justifyContent: 'center',
-												}}
-											>
-												<Button
-													startIcon={<CloseIcon />}
-													variant="contained"
-													color="tertiary"
-													onClick={resetGame}
-												>
-													Exit
-												</Button>
-											</Box>
-										</Box>
-									</SettingsPaper>
-								)}
-
-							{versusState.gameMode === 'finished' && (
-								<SettingsPaper
-									// sx={[{ minHeight: '230px' }]}
-									key="ai-finished"
-									{...baseAnimation}
-								>
-									<VersusAiResult
-										onNewGame={resetGame}
-										gameState={gameLogic.game}
-										engineTurn={versusState.engineTurn}
-										settings={gameLogic.settings}
-										difficulty={selectedDifficulty}
-									/>
-								</SettingsPaper>
-							)}
-						</AnimatePresence>
-					</Box>
-
-					{/* Game board */}
-					{(gameLogic.available === undefined ||
-						gameLogic.available === false) && (
-						<div
-							style={{
-								display: 'flex',
-								justifyContent: 'center',
-								width: '100%',
-							}}
-						>
-							<GameBoardSkeleton maxSize={'700px'} />
-						</div>
-					)}
-					{gameLogic.available === true && (
+				<AnimatePresence mode="wait">
+					{/* AI availability status, in pre-loading state */}
+					{gameLogic.available === undefined && (
 						<motion.motion.div
-							{...boardAnimation}
-							style={{
-								display: 'flex',
-								justifyContent: 'center',
-								width: '100%',
-							}}
+							key="ai-loading-skeleton"
+							{...errorAnimation}
 						>
-							<GameBoard
-								disabled={!canMakeMove}
-								maxSize={'700px'}
-								gameState={gameLogic.game}
-								handleCellClick={handlePlayerMove}
-								analysisState={analysisState}
-							/>
+							<Skeleton
+								variant="rectangular"
+								width={'100%'}
+								sx={{ borderRadius: 2 }}
+							>
+								<Unavailable />
+							</Skeleton>
 						</motion.motion.div>
 					)}
 
-					<Box
-						sx={{
-							width: '100%',
-							maxWidth: 840,
-							mx: 'auto',
-							px: { xxs: 1, sm: 2 },
-						}}
-					>
-						<GameRules />
-					</Box>
-				</Box>
+					{/* AI unavailable */}
+					{gameLogic.available === false && <Unavailable />}
+
+					{/* AI available; setup / playing / finished modes */}
+					{versusState.gameMode === 'setup' &&
+						gameLogic.available === true && (
+							<AiSettings
+								minHeight={'220px'}
+								key="ai-settings"
+								difficulty={selectedDifficulty}
+								difficultyLevels={difficultyLevels}
+								onDifficultyChange={(diff) =>
+									setSelectedDifficulty(diff)
+								}
+								motion={baseAnimation}
+								limits={gameLogic.limits}
+								settings={gameLogic.settings}
+								onSettingsChange={(s) =>
+									dispatchGameLogic({
+										type: 'change-settings',
+										newSettings: s,
+									})
+								}
+								engineTurn={pendingEngineTurn}
+								onEngineTurnChange={(et) =>
+									setPendingEngineTurn(et)
+								}
+								handleStart={handleStartConfiguredGame}
+							/>
+						)}
+
+					{versusState.gameMode === 'playing' &&
+						gameLogic.available === true && (
+							<SettingsPaper key="ai-playing" {...baseAnimation}>
+								<Box
+									sx={{
+										height: '100%',
+										display: 'flex',
+										justifyContent: 'space-between',
+										alignItems: 'center',
+										flexDirection: 'column',
+									}}
+								>
+									<VersusAiStatus
+										difficulty={selectedDifficulty}
+										versusState={versusState}
+										gameState={gameLogic.game}
+										settings={gameLogic.settings}
+									/>
+
+									<Box
+										sx={{
+											display: 'flex',
+											justifyContent: 'center',
+										}}
+									>
+										<Button
+											startIcon={<CloseIcon />}
+											variant="contained"
+											color="tertiary"
+											onClick={resetGame}
+										>
+											Exit
+										</Button>
+									</Box>
+								</Box>
+							</SettingsPaper>
+						)}
+
+					{versusState.gameMode === 'finished' && (
+						<SettingsPaper
+							// sx={[{ minHeight: '230px' }]}
+							key="ai-finished"
+							{...baseAnimation}
+						>
+							<VersusAiResult
+								onNewGame={resetGame}
+								gameState={gameLogic.game}
+								engineTurn={versusState.engineTurn}
+								settings={gameLogic.settings}
+								difficulty={selectedDifficulty}
+							/>
+						</SettingsPaper>
+					)}
+				</AnimatePresence>
 			</Box>
+
+			<Box
+				sx={{
+					width: '100%',
+					maxWidth: 900,
+					mb: 2,
+				}}
+			>
+				<GameRules available={gameLogic.available === true} />
+			</Box>
+
+			{/* Game board */}
+			{(gameLogic.available === undefined ||
+				gameLogic.available === false) && (
+				<div
+					style={{
+						display: 'flex',
+						justifyContent: 'center',
+						width: '100%',
+					}}
+				>
+					<GameBoardSkeleton maxSize={'700px'} />
+				</div>
+			)}
+			{gameLogic.available === true && (
+				<motion.motion.div
+					{...boardAnimation}
+					style={{
+						display: 'flex',
+						justifyContent: 'center',
+						width: '100%',
+					}}
+				>
+					<GameBoard
+						disabled={!canMakeMove}
+						maxSize={'700px'}
+						gameState={gameLogic.game}
+						handleCellClick={handlePlayerMove}
+						analysisState={analysisState}
+					/>
+				</motion.motion.div>
+			)}
+			{/* </Box> */}
 		</LandingPageLayout>
 	);
 }

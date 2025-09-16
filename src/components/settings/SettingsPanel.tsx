@@ -151,7 +151,13 @@ export default function SettingsPanel({
 	);
 
 	return (
-		<SettingsPaper sx={{ minHeight: 0, bgcolor: 'surface.subtle' }}>
+		<SettingsPaper
+			sx={{
+				minHeight: 0,
+				p: { xxs: 1, xs: 1.5, sm: 2 },
+				bgcolor: 'surface.subtle',
+			}}
+		>
 			<Box
 				sx={{
 					display: 'flex',

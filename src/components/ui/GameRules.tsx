@@ -36,7 +36,7 @@ const boxAnimation = {
 	initial: { opacity: 0, y: -10, height: 0 },
 	animate: { opacity: 1, y: 0, height: 'auto' },
 	exit: { opacity: 0, y: -10, height: 0 },
-	transition: { duration: 0.15 },
+	transition: { duration: 0.1 },
 };
 
 const paperAnimation = {
@@ -177,21 +177,36 @@ function GameRules({
 								{open && (
 									<AnimatedBox
 										sx={{
-											px: { xxs: 2, md: 3 },
+											px: { xxs: 2, md: 4 },
+											maxWidth: 760,
 										}}
 										{...boxAnimation}
 									>
 										<Typography {...props.rules}>
-											• Win 3 small boards in a row to win
-											the game
+											• Capture a small board by making
+											three in a row/column/diagonal
+											inside it;
 										</Typography>
 										<Typography {...props.rules}>
-											• Your move determines which board
-											your opponent plays in next
+											• Capture 3 small boards in a
+											row/column/diagonal on the macro
+											board to win.
+										</Typography>
+										<Typography {...props.rules}>
+											• On first move X may play anywhere.
+											After that, the cell you play (its
+											local row/col) chooses the small
+											board your opponent must play in.
 										</Typography>
 										<Typography {...props.rules}>
 											• If sent to a completed board, you
-											can play anywhere
+											can play anywhere on the remaining
+											uncompleted boards.
+										</Typography>
+										<Typography {...props.rules}>
+											• If all small boards are completed
+											without a macro 3-in-a-row, the game
+											is a draw.
 										</Typography>
 
 										{showAnalysis && (

@@ -443,7 +443,10 @@ export default function VersusAiGame() {
 					mb: 2,
 				}}
 			>
-				<GameRules available={gameLogic.available === true} />
+				<GameRules
+					available={gameLogic.available === true}
+					highlighted={versusState.gameMode === 'setup'}
+				/>
 			</Box>
 
 			{/* Game board */}

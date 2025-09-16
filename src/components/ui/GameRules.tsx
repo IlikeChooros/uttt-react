@@ -96,6 +96,16 @@ function GameRules({
 
 	// State for expansion
 	const [open, setOpen] = React.useState<boolean>(false);
+	const highlightRef = React.useRef<boolean>(highlighted);
+
+	React.useEffect(() => {
+		if (highlighted !== highlightRef.current) {
+			highlightRef.current = highlighted;
+			if (!highlighted) {
+				setOpen(false);
+			}
+		}
+	}, [highlighted]);
 
 	const titleComponent = (
 		<Typography {...props.title}>How to Play</Typography>

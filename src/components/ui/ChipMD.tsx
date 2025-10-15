@@ -18,7 +18,7 @@ export default function ChipMD({
 			variant="filled"
 			sx={{
 				borderRadius: '8px',
-				minWidth: '88px',
+				minWidth: { xxs: '64px', xs: '88px' },
 				...sx,
 			}}
 			color={color}

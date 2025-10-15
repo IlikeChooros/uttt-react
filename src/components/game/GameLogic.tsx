@@ -441,7 +441,8 @@ export function useGameLogic({
 			.then((limits) => {
 				dispatch({ type: 'set-limits', limits: limits });
 			})
-			.catch(() => {
+			.catch((e) => {
+				console.error('Failed to fetch engine limits:', e);
 				dispatch({ type: 'unavailable' });
 			});
 	}, [fetchLimits]);

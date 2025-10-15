@@ -90,7 +90,7 @@ export default function Analysis() {
 	const [analysisState, dispatchAnalysis] = useAnalysis({
 		fallbackToHttp: true,
 		useRtAnalysis: true,
-		slowDownMs: 500,
+		slowDownMs: 700,
 	});
 	const [errorStack, setErrorStack] = React.useState<ErrorStack>({
 		errors: [],

@@ -384,23 +384,32 @@ export function useAnalysis({
 					analysisSlowdown.current.startTime = Date.now();
 				}
 
+				console.debug('analysis event', analysis);
+
 				if (!analysis.final) {
 					disp();
 					return;
 				}
 
 				// wait a bit before allowing new analysis
+
 				const now = Date.now();
 				const elapsed = now - analysisSlowdown.current.startTime;
 				const waitTime = analysisSlowdown.current.waitTime;
 				analysisSlowdown.current.startTime = 0;
+				console.debug(
+					'final analysis received, wait time',
+					waitTime - elapsed,
+				);
 				if (elapsed < waitTime) {
 					setTimeout(() => {
+						console.debug('final analysis received, disp');
 						if (analysisSlowdown.current.startTime === 0) {
 							disp();
 						}
 					}, waitTime - elapsed);
 				} else {
+					console.debug('immiediate final analysis disp');
 					disp();
 				}
 			});

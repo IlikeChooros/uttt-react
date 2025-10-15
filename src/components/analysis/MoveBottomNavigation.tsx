@@ -313,7 +313,7 @@ function MoveComponent({
 					...typo.sx,
 					fontWeight: 'bold',
 					fontSize: {
-						xxs: '0.75rem',
+						xxs: '0.72rem',
 						xs: '1rem',
 						sm: '1.2rem',
 						md: '1.4rem',

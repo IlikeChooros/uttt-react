@@ -179,7 +179,7 @@ export interface EngineLimits {
 
 export function getInitialEngineLimits(): EngineLimits {
 	return {
-		depth: 14,
+		depth: 16,
 		mbsize: 16,
 		threads: 4,
 		multipv: 3,
@@ -189,19 +189,12 @@ export function getInitialEngineLimits(): EngineLimits {
 
 // Check if given object is instance of a given type, with prodvided 'requiredKeys'
 // and 'keys'
-function IsInstance<T>(
-	obj: object,
-	requiredKeys: (keyof T)[],
-	keys: (keyof T)[],
-): boolean {
+function IsInstance<T>(obj: object, requiredKeys: (keyof T)[]): boolean {
 	if (typeof obj != 'object' || obj == null) {
 		return false;
 	}
 
-	return (
-		requiredKeys.every((key) => key in obj) &&
-		(Object.keys(obj) as (keyof T)[]).every((key) => keys.includes(key))
-	);
+	return requiredKeys.every((key) => key in obj);
 }
 
 export function analysisToQuery(request: AnalysisRequest): URLSearchParams {
@@ -227,15 +220,18 @@ export async function getEngineLimits(): Promise<EngineLimits> {
 			method: 'GET',
 		});
 		const json = await resp.json();
-		const valid = IsInstance<EngineLimits>(
-			json,
-			['depth', 'mbsize', 'threads', 'multipv', 'max_movetime'],
-			['depth', 'mbsize', 'threads', 'multipv', 'max_movetime'],
-		);
-		if (!valid) {
+		if (
+			!IsInstance<EngineLimits>(json, [
+				'depth',
+				'mbsize',
+				'threads',
+				'multipv',
+				'max_movetime',
+			])
+		) {
 			throw new Error('Limits: invalid json structure');
 		}
-		return json;
+		return json as EngineLimits;
 	} catch (e) {
 		// Surface error upward so UI can handle (retry / message)
 		throw e;
@@ -244,11 +240,12 @@ export async function getEngineLimits(): Promise<EngineLimits> {
 
 export class EngineAPI {
 	static isAnalysisResponse(json: object): json is AnalysisResponse {
-		return IsInstance<AnalysisResponse>(
-			json,
-			['lines', 'cps', 'depth', 'final'],
-			['error', 'cps', 'lines', 'depth', 'final'],
-		);
+		return IsInstance<AnalysisResponse>(json, [
+			'lines',
+			'cps',
+			'depth',
+			'final',
+		]);
 	}
 
 	static parseAnalysisResponse(json: object): EngineMove[] {
